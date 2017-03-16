@@ -2,7 +2,7 @@ all:
 	@echo read the Makefile!
 
 lookup.dylib: lookup.c
-	clang -framework CoreServices -shared -o $@ lookup.c
+	clang -framework CoreServices -shared -o $@ $?
 
 anki:
 	# https://github.com/dae/anki

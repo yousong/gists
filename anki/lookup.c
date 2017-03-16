@@ -26,14 +26,14 @@ const char *lookup(const char *word)
 		if (searchRange.location == kCFNotFound)
 			return NULL;
 		CFStringRef definition = DCSCopyTextDefinition(NULL, searchPhrase, searchRange);
+		CFRelease(searchPhrase);
 		if (definition) {
 			char *output = getCStringFromCFString(definition);
-			return output;
 			CFRelease(definition);
+			return output;
 		} else {
 			return NULL;
 		}
-		CFRelease(searchPhrase);
 	}
 	return NULL;
 }
