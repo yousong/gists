@@ -1,0 +1,89 @@
+ipset=setblocked
+dns=127.0.0.1#8053
+
+# Twitter
+twitter.com
+t.co
+twimg.com
+# Facebook
+facebook.com
+fbcdn.net
+# Vimeo
+vimeo.com
+vimeocdn.com
+vimeo-hp-videos.global.ssl.fastly.net
+akamaihd.net
+# YouTube
+googlevideo.com
+youtube.com
+ytimg.com
+youtube-nocookie.com
+youtu.be
+# Amazon AWS
+amazonaws.com
+awsstatic.com
+# Wikiepdia
+wikipedia.org
+# Google
+google.com
+google.com.hk
+google.co.uk
+google.com.sg
+google.sg
+googleapis.com
+gstatic.com
+ggpht.com
+appspot.com
+blogger.com
+blogspot.com
+blogspot.sg
+goo.gl
+golang.org
+googlesource.com
+# Google Play
+googleusercontent.com
+android.clients.google.com
+# Reddit
+reddit.com
+redditstatic.com
+redditmedia.com
+# Apple
+#akadns.net
+#edgekey.net
+#akamaiedge.net
+#akamai.net
+# New York Times
+nytimes.com
+nyt.com
+# Github
+github.com
+githubusercontent.com
+# Others
+wordpress.com
+openvpn.net
+torproject.org
+pastebin.com
+pastie.org
+slideshare.net
+psiphon.ca
+duolingo.com
+cloudfront.net
+sourceforge.net
+sprunge.us
+linuxjournal.com
+torrentproject.se
+gnu.org
+qemu.org
+wp.com
+travis-ci.org
+perl.org
+changeip.com
+lwn.net
+
+ipset=setnormal
+#dns=114.114.114.114
+dns=
+baidu.com
+bdstatic.com
+baidupcs.com
+sohu.com
