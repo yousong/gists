@@ -1,0 +1,334 @@
+Index: target/linux/ar71xx/files/arch/mips/ath79/mach-tl-wr743n-v2.c
+===================================================================
+--- target/linux/ar71xx/files/arch/mips/ath79/mach-tl-wr743n-v2.c	(revision 0)
++++ target/linux/ar71xx/files/arch/mips/ath79/mach-tl-wr743n-v2.c	(revision 0)
+@@ -0,0 +1,143 @@
++/*
++ *  TP-LINK TL-WR743N v2 board support
++ *
++ *  Copyright (C) 2011-2012 Gabor Juhos <juhosg@openwrt.org>
++ *  Copyright (C) 2013 yousong <yszhou4tech@gmail.com>
++ *
++ *  This program is free software; you can redistribute it and/or modify it
++ *  under the terms of the GNU General Public License version 2 as published
++ *  by the Free Software Foundation.
++ */
++
++#include <linux/gpio.h>
++
++#include <asm/mach-ath79/ath79.h>
++#include <asm/mach-ath79/ar71xx_regs.h>
++
++#include "common.h"
++#include "dev-eth.h"
++#include "dev-gpio-buttons.h"
++#include "dev-leds-gpio.h"
++#include "dev-m25p80.h"
++#include "dev-usb.h"
++#include "dev-wmac.h"
++#include "machtypes.h"
++
++#define TL_WR743NV2_GPIO_BTN_RESET	11
++#define TL_WR743NV2_GPIO_BTN_QSS	26
++
++#define TL_WR743NV2_GPIO_LED_WLAN	0
++#define TL_WR743NV2_GPIO_LED_3G		1
++#define TL_WR743NV2_GPIO_LED_LAN1	13
++#define TL_WR743NV2_GPIO_LED_LAN2	14
++#define TL_WR743NV2_GPIO_LED_LAN3	15
++#define TL_WR743NV2_GPIO_LED_LAN4	16
++#define TL_WR743NV2_GPIO_LED_WAN	17
++#define TL_WR743NV2_GPIO_LED_SYSTEM	27
++
++#define TL_WR743NV2_GPIO_USB_POWER	8
++
++#define TL_WR743NV2_KEYS_POLL_INTERVAL	20	/* msecs */
++#define TL_WR743NV2_KEYS_DEBOUNCE_INTERVAL (3 * TL_WR743NV2_KEYS_POLL_INTERVAL)
++
++static const char *tl_wr743nv2_part_probes[] = {
++	"tp-link",
++	NULL,
++};
++
++static struct flash_platform_data tl_wr743nv2_flash_data = {
++	.part_probes	= tl_wr743nv2_part_probes,
++};
++
++static struct gpio_led tl_wr743nv2_leds_gpio[] __initdata = {
++	{
++		.name		= "tp-link:green:lan1",
++		.gpio		= TL_WR743NV2_GPIO_LED_LAN1,
++		.active_low	= 0,
++	}, {
++		.name		= "tp-link:green:lan2",
++		.gpio		= TL_WR743NV2_GPIO_LED_LAN2,
++		.active_low	= 0,
++	}, {
++		.name		= "tp-link:green:lan3",
++		.gpio		= TL_WR743NV2_GPIO_LED_LAN3,
++		.active_low	= 0,
++	}, {
++		.name		= "tp-link:green:lan4",
++		.gpio		= TL_WR743NV2_GPIO_LED_LAN4,
++		.active_low	= 0,
++	}, {
++		.name		= "tp-link:green:system",
++		.gpio		= TL_WR743NV2_GPIO_LED_SYSTEM,
++		.active_low	= 1,
++	}, {
++		.name		= "tp-link:green:wan",
++		.gpio		= TL_WR743NV2_GPIO_LED_WAN,
++		.active_low	= 1,
++	}, {
++		.name		= "tp-link:green:wlan",
++		.gpio		= TL_WR743NV2_GPIO_LED_WLAN,
++		.active_low	= 0,
++	}, {
++		.name		= "tp-link:green:3g",
++		.gpio		= TL_WR743NV2_GPIO_LED_3G,
++		.active_low	= 0,
++	},
++};
++
++static struct gpio_keys_button tl_wr743nv2_gpio_keys[] __initdata = {
++	{
++		.desc		= "reset",
++		.type		= EV_KEY,
++		.code		= KEY_RESTART,
++		.debounce_interval = TL_WR743NV2_KEYS_DEBOUNCE_INTERVAL,
++		.gpio		= TL_WR743NV2_GPIO_BTN_RESET,
++		.active_low	= 0,
++	}, {
++		/* the QSS button is present on the WR743N v2 */
++		.desc		= "QSS",
++		.type		= EV_KEY,
++		.code		= KEY_WPS_BUTTON,
++		.debounce_interval = TL_WR743NV2_KEYS_DEBOUNCE_INTERVAL,
++		.gpio		= TL_WR743NV2_GPIO_BTN_QSS,
++		.active_low	= 0,
++	}
++};
++
++static void __init tl_wr743nv2_setup(void)
++{
++	u8 *mac = (u8 *) KSEG1ADDR(0x1f01fc00);
++	u8 *ee = (u8 *) KSEG1ADDR(0x1fff1000);
++
++	ath79_setup_ar933x_phy4_switch(false, false);
++
++	ath79_gpio_function_disable(AR933X_GPIO_FUNC_ETH_SWITCH_LED0_EN |
++				    AR933X_GPIO_FUNC_ETH_SWITCH_LED1_EN |
++				    AR933X_GPIO_FUNC_ETH_SWITCH_LED2_EN |
++				    AR933X_GPIO_FUNC_ETH_SWITCH_LED3_EN |
++				    AR933X_GPIO_FUNC_ETH_SWITCH_LED4_EN);
++
++	ath79_register_m25p80(&tl_wr743nv2_flash_data);
++	ath79_init_mac(ath79_eth0_data.mac_addr, mac, 1);
++	ath79_init_mac(ath79_eth1_data.mac_addr, mac, -1);
++
++	ath79_register_mdio(0, 0x0);
++	ath79_register_eth(1);
++	ath79_register_eth(0);
++
++	ath79_register_wmac(ee, mac);
++
++	ath79_register_leds_gpio(-1, ARRAY_SIZE(tl_wr743nv2_leds_gpio),
++				 tl_wr743nv2_leds_gpio);
++	ath79_register_gpio_keys_polled(1, TL_WR743NV2_KEYS_POLL_INTERVAL,
++					ARRAY_SIZE(tl_wr743nv2_gpio_keys),
++					tl_wr743nv2_gpio_keys);
++
++	gpio_request_one(TL_WR743NV2_GPIO_USB_POWER,
++			 GPIOF_OUT_INIT_HIGH | GPIOF_EXPORT_DIR_FIXED,
++			 "USB power");
++	ath79_register_usb();
++}
++
++MIPS_MACHINE(ATH79_MACH_TL_WR743N_V2, "TL-WR743N-v2",
++	     "TP-LINK TL-WR743N v2", tl_wr743nv2_setup);
+Index: target/linux/ar71xx/image/Makefile
+===================================================================
+--- target/linux/ar71xx/image/Makefile	(revision 36508)
++++ target/linux/ar71xx/image/Makefile	(working copy)
+@@ -934,7 +934,7 @@
+ $(eval $(call SingleProfile,TPLINK-LZMA,$(fs_64kraw),TLWR720NV3,tl-wr720n-v3,TL-WR720N-v3,ttyATH0,115200,0x07200103,1,4Mlzma))
+ $(eval $(call SingleProfile,TPLINK-LZMA,$(fs_64kraw),TLWR740NV4,tl-wr740n-v4,TL-WR741ND-v4,ttyATH0,115200,0x07400004,1,4Mlzma))
+ $(eval $(call SingleProfile,TPLINK-LZMA,$(fs_64kraw),TLWR741NV4,tl-wr741nd-v4,TL-WR741ND-v4,ttyATH0,115200,0x07410004,1,4Mlzma))
+-$(eval $(call SingleProfile,TPLINK-LZMA,$(fs_64kraw),TLWR743NV2,tl-wr743nd-v2,TL-WR741ND-v4,ttyATH0,115200,0x07430002,1,4Mlzma))
++$(eval $(call SingleProfile,TPLINK-LZMA,$(fs_64kraw),TLWR743NV2,tl-wr743n-v2,TL-WR743N-v2,ttyATH0,115200,0x07430102,1,4Mlzma))
+ $(eval $(call SingleProfile,TPLINK-LZMA,$(fs_64kraw),TLWR841NV8,tl-wr841n-v8,TL-WR841N-v8,ttyS0,115200,0x08410008,1,4Mlzma))
+ $(eval $(call SingleProfile,TPLINK-LZMA,$(fs_64kraw),TLWR1041,tl-wr1041n-v2,TL-WR1041N-v2,ttyS0,115200,0x10410002,1,4Mlzma))
+ $(eval $(call SingleProfile,TPLINK-LZMA,$(fs_64kraw),TLWR2543,tl-wr2543-v1,TL-WR2543N,ttyS0,115200,0x25430001,1,8Mlzma,-v 3.13.99))
+Index: target/linux/ar71xx/base-files/lib/ar71xx.sh
+===================================================================
+--- target/linux/ar71xx/base-files/lib/ar71xx.sh	(revision 36508)
++++ target/linux/ar71xx/base-files/lib/ar71xx.sh	(working copy)
+@@ -87,7 +87,7 @@
+ 	"074100"*)
+ 		model="TP-Link TL-WR741N/ND"
+ 		;;
+-	"074300"*)
++	"0743"*)
+ 		model="TP-Link TL-WR743N/ND"
+ 		;;
+ 	"080100"*)
+@@ -408,6 +408,9 @@
+ 	*"TL-WR741ND v4")
+ 		name="tl-wr741nd-v4"
+ 		;;
++	*"TL-WR743N v2")
++		name="tl-wr743n-v2"
++		;;
+ 	*"TL-WR841N v1")
+ 		name="tl-wr841n-v1"
+ 		;;
+Index: target/linux/ar71xx/base-files/lib/upgrade/platform.sh
+===================================================================
+--- target/linux/ar71xx/base-files/lib/upgrade/platform.sh	(revision 36508)
++++ target/linux/ar71xx/base-files/lib/upgrade/platform.sh	(working copy)
+@@ -169,6 +169,7 @@
+ 	tl-wr720n-v3 | \
+ 	tl-wr741nd | \
+ 	tl-wr741nd-v4 | \
++	tl-wr743n-v2 | \
+ 	tl-wr841n-v1 | \
+ 	tl-wr841n-v7 | \
+ 	tl-wr841n-v8 | \
+Index: target/linux/ar71xx/base-files/etc/uci-defaults/01_leds
+===================================================================
+--- target/linux/ar71xx/base-files/etc/uci-defaults/01_leds	(revision 36508)
++++ target/linux/ar71xx/base-files/etc/uci-defaults/01_leds	(working copy)
+@@ -173,6 +173,16 @@
+ 	ucidef_set_led_wlan "wlan" "WLAN" "tp-link:green:wlan" "phy0tpt"
+ 	;;
+ 
++tl-wr743n-v2)
++	ucidef_set_led_netdev "wan" "WAN" "tp-link:green:wan" "eth1"
++	ucidef_set_led_switch "lan1" "LAN1" "tp-link:green:lan1" "switch0" "0x02"
++	ucidef_set_led_switch "lan2" "LAN2" "tp-link:green:lan2" "switch0" "0x04"
++	ucidef_set_led_switch "lan3" "LAN3" "tp-link:green:lan3" "switch0" "0x08"
++	ucidef_set_led_switch "lan4" "LAN4" "tp-link:green:lan4" "switch0" "0x10"
++	ucidef_set_led_wlan "wlan" "WLAN" "tp-link:green:wlan" "phy0tpt"
++	ucidef_set_led_usbdev "usb" "USB" "tp-link:green:3g" "1-1"
++	;;
++
+ tl-wr841n-v8)
+ 	ucidef_set_led_netdev "wan" "WAN" "tp-link:green:wan" "eth0"
+ 	ucidef_set_led_switch "lan1" "LAN1" "tp-link:green:lan1" "switch0" "0x04"
+Index: target/linux/ar71xx/base-files/etc/uci-defaults/02_network
+===================================================================
+--- target/linux/ar71xx/base-files/etc/uci-defaults/02_network	(revision 36508)
++++ target/linux/ar71xx/base-files/etc/uci-defaults/02_network	(working copy)
+@@ -234,6 +234,7 @@
+ tl-wdr3500 |\
+ tl-wr741nd |\
+ tl-wr741nd-v4 |\
++tl-wr743n-v2 |\
+ tl-wr841n-v7 |\
+ whr-g301n |\
+ whr-hp-g300n |\
+Index: target/linux/ar71xx/base-files/etc/diag.sh
+===================================================================
+--- target/linux/ar71xx/base-files/etc/diag.sh	(revision 36508)
++++ target/linux/ar71xx/base-files/etc/diag.sh	(working copy)
+@@ -126,6 +126,7 @@
+ 	tl-wr1043nd | \
+ 	tl-wr741nd | \
+ 	tl-wr741nd-v4 | \
++	tl-wr743n-v2 | \
+ 	tl-wr841n-v1 | \
+ 	tl-wr841n-v7 | \
+ 	tl-wr841n-v8 | \
+Index: target/linux/ar71xx/config-3.8
+===================================================================
+--- target/linux/ar71xx/config-3.8	(revision 36508)
++++ target/linux/ar71xx/config-3.8	(working copy)
+@@ -75,6 +75,7 @@
+ CONFIG_ATH79_MACH_TL_WR720N_V3=y
+ CONFIG_ATH79_MACH_TL_WR741ND=y
+ CONFIG_ATH79_MACH_TL_WR741ND_V4=y
++CONFIG_ATH79_MACH_TL_WR743N_V2=y
+ CONFIG_ATH79_MACH_TL_WR841N_V1=y
+ CONFIG_ATH79_MACH_TL_WR841N_V8=y
+ CONFIG_ATH79_MACH_TL_WR941ND=y
+Index: target/linux/ar71xx/generic/profiles/tp-link.mk
+===================================================================
+--- target/linux/ar71xx/generic/profiles/tp-link.mk	(revision 36508)
++++ target/linux/ar71xx/generic/profiles/tp-link.mk	(working copy)
+@@ -171,7 +171,7 @@
+ 
+ define Profile/TLWR743
+ 	NAME:=TP-LINK TL-WR743N/ND
+-	PACKAGES:=
++	PACKAGES:=kmod-usb-core kmod-usb2 kmod-ledtrig-usbdev
+ endef
+ 
+ define Profile/TLWR743/Description
+Index: target/linux/ar71xx/patches-3.8/619-MIPS-ath79-TL-WR743N-v2-support.patch
+===================================================================
+--- target/linux/ar71xx/patches-3.8/619-MIPS-ath79-TL-WR743N-v2-support.patch	(revision 0)
++++ target/linux/ar71xx/patches-3.8/619-MIPS-ath79-TL-WR743N-v2-support.patch	(revision 0)
+@@ -0,0 +1,39 @@
++--- a/arch/mips/ath79/Kconfig
+++++ b/arch/mips/ath79/Kconfig
++@@ -575,6 +575,16 @@ config ATH79_MACH_TL_WR741ND_V4
++ 	select ATH79_DEV_USB
++ 	select ATH79_DEV_WMAC
++ 
+++config ATH79_MACH_TL_WR743N_V2
+++	bool "TP-LINK TL-WR743N v2 support"
+++	select SOC_AR933X
+++	select ATH79_DEV_ETH
+++	select ATH79_DEV_GPIO_BUTTONS
+++	select ATH79_DEV_LEDS_GPIO
+++	select ATH79_DEV_M25P80
+++	select ATH79_DEV_USB
+++	select ATH79_DEV_WMAC
+++
++ config ATH79_MACH_TL_WR841N_V1
++ 	bool "TP-LINK TL-WR841N v1 support"
++ 	select SOC_AR71XX
++--- a/arch/mips/ath79/Makefile
+++++ b/arch/mips/ath79/Makefile
++@@ -86,6 +86,7 @@ obj-$(CONFIG_ATH79_MACH_TL_WDR3500)
++ obj-$(CONFIG_ATH79_MACH_TL_WDR4300)     += mach-tl-wdr4300.o
++ obj-$(CONFIG_ATH79_MACH_TL_WR741ND)	+= mach-tl-wr741nd.o
++ obj-$(CONFIG_ATH79_MACH_TL_WR741ND_V4)	+= mach-tl-wr741nd-v4.o
+++obj-$(CONFIG_ATH79_MACH_TL_WR743N_V2)	+= mach-tl-wr743n-v2.o
++ obj-$(CONFIG_ATH79_MACH_TL_WR841N_V1)	+= mach-tl-wr841n.o
++ obj-$(CONFIG_ATH79_MACH_TL_WR841N_V8)	+= mach-tl-wr841n-v8.o
++ obj-$(CONFIG_ATH79_MACH_TL_WR941ND)	+= mach-tl-wr941nd.o
++--- a/arch/mips/ath79/machtypes.h
+++++ b/arch/mips/ath79/machtypes.h
++@@ -96,6 +96,7 @@ enum ath79_mach_type {
++ 	ATH79_MACH_TL_WR703N,		/* TP-LINK TL-WR703N */
++ 	ATH79_MACH_TL_WR741ND,		/* TP-LINK TL-WR741ND */
++ 	ATH79_MACH_TL_WR741ND_V4,	/* TP-LINK TL-WR741ND  v4*/
+++	ATH79_MACH_TL_WR743N_V2,	/* TP-LINK TL-WR743N  v2*/
++ 	ATH79_MACH_TL_WR841N_V1,	/* TP-LINK TL-WR841N v1 */
++ 	ATH79_MACH_TL_WR841N_V7,	/* TP-LINK TL-WR841N/ND v7 */
++ 	ATH79_MACH_TL_WR841N_V8,	/* TP-LINK TL-WR841N/ND v8 */
+Index: tools/firmware-utils/src/mktplinkfw.c
+===================================================================
+--- tools/firmware-utils/src/mktplinkfw.c	(revision 36508)
++++ tools/firmware-utils/src/mktplinkfw.c	(working copy)
+@@ -50,7 +50,7 @@
+ #define HWID_TL_WR740N_V1	0x07400001
+ #define HWID_TL_WR740N_V3	0x07400003
+ #define HWID_TL_WR743ND_V1	0x07430001
+-#define HWID_TL_WR743ND_V2	0x07430002
++#define HWID_TL_WR743N_V2	0x07430102
+ #define HWID_TL_WR841N_V1_5	0x08410002
+ #define HWID_TL_WR841ND_V3	0x08410003
+ #define HWID_TL_WR841ND_V5	0x08410005
+@@ -283,8 +283,8 @@
+ 		.hw_rev		= 1,
+ 		.layout_id	= "4M",
+ 	}, {
+-		.id		= "TL-WR743NDv2",
+-		.hw_id		= HWID_TL_WR743ND_V2,
++		.id		= "TL-WR743Nv2",
++		.hw_id		= HWID_TL_WR743N_V2,
+ 		.hw_rev		= 1,
+ 		.layout_id	= "4Mlzma",
+ 	}, {

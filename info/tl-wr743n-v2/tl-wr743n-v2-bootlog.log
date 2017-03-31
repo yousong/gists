@@ -1,0 +1,154 @@
+U-Boot 1.1.4 (Nov 17 2011 - 14:36:19)
+
+AP121 (ar9330) U-boot
+
+DRAM:  32 MB
+led turning on for 1s...
+id read 0x100000ff
+flash size 4194304, sector count = 64
+Flash:  4 MB
+Using default environment
+
+In:    serial
+Out:   serial
+Err:   serial
+Net:   ag7240_enet_initialize...
+No valid address in Flash. Using fixed address
+No valid address in Flash. Using fixed address
+: cfg1 0x5 cfg2 0x7114
+eth0: 00:03:7f:09:0b:ad
+ag7240_phy_setup
+eth0 up
+: cfg1 0xf cfg2 0x7214
+eth1: 00:03:7f:09:0b:ad
+athrs26_reg_init_lan
+ATHRS26: resetting s26
+ATHRS26: s26 reset done
+ag7240_phy_setup
+eth1 up
+eth0, eth1
+Autobooting in 1 seconds
+## Booting image at 9f020000 ...
+   Uncompressing Kernel Image ... OK
+
+Starting kernel ...
+
+[    0.000000] Linux version 3.3.8 (yousong@debian) (gcc version 4.6.3 20120201 (prerelease) (Linaro GCC 4.6-2012.02) ) #6 Sat May 4 11:23:44 CST 2013
+[    0.000000] bootconsole [early0] enabled
+[    0.000000] CPU revision is: 00019374 (MIPS 24Kc)
+[    0.000000] SoC: Atheros AR9330 rev 1
+[    0.000000] Clocks: CPU:400.000MHz, DDR:400.000MHz, AHB:200.000MHz, Ref:25.000MHz
+[    0.000000] Determined physical RAM map:
+[    0.000000]  memory: 02000000 @ 00000000 (usable)
+[    0.000000] Initrd not found or empty - disabling initrd
+[    0.000000] Zone PFN ranges:
+[    0.000000]   Normal   0x00000000 -> 0x00002000
+[    0.000000] Movable zone start PFN for each node
+[    0.000000] Early memory PFN ranges
+[    0.000000]     0: 0x00000000 -> 0x00002000
+[    0.000000] Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 8128
+[    0.000000] Kernel command line:  board=TL-WR743N-v2 console=ttyATH0,115200 rootfstype=squashfs,jffs2 noinitrd
+[    0.000000] PID hash table entries: 128 (order: -3, 512 bytes)
+[    0.000000] Dentry cache hash table entries: 4096 (order: 2, 16384 bytes)
+[    0.000000] Inode-cache hash table entries: 2048 (order: 1, 8192 bytes)
+[    0.000000] Primary instruction cache 64kB, VIPT, 4-way, linesize 32 bytes.
+[    0.000000] Primary data cache 32kB, 4-way, VIPT, cache aliases, linesize 32 bytes
+[    0.000000] Writing ErrCtl register=00000000
+[    0.000000] Readback ErrCtl register=00000000
+[    0.000000] Memory: 29136k/32768k available (2092k kernel code, 3632k reserved, 405k data, 212k init, 0k highmem)
+[    0.000000] SLUB: Genslabs=9, HWalign=32, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+[    0.000000] NR_IRQS:51
+[    0.000000] Calibrating delay loop... 265.42 BogoMIPS (lpj=1327104)
+[    0.080000] pid_max: default: 32768 minimum: 301
+[    0.080000] Mount-cache hash table entries: 512
+[    0.090000] NET: Registered protocol family 16
+[    0.090000] gpiochip_add: registered GPIOs 0 to 29 on device: ath79
+[    0.100000] MIPS: machine is TP-LINK TL-WR743N v2
+[    0.550000] bio: create slab <bio-0> at 0
+[    0.560000] Switching to clocksource MIPS
+[    0.560000] NET: Registered protocol family 2
+[    0.570000] IP route cache hash table entries: 1024 (order: 0, 4096 bytes)
+[    0.570000] TCP established hash table entries: 1024 (order: 1, 8192 bytes)
+[    0.570000] TCP bind hash table entries: 1024 (order: 0, 4096 bytes)
+[    0.580000] TCP: Hash tables configured (established 1024 bind 1024)
+[    0.590000] TCP reno registered
+[    0.590000] UDP hash table entries: 256 (order: 0, 4096 bytes)
+[    0.600000] UDP-Lite hash table entries: 256 (order: 0, 4096 bytes)
+[    0.600000] NET: Registered protocol family 1
+[    0.630000] squashfs: version 4.0 (2009/01/31) Phillip Lougher
+[    0.630000] JFFS2 version 2.2 (NAND) (SUMMARY) (LZMA) (RTIME) (CMODE_PRIORITY) (c) 2001-2006 Red Hat, Inc.
+[    0.640000] msgmni has been set to 56
+[    0.640000] io scheduler noop registered
+[    0.650000] io scheduler deadline registered (default)
+[    0.650000] Serial: 8250/16550 driver, 1 ports, IRQ sharing disabled
+[    0.660000] ar933x-uart: ttyATH0 at MMIO 0x18020000 (irq = 11) is a AR933X UART
+[    0.660000] console [ttyATH0] enabled, bootconsole disabled
+[    0.660000] console [ttyATH0] enabled, bootconsole disabled
+[    0.680000] m25p80 spi0.0: found s25sl032a, expected m25p80
+[    0.680000] m25p80 spi0.0: s25sl032a (4096 Kbytes)
+[    0.690000] 5 tp-link partitions found on MTD device spi0.0
+[    0.690000] Creating 5 MTD partitions on "spi0.0":
+[    0.700000] 0x000000000000-0x000000020000 : "u-boot"
+[    0.710000] 0x000000020000-0x0000000ff34c : "kernel"
+[    0.710000] mtd: partition "kernel" must either start or end on erase block boundary or be smaller than an erase block -- forcing read-only
+[    0.720000] 0x0000000ff34c-0x0000003f0000 : "rootfs"
+[    0.730000] mtd: partition "rootfs" must either start or end on erase block boundary or be smaller than an erase block -- forcing read-only
+[    0.740000] mtd: partition "rootfs" set to be root filesystem
+[    0.750000] mtd: partition "rootfs_data" created automatically, ofs=2D0000, len=120000
+[    0.750000] 0x0000002d0000-0x0000003f0000 : "rootfs_data"
+[    0.760000] 0x0000003f0000-0x000000400000 : "art"
+[    0.770000] 0x000000020000-0x0000003f0000 : "firmware"
+[    0.790000] ag71xx_mdio: probed
+[    0.790000] eth0: Atheros AG71xx at 0xba000000, irq 5
+[    1.350000] eth0: Found an AR7240/AR9330 built-in switch
+[    2.380000] eth1: Atheros AG71xx at 0xb9000000, irq 4
+[    2.930000] ag71xx ag71xx.0: eth1: connected to PHY at ag71xx-mdio.1:04 [uid=004dd041, driver=Generic PHY]
+[    2.940000] TCP cubic registered
+[    2.940000] NET: Registered protocol family 17
+[    2.950000] 8021q: 802.1Q VLAN Support v1.8
+[    2.950000] VFS: Mounted root (squashfs filesystem) readonly on device 31:2.
+[    2.960000] Freeing unused kernel memory: 212k freed
+- preinit -
+Press the [f] key and hit [enter] to enter failsafe mode
+- regular preinit -
+[    9.320000] JFFS2 notice: (418) jffs2_build_xattr_subsystem: complete building xattr subsystem, 1 of xdatum (0 unchecked, 0 orphan) and 10 of xref (0 dead, 0 orphan) found.
+switching to jffs2
+- init -
+
+Please press Enter to activate this console. [   11.260000] Compat-drivers backport release: compat-drivers-2013-01-21-1
+[   11.270000] Backport based on wireless-testing.git master-2013-02-22
+[   11.270000] compat.git: wireless-testing.git
+[   11.300000] cfg80211: Calling CRDA to update world regulatory domain
+[   11.310000] cfg80211: World regulatory domain updated:
+[   11.310000] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[   11.320000] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   11.330000] cfg80211:   (2457000 KHz - 2482000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[   11.340000] cfg80211:   (2474000 KHz - 2494000 KHz @ 20000 KHz), (300 mBi, 2000 mBm)
+[   11.340000] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   11.350000] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   11.700000] usbcore: registered new interface driver usbfs
+[   11.700000] usbcore: registered new interface driver hub
+[   11.710000] usbcore: registered new device driver usb
+[   12.320000] ieee80211 phy0: Atheros AR9330 Rev:1 mem=0xb8100000, irq=2
+[   12.320000] cfg80211: Calling CRDA for country: US
+[   12.330000] cfg80211: Regulatory domain changed to country: US
+[   12.330000] cfg80211:   (start_freq - end_freq @ bandwidth), (max_antenna_gain, max_eirp)
+[   12.340000] cfg80211:   (2402000 KHz - 2472000 KHz @ 40000 KHz), (300 mBi, 2700 mBm)
+[   12.350000] cfg80211:   (5170000 KHz - 5250000 KHz @ 40000 KHz), (300 mBi, 1700 mBm)
+[   12.360000] cfg80211:   (5250000 KHz - 5330000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   12.360000] cfg80211:   (5490000 KHz - 5600000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   12.370000] cfg80211:   (5650000 KHz - 5710000 KHz @ 40000 KHz), (300 mBi, 2000 mBm)
+[   12.380000] cfg80211:   (5735000 KHz - 5835000 KHz @ 40000 KHz), (300 mBi, 3000 mBm)
+[   12.430000] PPP generic driver version 2.4.2
+[   12.690000] ip_tables: (C) 2000-2006 Netfilter Core Team
+[   12.910000] NET: Registered protocol family 24
+[   12.930000] ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+[   12.940000] ehci-platform ehci-platform: Generic Platform EHCI Controller
+[   12.940000] ehci-platform ehci-platform: new USB bus registered, assigned bus number 1
+[   12.980000] ehci-platform ehci-platform: irq 3, io mem 0x1b000000
+[   13.000000] ehci-platform ehci-platform: USB 2.0 started, EHCI 1.00
+[   13.000000] hub 1-0:1.0: USB hub found
+[   13.000000] hub 1-0:1.0: 1 port detected
+[   13.030000] nf_conntrack version 0.5.0 (458 buckets, 1832 max)
+[   13.260000] ohci_hcd: USB 1.1 'Open' Host Controller (OHCI) Driver
+[   17.970000] device eth0 entered promiscuous mode
