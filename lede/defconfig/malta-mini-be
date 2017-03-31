@@ -1,0 +1,68 @@
+CONFIG_TARGET_malta=y
+CONFIG_TARGET_malta_be=y
+CONFIG_TARGET_malta_be_Default=y
+
+CONFIG_PACKAGE_strace=y
+#CONFIG_PACKAGE_gdb=y
+CONFIG_PACKAGE_gdbserver=y
+#CONFIG_DEBUG=y
+#CONFIG_NO_STRIP=y
+
+CONFIG_PACKAGE_openvpn-mbedtls=y
+CONFIG_PACKAGE_ip-tiny=y
+CONFIG_PACKAGE_ip-full=m
+#CONFIG_PACKAGE_hello=y
+
+#CONFIG_PACKAGE_reaver=y
+#CONFIG_PACKAGE_hostapd-utils=y
+#CONFIG_PACKAGE_kmod-ipsec=y
+#CONFIG_PACKAGE_kmod-ipsec4=y
+#CONFIG_PACKAGE_kmod-ipsec6=y
+#CONFIG_PACKAGE_strongswan-minimal=y
+#CONFIG_PACKAGE_wpad=y
+#CONFIG_PACKAGE_wpad-mini=n
+#CONFIG_PACKAGE_kmod-mwl8k=y
+# CONFIG_PACKAGE_valgrind=y
+#CONFIG_PACKAGE_xl2tpd=y
+# CONFIG_PACKAGE_tcpdump-mini=y
+
+# CONFIG_PACKAGE_aircrack-ng=y
+# CONFIG_PACKAGE_airmon-ng=y
+# CONFIG_PACKAGE_dvtm=y
+# CONFIG_PACKAGE_nginx=y
+# CONFIG_PACKAGE_qemu-ga=y
+# CONFIG_PACKAGE_arp-scan=y
+# CONFIG_PACKAGE_strongswan-minimal=y
+
+# CONFIG_PACKAGE_python-pip=y
+# CONFIG_PACKAGE_python-cffi=y
+# CONFIG_PACKAGE_twisted=y
+# CONFIG_PACKAGE_python-attrs=y
+# CONFIG_PACKAGE_python-pyasn1-modules=y
+# CONFIG_PACKAGE_python-service-identity=y
+# CONFIG_PACKAGE_python-gmpy=y
+# CONFIG_PACKAGE_python-parsley=y
+# CONFIG_PACKAGE_python-gmpy2=y
+# CONFIG_PACKAGE_python-pyopenssl=y
+# CONFIG_PACKAGE_python-txsocksx=y
+# CONFIG_PACKAGE_obfsproxy=y
+
+# CONFIG_PACKAGE_erlang=y
+#CONFIG_PACKAGE_libunwind=y
+#CONFIG_PACKAGE_strace_libunwind=y
+
+# CONFIG_PACKAGE_luajit=y
+# CONFIG_PACKAGE_nginx=y
+# CONFIG_NGINX_LUA=y
+# CONFIG_PACKAGE_lsqlite3=y
+
+
+# CONFIG_PACKAGE_stunnel=y
+
+#CONFIG_PACKAGE_ip-full=y
+#CONFIG_PACKAGE_gre=y
+#CONFIG_PACKAGE_grev4=y
+
+#CONFIG_PACKAGE_mdns=y
+
+#CONFIG_PACKAGE_emailrelay=y

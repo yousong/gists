@@ -1,0 +1,25 @@
+CONFIG_TARGET_x86=y
+CONFIG_TARGET_x86_64=y
+CONFIG_TARGET_x86_64_Generic=y
+CONFIG_GRUB_TIMEOUT="0"
+CONFIG_PACKAGE_qemu-ga=y
+
+CONFIG_PACKAGE_ip=y
+CONFIG_PACKAGE_ip-full=y
+CONFIG_PACKAGE_tc=y
+CONFIG_PACKAGE_genl=y
+CONFIG_PACKAGE_ip-bridge=y
+CONFIG_PACKAGE_ss=y
+
+CONFIG_PACKAGE_python=y
+CONFIG_PACKAGE_python-pip=y
+CONFIG_PACKAGE_tcpdump=y
+CONFIG_PACKAGE_netcat=y
+CONFIG_PACKAGE_iputils-arping=y
+
+CONFIG_DEVEL=y
+CONFIG_PACKAGE_python=y
+CONFIG_PACKAGE_python-packages=y
+CONFIG_PACKAGE_python-packages-list="tornado==4.4.*"
+CONFIG_PACKAGE_python-packages-index-url="http://pypi.douban.com/simple"
+CONFIG_PACKAGE_python-packages-pip-opts="--trusted-host pypi.douban.com -v"
