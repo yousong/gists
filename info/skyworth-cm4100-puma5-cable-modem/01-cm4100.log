@@ -1,0 +1,783 @@
+=~=~=~=~=~=~=~=~=~=~=~= PuTTY log 2017.01.08 12:18:53 =~=~=~=~=~=~=~=~=~=~=~=
+
+
+U-Boot 1.2.0 (Aug 13 2015 - 17:14:21) Puma5 - PSPU-Boot 2.0.0.32
+
+DRAM:  64 MB
+Macronix MX25l6405D flash found
+Flash:  8 MB
+In:    serial
+Out:   serial
+Err:   serial
+Press SPACE to abort autoboot in 1 second(s)
+=>   help
+
+?       - alias for 'help'
+autoscr - run script from memory
+base    - print or set address offset
+bdinfo  - print Board Info structure
+boot    - boot default, i.e., run 'bootcmd'
+bootd   - boot default, i.e., run 'bootcmd'
+bootm   - boot application image from memory
+bootp	- boot image via network using BootP/TFTP protocol
+cmp     - memory compare
+coninfo - print console devices and information
+cp      - memory copy
+crc32   - checksum calculation
+echo    - echo args to console
+erase   - erase FLASH memory
+eval	- return addition/subraction
+exit    - exit script
+flinfo  - print FLASH memory information
+go      - start application at address 'addr'
+help    - print online help
+iminfo  - print header information for application image
+imls    - list all images found in flash
+itest	- return true/false on integer compare
+loadb   - load binary file over serial line (kermit mode)
+loads   - load S-Record file over serial line
+loady   - load binary file over serial line (ymodem mode)
+loop    - infinite loop on address range
+md      - memory display
+mm      - memory modify (auto-incrementing)
+mtest   - simple RAM test
+mw      - memory write (fill)
+nm      - memory modify (constant address)
+printenv- print environment variables
+protect - enable or disable FLASH write protection
+rarpboot- boot image via network using RARP/TFTP protocol
+reset   - Perform RESET of the CPU
+run     - run commands in an environment variable
+saveenv - save environment variables to persistent storage
+setenv  - set environment variables
+sleep   - delay execution for some time
+test    - minimal test like /bin/sh
+tftpboot- boot image via network using TFTP protocol
+version - print monitor version
+=> iminfo
+
+
+## Checking Image at 80000100 ...
+   Bad Magic Number
+=> version
+
+
+U-Boot 1.2.0 (Aug 13 2015 - 17:14:21) Puma5 - PSPU-Boot 2.0.0.32
+=> printenv
+
+bootcmd=while itest.b 1 == 1;do;if itest.b ${ACTIMAGE} == 1 || itest.b ${ACTIMAGE} == 3;then aimgname=UBFI1; aubfiaddr=${UBFIADDR1};bimgname=UBFI2; bubfiaddr=${UBFIADDR2}; bimgnum=2;else if itest.b ${ACTIMAGE} == 2;then aimgname=UBFI2; aubfiaddr=${UBFIADDR2};bimgname=UBFI1; bubfiaddr=${UBFIADDR1}; bimgnum=1;else echo *** ACTIMAGE invalid; exit;fi;fi;if itest.b ${ACTIMAGE} == 3;then eval *0x80000000 - ${UBFI3RAMRESERVE};eval 0x80000000 + ${evalval};ramimgaddr=${evalval};if autoscr ${ramimgaddr};then bootm ${LOADADDR};else echo Reloading RAM image;tftpboot ${ramimgaddr} ${UBFINAME3};if autoscr ${ramimgaddr};then bootm ${LOADADDR};else setenv ACTIMAGE 1;fi;fi;fi; echo *** ACTIMAGE = ${ACTIMAGE}, will try to boot $aimgname stored @${aubfiaddr};if autoscr $aubfiaddr;then echo *** $aimgname bootscript executed successfully.;echo Start booting...;bootm ${LOADADDR};fi;echo *** $aimgname is corrupted, try $bimgname...;setenv ACTIMAGE $bimgnum;if autoscr $bubfiaddr;then echo *** $bimgname bootscript executed successfully.;echo Check image...;if imi ${LOADADDR};then echo Save updated ACTIMAGE...;saveenv;echo Image OK, start booting...;bootm ${LOADADDR};fi;fi;echo Backup image also corrupted...exit.;exit;done;
+bootdelay=1
+baudrate=115200
+LOADADDR=0
+UBFINAME2=bootImage2
+UBFINAME3=bootImage3
+update=tftpboot 0x80000100 ${imgname} && protect off ${imgaddr} +${filesize} && erase ${imgaddr} +${filesize} && cp.b ${fileaddr} ${imgaddr} ${filesize} && protect on ${imgaddr} +${filesize} && if itest.b ${actimg} != 0; then setenv ACTIMAGE ${actimg} && saveenv; fi
+update1=actimg=1 && imgaddr=${UBFIADDR1} && imgname=${UBFINAME1} && run update
+update2=actimg=2 && imgaddr=${UBFIADDR2} && imgname=${UBFINAME2} && run update
+update3=actimg=3;eval *0x80000000 - ${UBFI3RAMRESERVE};eval 0x80000000 + ${evalval};tftpboot ${evalval} ${UBFINAME3} && setenv ACTIMAGE ${actimg} && saveenv
+UBFI3RAMRESERVE=0x800000
+update_uboot=actimg=0 && imgaddr=0x48000000 && imgname=u-boot.bin && run update
+erase_env=eval ${envpartsize} + ${envpartsize} && envblocksize=${evalval} && eval 0x48000000 + ${ubootpartsize} && protect off ${evalval} +$envblocksize && erase ${evalval} +$envblocksize && protect on ${evalval} +$envblocksize
+netretry=no
+boardtype=tnetc550
+ubootpartsize=0x1e000
+envpartsize=0x1000
+UBFIADDR1=0x48020000
+UBFIADDR2=0x483f0000
+updateall=tftpboot 0x80000100 Product.bin && protect off 0x48000000 +${filesize} && erase 0x48000000 +${filesize} && cp.b 0x80000100 0x48000000 ${filesize} && protect on 0x48000000 +${filesize}
+updatenvram=tftpboot 0x80000100 nvram-cal.bin && protect off 0x487C0000 +${filesize} && erase 0x487C0000 +${filesize} && cp.b 0x80000100 0x487C0000 ${filesize} && protect on 0x487C0000 +${filesize}
+ethaddr=00:1a:9a:12:34:56
+UBFINAME1=dsdk.tnetc48xx.img
+filesize=337400
+fileaddr=80000100
+gatewayip=192.168.100.2
+netmask=255.255.255.0
+ipaddr=192.168.100.1
+serverip=192.168.100.129
+ACTIMAGE=1
+usbhostaddr=00.50.f1.16.c6.99
+ver=U-Boot 1.2.0 (Aug 13 2015 - 17:14:21) Puma5 - PSPU-Boot 2.0.0.32
+stdin=serial
+stdout=serial
+stderr=serial
+
+Environment size: 3052/4091 bytes
+=> boot
+
+*** ACTIMAGE = 1, will try to boot UBFI1 stored @0x48020000
+## Executing script at 48020000
+============== Running script =========
+*** Running from UBFI1 partition @0x48020000
+Load address = 0x480221e4 (0x21e4)
+Kernel address = 0x48022230 (0x2230)
+kernel size = 0xdc5d0
+Root FS address = 0x480fe800 (0xde800)
+Root FS size = 0x2a8c00
+Additional FS =
+NVRAM offset = 0x7c0000
+NVRAM size = 0x40000
+*** UBFI1 bootscript executed successfully.
+Start booting...
+## Booting image at 480221e4 ...
+   Image Name:   Multi Image File
+   Image Type:   ARM Linux Multi-File Image (uncompressed)
+   Data Size:    3690972 Bytes =  3.5 MB
+   Load Address: 80a00000
+   Entry Point:  80a00000
+   Contents:
+   Image 0:   902608 Bytes = 881.5 kB
+   Image 1:  2788352 Bytes =  2.7 MB
+   Verifying Checksum ... OK
+OK
+
+Starting kernel ...
+
+Starting LZMA Uncompression Algorithm.
+Compressed file is LZMA format.
+[Debug - Kerenl] LZMA Uncompression - Done.
+Linux version 2.6.39.3 (caizhongpeng@DrteamSvr) (gcc version 4.6.4 (Buildroot 2013.08.1) ) #1 PREEMPT Thu Aug 13 17:18:45 CST 2015
+CPU: ARMv6-compatible processor [410fb764] revision 4 (ARMv7), cr=00c538ff
+CPU: VIPT nonaliasing data cache, VIPT aliasing instruction cache
+Machine: puma5
+Ignoring unrecognised tag 0x00000000
+Malformed early option 'boardtype'
+Malformed early option 'ext_switch_reset_gpio'
+Memory policy: ECC disabled, Data cache writeback
+Reserved 0k DSP memory starting from Physical 0x84000000
+Power & Sleep Controller @ 0xd8621000 Initialized [id-0x44822905]
+Board type: tnetc550
+Initialized Peripheral Port Remap Register to base : 0x50000000
+Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 16256
+Kernel command line: root=/dev/mtdblock6 mtdparts=spansion:0x1e000(U-Boot)ro,0x1000(env1),0x1000(env2),0x3d0000@0x20000(UBFI1),0x3d0000@0x3f0000(UBFI2),0xdc5d0@0x22230(Kernel)ro,0x2a8c00(RootFileSystem)ro,0x40000@0x7c0000(nvram) console=ttyS0,115200n8 ethaddr0=00:1a:9a:12:34:56 usbhostaddr=00.50.f1.16.c6.99 boardtype=tnetc550 eth0_mdio_phy_addr= ext_switch_reset_gpio= threadirqs
+ CPGMAC PHY MDIO ADDRESS []
+PID hash table entries: 256 (order: -2, 1024 bytes)
+Dentry cache hash table entries: 8192 (order: 3, 32768 bytes)
+Inode-cache hash table entries: 4096 (order: 2, 16384 bytes)
+Memory: 64MB = 64MB total
+Memory: 62048k/62048k available, 3488k reserved, 0K highmem
+Virtual kernel memory layout:
+    vector  : 0xffff0000 - 0xffff1000   (   4 kB)
+    fixmap  : 0xfff00000 - 0xfffe0000   ( 896 kB)
+    DMA     : 0xffc00000 - 0xffe00000   (   2 MB)
+    vmalloc : 0x84800000 - 0xd0000000   (1208 MB)
+    lowmem  : 0x80000000 - 0x84000000   (  64 MB)
+    modules : 0x7f000000 - 0x80000000   (  16 MB)
+      .init : 0x80018000 - 0x80031000   ( 100 kB)
+      .text : 0x80031000 - 0x80278000   (2332 kB)
+      .data : 0x80278000 - 0x8028db60   (  87 kB)
+NR_IRQS:150
+Interrupt controller revision : 4e822100
+Precise sched_clock: load 62500, nsec/count 160Puma5 Timer0 initialized
+console [ttyS0] enabled
+Calibrating delay loop... 398.13 BogoMIPS (lpj=1990656)
+pid_max: default: 4096 minimum: 301
+Mount-cache hash table entries: 512
+CPU: Testing write buffer coherency: ok
+NET: Registered protocol family 16
+
+PAL_cppi4Init : domain is 0, cfg ptr is 0x8027E0D8 
+PAL_cppi4Init: CPPI 4.1 API initialized successfully.
+avalanche_ppd_init: PP system  initialized successfully.
+
+PAL_cppi4Init : domain is 0, cfg ptr is 0x00000000 
+bio: create slab <bio-0> at 0
+puma5 init
+HIL Core: Profile intrusive has been Loaded.
+musb-hdrc: version 6.0, cppi-dma, peripheral, debug=0
+VBUS off(0)-GPIO14(HIGH)
+
+PAL_cppi4Init : domain is 0, cfg ptr is 0x00000000 
+musb-hdrc musb-hdrc: USB Peripheral mode controller at d3300000 using DMA, IRQ 24
+NET: Registered protocol family 2
+IP route cache hash table entries: 1024 (order: 0, 4096 bytes)
+TCP established hash table entries: 2048 (order: 2, 16384 bytes)
+TCP bind hash table entries: 2048 (order: 1, 8192 bytes)
+TCP: Hash tables configured (established 2048 bind 2048)
+TCP reno registered
+NET: Registered protocol family 1
+squashfs: version 4.0 (2009/01/31) Phillip Lougher
+JFFS2 version 2.2. (NAND) 漏 2001-2006 Red Hat, Inc.
+msgmni has been set to 121
+io scheduler noop registered (default)
+Serial: 8250/16550 driver, 2 ports, IRQ sharing disabled
+serial8250: ttyS0 at MMIO 0x8610f03 (irq = 8) is a TI 16550A
+serial8250: ttyS1 at MMIO 0x8610e03 (irq = 7) is a TI 16550A
+TI LED driver initialized [major=254]
+Serial Flash [Bus:0 CS:0] : mx25l6405 8192KB, 2048 sectors each   4KB 
+8 cmdlinepart partitions found on MTD device spansion
+partitions[0] = {.name = U-Boot, .offset = 0x00000000,.size = 0x0001e000 (120K) }
+partitions[1] = {.name = env1, .offset = 0x0001e000,.size = 0x00001000 (4K) }
+partitions[2] = {.name = env2, .offset = 0x0001f000,.size = 0x00001000 (4K) }
+partitions[3] = {.name = UBFI1, .offset = 0x00020000,.size = 0x003d0000 (3904K) }
+partitions[4] = {.name = UBFI2, .offset = 0x003f0000,.size = 0x003d0000 (3904K) }
+partitions[5] = {.name = Kernel, .offset = 0x00022230,.size = 0x000dc5d0 (881K) }
+partitions[6] = {.name = RootFileSystem, .offset = 0x000fe800,.size = 0x002a8c00 (2723K) }
+partitions[7] = {.name = nvram, .offset = 0x007c0000,.size = 0x00040000 (256K) }
+Creating 8 MTD partitions on "spansion":
+0x000000000000-0x00000001e000 : "U-Boot"
+0x00000001e000-0x00000001f000 : "env1"
+0x00000001f000-0x000000020000 : "env2"
+0x000000020000-0x0000003f0000 : "UBFI1"
+0x0000003f0000-0x0000007c0000 : "UBFI2"
+0x000000022230-0x0000000fe800 : "Kernel"
+0x0000000fe800-0x0000003a7400 : "RootFileSystem"
+0x0000007c0000-0x000000800000 : "nvram"
+Serial Flash [Bus:0 CS:1] : No device found
+(null): AVALANCHE SPI Controller driver at 0xd8612500           (irq = 0)
+(null): TI Codec SPI Controller driver at 0xd86040c8           (irq = 0)
+ftmac100: Loading version 0.2 ...
+dm9000 Ethernet Driver, V1.31
+Loading cpgmac driver for puma5 
+   Rudek 00000083 
+
+PAL_cppi4Init : domain is 0, cfg ptr is 0x00000000 
+TI CPGMAC_F Linux DDA version 0.1 - CPGMAC_F DDC version 0.2
+Cpmac: Installed 1 instances.
+i2c /dev entries driver
+watchdog: TI Avalanche Watchdog Timer: timer margin 42 sec
+TCP cubic registered
+NET: Registered protocol family 10
+NET: Registered protocol family 17
+802.1Q VLAN Support v1.8 Ben Greear <greearb@candelatech.com>
+All bugs added by David S. Miller <davem@redhat.com>
+VFS: Mounted root (squashfs filesystem) readonly on device 31:6.
+Freeing init memory: 100K
+
+init started: BusyBox v1.19.2 (2015-08-13 17:20:32 CST)
+
+starting pid 28, tty '/dev/tts/0': '/etc/init.d/rcS > /dev/console 2> /dev/console'
+Calibrate: prev cal 0, new cal 0
+
+About to set realtime runtime...
+
+
+About to initialize PP ...
+
+Initializing ppd driver module
+
+PAL_cppi4Init : domain is 0, cfg ptr is 0x00000000 
+
+PAL_cppi4Init : domain is 0, cfg ptr is 0x00000000 
+avalanche_prefetcher_init(1028):return code 0x00
+main(149): hal_pp_fw_download SUCCESS!
+Removing ppd driver module
+
+The PP Should be running now ...
+
+mount -t jffs2 /dev/mtdblock7 /nvram
+mount return 0
+fss=
+eth_bind: create usb pids(PP Operation TI_PPM_PID_CREATED, pid_handle=26 @ NULL device
+PP Operation TI_PPM_PID_CREATED, pid_handle=27 @ NULL device
+PP Operation TI_PPM_PID_CREATED, pid_handle=28 @ NULL device
+PP Operation TI_PPM_PID_CREATED, pid_handle=29 @ NULL device
+ )
+usb0: Ethernet Gadget, version: May 2007
+usb0: using musb-hdrc, OUT ep1out IN ep1in STATUS ep2in
+usb0: MAC 00:e0:a6:75:75:80
+usb0: HOST MAC 00:50:f1:16:c6:99
+usb0: VendorID   0451
+usb0: ProductID  6060
+usb0: RNDIS ready
+
+
+========================================================
+Intel DSDK release 4.3.0.39
+Build date: Thursday, August 13 2015, 17:27:31
+Copyright ?2011, Intel Corporation.
+========================================================
+
+
+/etc/scripts/sys_check.sh: /etc/config: line 1553: CROSS: not found
+Setup memory config from file "/etc/sysctl_mem.conf" 
+vm.panic_on_oom = 2
+vm.swappiness = 0
+vm.overcommit_memory = 2
+vm.overcommit_ratio = 100
+pcd: (76): Starting TI Process Control Daemon.
+
+starting pid 79, tty '/dev/tts/0': '/bin/sh --login /etc/scripts/start_cli.sh > /dev/console 2> /dev/console'
+pcd: (76): Error: Unable to open configuration file /etc/scripts/dsg.pcd.
+pcd: (76): Loaded 60 rules.
+pcd: Initialization complete.
+pcd: (76): Starting process /usr/sbin/watchdog_rt (Rule SYSTEM_WATCHDOG).
+pcd: (76): Starting process /usr/sbin/logger (Rule SYSTEM_LOGGER).
+pcd: (76): Starting process /usr/sbin/gptimer (Rule SYSTEM_GPTIMER).
+pcd: (76): Rule SYSTEM_WATCHDOG: Success (Process /usr/sbin/watchdog_rt (80)).
+TI Watchdog-RT daemon started <kick interval = 10 seconds>
+main:803 (pid=82): Initialized successfully, timer tick 50ms
+pcd: (76): Rule SYSTEM_GPTIMER: Success (Process /usr/sbin/gptimer (82)).
+
+
+>>>
+Console, CLI version 1.0.0.5
+Type 'help' for list of commands
+
+mainMenu> TI Logger: Init complete
+pcd: (76): Rule SYSTEM_LOGGER: Success (Process /usr/sbin/logger (81)).
+pcd: (76): Starting process /usr/sbin/gim (Rule SYSTEM_GIM).
+pcd: (76): Rule SYSTEM_GIM: Success (Process /usr/sbin/gim (85)).
+pcd: (76): Rule SYSTEM_LASTRULE: Success.
+pcd: (76): Rule PREDOCSIS_LASTRULE: Success.
+pcd: (76): Starting process echo (Rule DOCSIS_APPRUN).
+pcd: (76): Rule DOCSIS_APPRUN: Success (Process echo (86)).
+pcd: (76): Starting process /usr/sbin/docsis_init_once (Rule DOCSIS_INITONCE).
+iniparser: cannot open /var/tmp/lsddb_rt.ini
+pcd: (76): Rule DOCSIS_INITONCE: Success (Process /usr/sbin/docsis_init_once (87)).
+pcd: (76): Starting process /usr/sbin/upstream_manager_1q (Rule DOCSIS_US1Q).
+pcd: (76): Starting process insmod (Rule DOCSIS_SOCIFDRV).
+pcd: (76): Starting process /usr/sbin/cm_status (Rule DOCSIS_CMSTATUS).
+pcd: (76): Rule DOCSIS_CMSTATUS: Success (Process /usr/sbin/cm_status (91)).
+
+PAL_cppi4Init : domain is 0, cfg ptr is 0x00000000 
+RX Init CPPI: open free descriptor queue
+RX Init CPPI: allocate descriptors
+init_cppi_rx: Allocate descriptors to the embedded free queues
+RX Init CPPI: Fill free discriptor queue
+RX Init CPPI: Set DMA channel
+init_cppi_rx: Call PAL_cppi4RxChOpen channel=12, REF_CNT=1 BUF COUNT=512
+pcd: (76): Rule RX Init CPPI: Init accumulator
+DOCSIS_US1Q: SucRX Init RX CPPI pass
+cess (Process /uTX Init CPPI: open free descriptor queue
+sr/sbin/upstreamTX Init CPPI: allocate descriptors
+_manager_1q (89)init_cppi_tx: Allocate descriptors to the embedded free queues
+).
+TX Init CPPI: Fill free discriptor queue
+TX Init CPPI: Create CPGMAC TX handler
+TX Init CPPI: open mpeg TX channel
+TX Init CPPI pass
+WQ Init CPPI: open queue descriptor queue
+WQ Init pass
+MPEG driver initialization complete.
+pcd: (76): Rule DOCSIS_SOCIFDRV: Success (Process insmod (90)).
+pcd: (76): Starting process mknod (Rule DOCSIS_MKNODSOCIFDRV).
+pcd: (76): Starting process insmod (Rule DOCSIS_BRIDGE).
+pcd: (76): Rule DOCSIS_MKNODSOCIFDRV: Success (Process mknod (94)).
+pcd: (76): Starting process insmod (Rule DOCSIS_MNG).
+ Entered docsis_cppi_init 
+
+PAL_cppi4Init : domain is 0, cfg ptr is 0x00000000 
+
+PAL_cppi4Init : domain is 1, cfg ptr is 0x7F021ADC 
+ Entered docsis_cppi_DS_GROUP_init 
+
+PAL_cppi4Init : domain is 0, cfg ptr is 0x00000000 
+pcd: (76): Rule DOCSIS_MNG: Success (Process insmod (96)).
+pcd: (76): Starting process mknod (Rule DOCSIS_MKNODMNG).
+pcd: (76): Starting process insmod (Rule DOCSIS_KINTR).
+pcd: (76): Rule DOCSIS_MKNODMNG: Success (Process mknod (98)).
+pcd: (76): Rule DOCSIS_KINTR: Success (Process insmod (99)).
+pcd: (76): Starting process /usr/sbin/hal_event_mbox (Rule DOCSIS_HALEVENTMBOX).
+pcd: (76): Starting process /usr/sbin/hal_cmd_mbox (Rule DOCSIS_HALCMDMBOX).
+pcd: (76): Rule DOCSIS_BRIDGE: Success (Process insmod (95)).
+pcd: (76): Starting process insmod (Rule DOCSIS_FILTERCLASS).
+pcd: (76): Starting process insmod (Rule DOCSIS_CNI).
+
+PAL_cppi4Init : domain is 0, cfg ptr is 0x00000000 
+PP Operation TI_PPM_PID_CREATED, pid_handle=9 @ cni0 device
+pcd: (76): Rule DOCSIS_CNI: Success (Process insmod (113)).
+pcd: (76): Rule DOCSIS_FILTERCLASS: Success (Process insmod (112)).
+pcd: (76): Rule DOCSIS_HALEVENTMBOX: Success (Process /usr/sbin/hal_event_mbox (109)).
+pcd: (76): Rule DOCSIS_HALCMDMBOX: Success (Process /usr/sbin/hal_cmd_mbox (110)).
+pcd: (76): Starting process /usr/sbin/mlx (Rule DOCSIS_MLX).
+pcd: (76): Starting process /bin/sh (Rule DOCSIS_FCDEV).
+pcd: (76): Rule DOCSIS_FCDEV: Success (Process /bin/sh (136)).
+pcd: (76): Starting process /usr/sbin/dbridge_init (Rule DOCSIS_DBRIDGEINIT).
+Dbridge Init SUCSESS
+Autoconfiguration disabled for lbr0
+PP Operation TI_PPM_PID_CREATED, pid_handle=31 @ eth0 device
+--Fond Phy Id [001c:c915] is not RTL8365. Skip init--
+Ethernet PHY ID [001c:c915] @ 0
+PP Operation TI_PPM_PID_DELETED, pid_handle=26
+PP Operation TI_PPM_PID_DELETED, pid_handle=27
+PP Operation TI_PPM_PID_DELETED, pid_handle=28
+PP Operation TI_PPM_PID_DELETED, pid_handle=29
+ERROR: PP Operation ti_ppm_remove_pid_range failed
+pcd: (76): Rule DOCSIS_MLX: Success (Process /usr/sbin/mlx (135)).
+pcd: (76): Starting process /usr/sbin/hal_tuner_mgr (Rule DOCSIS_HALTUNERMGR).
+PP Operation TI_PPM_PID_CREATED, pid_handle=26 @ NULL device
+PP Operation TI_PPM_PID_CREATED, pid_handle=27 @ NULL device
+PP Operation TI_PPM_PID_CREATED, pid_handle=28 @ NULL device
+PP Operation TI_PPM_PID_CREATED, pid_handle=29 @ NULL device
+Autoconfiguration disabled for lan0
+Autoconfiguration disabled for wan0
+Autoconfiguration disabled for cni0
+pcd: (76): Rule DOCSIS_DBRIDGEINIT: Success (Process /usr/sbin/dbridge_init (148)).
+pcd: (76): Starting process /bin/sh (Rule DOCSIS_DBRIDGEMDFINIT).
+pcd: (76): Starting process /bin/sh (Rule DOCSIS_DBRIDGEL2VPNDSI).
+pcd: (76): Rule DOCSIS_HALTUNERMGR: Success (Process /usr/sbin/hal_tuner_mgr (157)).
+pcd: (76): Rule DOCSIS_DBRIDGEMDFINIT: Success (Process /bin/sh (162)).
+pcd: (76): Starting process insmod (Rule DOCSIS_PP).
+pcd: (76): Rule DOCSIS_DBRIDGEL2VPNDSI: Success (Process /bin/sh (163)).
+pcd: (76): Rule DOCSIS_PP: Success (Process insmod (174)).
+pcd: (76): Starting process /bin/sh (Rule DOCSIS_PPDEV).
+pcd: (76): Starting process /usr/sbin/ledd (Rule DOCSIS_LED).
+pcd: (76): Rule DOCSIS_HALREADY: Success.
+pcd: (76): Rule DOCSIS_LED: Success (Process /usr/sbin/ledd (178)).
+pcd: (76): Starting process /usr/sbin/mptint (Rule DOCSIS_MPT_INT).
+pcd: (76): Starting process /usr/sbin/qos_dsx_sm (Rule DOCSIS_QOSDSXSM).
+pcd: (76): Rule DOCSIS_MPT_INT: Success (Process /usr/sbin/mptint (179)).
+pcd: (76): Starting process /usr/sbin/dispatcher (Rule DOCSIS_DISPATCHER).
+netlink_open: initialized fd 6
+pcd: (76): Rule DOCSIS_DISPATCHER: Success (Process /usr/sbin/dispatcher (181)).
+pcd: (76): Starting process /usr/sbin/docsis_mac_driver (Rule DOCSIS_MACDRIVER).
+pcd: (76): Rule DOCSIS_QOSDSXSM: Success (Process /usr/sbin/qos_dsx_sm (180)).
+pcd: (76): Rule DOCSIS_PPDEV: Success (Process /bin/sh (176)).
+DRG : disable phy 125M clock pin output
+
+DRG : ccpmac_p_read_link : Phy ID1: 0000001c
+
+DRG : ccpmac_p_read_link : Phy ID2: 0000c915
+
+DRG : ccpmac_p_read_link : 0000097e
+
+pcd: (76): Starting process /usr/sbin/downstream_manager (Rule DOCSIS_DSMNGR8).
+pcd: (76): Starting process /usr/sbin/downstream_manager (Rule DOCSIS_DSMNGR7).
+pcd: (76): Starting process /usr/sbin/downstream_manager (Rule DOCSIS_DSMNGR6).
+pcd: (76): Starting process /usr/sbin/downstream_manager (Rule DOCSIS_DSMNGR5).
+pcd: (76): Starting process /usr/sbin/downstream_manager (Rule DOCSIS_DSMNGR4).
+pcd: (76): Starting process /usr/sbin/downstream_manager (Rule DOCSIS_DSMNGR3).
+pcd: (76): Starting process /usr/sbin/downstream_manager (Rule DOCSIS_DSMNGR2).
+pcd: (76): Starting process /usr/sbin/downstream_manager (Rule DOCSIS_DSMNGR1).
+pcd: (76): Rule DOCSIS_DSMNGR7: Success (Process /usr/sbin/downstream_manager (193)).
+pcd: (76): Rule DOCSIS_DSMNGR8: Success (Process /usr/sbin/downstream_manager (192)).
+pcd: (76): Rule DOCSIS_DSMNGR5: Success (Process /usr/sbin/downstream_manager (195)).
+pcd: (76): Rule DOCSIS_DSMNGR4: Success (Process /usr/sbin/downstream_manager (196)).
+pcd: (76): Rule DOCSIS_DSMNGR3: Success (Process /usr/sbin/downstream_manager (197)).
+pcd: (76): Rule DOCSIS_DSMNGR2: Success (Process /usr/sbin/downstream_manager (198)).
+pcd: (76): Rule DOCSIS_DSMNGR6: Success (Process /usr/sbin/downstream_manager (194)).
+pcd: (76): Rule DOCSIS_DSMNGR1: Success (Process /usr/sbin/downstream_manager (199)).
+pcd: (76): Starting process /usr/sbin/upstream_manager (Rule DOCSIS_USMNGR1).
+pcd: (76): Starting process /usr/sbin/upstream_manager (Rule DOCSIS_USMNGR2).
+pcd: (76): Starting process /usr/sbin/upstream_manager (Rule DOCSIS_USMNGR3).
+pcd: (76): Starting process /usr/sbin/upstream_manager (Rule DOCSIS_USMNGR4).
+pcd: (76): Rule DOCSIS_USMNGR3: Success (Process /usr/sbin/upstream_manager (202)).
+pcd: (76): Rule DOCSIS_USMNGR1: Success (Process /usr/sbin/upstream_manager (200)).
+pcd: (76): Rule DOCSIS_USMNGR2: Success (Process /usr/sbin/upstream_manager (201)).
+pcd: (76): Rule DOCSIS_USMNGR4: Success (Process /usr/sbin/upstream_manager (203)).
+pcd: (76): Rule DOCSIS_MACDRIVER: Success (Process /usr/sbin/docsis_mac_driver (185)).
+pcd: (76): Starting process /usr/sbin/snmp_agent_cm (Rule DOCSIS_SNMPAGENT).
+pcd: (76): Starting process /usr/sbin/energy_manager_app (Rule DOCSIS_EM).
+pcd: (76): Starting process /usr/sbin/bpi_auth (Rule DOCSIS_BPIAUTH).
+pcd: (76): Rule DOCSIS_EM: Success (Process /usr/sbin/energy_manager_app (205)).
+pcd: (76): Rule DOCSIS_BPIAUTH: Success (Process /usr/sbin/bpi_auth (206)).
+pcd: (76): Starting process /usr/sbin/bpi_tek (Rule DOCSIS_BPITEK).
+pcd: (76): Starting process /usr/sbin/bpi_sa_map (Rule DOCSIS_BPISAMAP).
+pcd: (76): Rule DOCSIS_BPISAMAP: Success (Process /usr/sbin/bpi_sa_map (208)).
+pcd: (76): Rule DOCSIS_BPITEK: Success (Process /usr/sbin/bpi_tek (207)).
+snmp  initialization  set NmAccess default enable True!!!
+SNMPA_CreateSocketEntry : type 0, addr = 0, port = 0, ifname = /var/tmp/cm_snmp_ctrl List = (nil)
+Cntl Entry created
+SNMPA_CreateSocketEntry : type 1, addr = c0a86401, port = 161, ifname = lan0 List = 0x67d50
+SNMPA_CreateSocketEntry : type 1, addr = c0a86401, port = 162, ifname = lan0 List = 0x67d50
+pcd: (76): Rule DOCSIS_SNMPAGENT: Success (Process /usr/sbin/snmp_agent_cm (204)).
+pcd: (76): Starting process /usr/sbin/eventmgr_cm (Rule DOCSIS_EVENTMNGR).
+pcd: (76): Rule DOCSIS_EVENTMNGR: Success (Process /usr/sbin/eventmgr_cm (218)).
+pcd: (76): Starting process /usr/sbin/ti_webserver (Rule DOCSIS_WEBSERVER).
+pcd: (76): Starting process /usr/sbin/docsis_mac_manager (Rule DOCSIS_MACMANAGER).
+pcd: (76): Starting process /sbin/udhcpd (Rule DOCSIS_DHCPSERVER).
+iniparser: cannot open /nvram/3/swt_cfg.ini
+iniparser: cannot open /nvram/1/npgroups.ini
+iniparser: cannot open /var/tmp/lsddb_rt.ini
+info, udhcp server (v0.9.7) started
+error, Unable to open /var/lib/misc/udhcpd00.host for reading
+error, Unable to open /var/lib/misc/udhcpd01.host for reading
+error, Unable to open /var/lib/misc/udhcpd02.host for reading
+error, Unable to open /var/lib/misc/udhcpd03.host for reading
+info, interface: lan0, start : c0a86402 end : c0a8641f
+
+/bin/sh: can't create /proc/sys/dev/ext_switch/1: nonexistent directory
+/bin/sh: can't create /proc/sys/dev/ext_switch/1: nonexistent directory
+/bin/sh: vconfig: not found
+PP Operation TI_PPM_VPID_CREATED, vpid_handle=31
+Autoconfiguration disabled for br0
+FcUtils_AddSysInterface: Failed to get net device struct for 
+pcd: (76): Rule DOCSIS_MACMANAGER: Success (Process /usr/sbin/docsis_mac_manager (220)).
+pcd: (76): Rule DOCSIS_LASTRULE: Success.
+pcd: (76): Starting process insmod (Rule VFE_IPTV_BRIDGE).
+
+IPTV Bridge char device init done
+pcd: (76): Rule VFE_IPTV_BRIDGE: Success (Process insmod (234)).
+pcd: (76): Starting process /bin/sh (Rule VFE_IPTV_BRIDGE_DEV).
+pcd: (76): Rule VFE_IPTV_BRIDGE_DEV: Success (Process /bin/sh (236)).
+pcd: (76): Starting process /usr/sbin/vfe_mgr_app (Rule VFE_VMA).
+pcd: (76): Rule VFE_VMA: Success (Process /usr/sbin/vfe_mgr_app (242)).
+pcd: (76): Rule VFE_LASTRULE: Success.
+
+mainMenu> help
+Console Commands for this level:
+ system               - Go to system Menu.
+ docsis               - Go to DOCSIS Menu.
+ vfe                  - Go to VFE Menu.
+ logger               - Go to Logger Menu.
+ eventm               - Go to Event Manager Menu.
+ version              - prints system version.
+ help                 - Display menu commands.
+ shortcuts            - Display key shortcuts help.
+ exit                 - Exit this sub-menu, go to previous menu.
+ shell                - Open shell command line, CLI in background.
+ quit                 - Quit and terminate CLI.
+ reboot               - Reboot the system.
+mainMenu> version
+IMAGE_NAME=dsdk_4.3.0.39-150813_ubfi.img
+VERSION=4.3.0.39
+FSSTAMP=20150813172731
+mainMenu> help[D [D [D [D shell
+Exiting to shell. Type "exit" to return back to CLI
+
+
+BusyBox v1.19.2 (2015-08-13 17:20:32 CST) built-in shell (ash)
+Enter 'help' for a list of built-in commands.
+
+# cat /proc/cpuinfo
+Processor	: ARMv6-compatible processor rev 4 (v6b)
+BogoMIPS	: 398.13
+Features	: swp half thumb fastmult edsp java 
+CPU implementer	: 0x41
+CPU architecture: 7
+CPU variant	: 0x0
+CPU part	: 0xb76
+CPU revision	: 4
+
+Hardware	: puma5
+Revision	: 0001
+Serial		: 0000000000000000
+# cat /proc/mtd
+dev:    size   erasesize  name
+mtd0: 0001e000 00001000 "U-Boot"
+mtd1: 00001000 00001000 "env1"
+mtd2: 00001000 00001000 "env2"
+mtd3: 003d0000 00001000 "UBFI1"
+mtd4: 003d0000 00001000 "UBFI2"
+mtd5: 000dc5d0 00001000 "Kernel"
+mtd6: 002a8c00 00001000 "RootFileSystem"
+mtd7: 00040000 00001000 "nvram"
+# cat /proc/filesystem
+# cat /proc/filesystems [J
+nodev	sysfs
+nodev	rootfs
+nodev	bdev
+nodev	proc
+nodev	tmpfs
+nodev	sockfs
+nodev	pipefs
+nodev	anon_inodefs
+nodev	devpts
+	squashfs
+nodev	ramfs
+nodev	jffs2
+nodev	mtd_inodefs
+# mount
+rootfs on / type rootfs (rw)
+/dev/root on / type squashfs (ro,relatime)
+proc on /proc type proc (rw,relatime)
+ramfs on /var type ramfs (rw,relatime)
+sysfs on /sys type sysfs (rw,relatime)
+tmpfs on /dev type tmpfs (rw,relatime)
+devpts on /dev/pts type devpts (rw,relatime,mode=600)
+/dev/mtdblock7 on /nvram type jffs2 (rw,relatime)
+# free -m
+             total         used         free       shared      buffers
+Mem:         62148        34448        27700            0         2184
+-/+ buffers:              32264        29884
+Swap:            0            0            0
+# net[J[J[Jdf -h
+/bin/sh: df: not found
+# lsmod
+
+vfe_iptv_bridge 7012 0 - Live 0x7f07a000
+docsis_pp 28956 0 - Live 0x7f06d000
+docsis_fltr_class 20144 0 - Live 0x7f066000
+avalanche_cnid 26988 0 - Live 0x7f05a000
+docsis_bridge 90428 4 vfe_iptv_bridge,docsis_fltr_class,avalanche_cnid, Live 0x7f038000
+kintr 14612 34 - Live 0x7f054000
+docsis_management 78464 3 docsis_fltr_class, Live 0x7f01f000
+soc_if_driver 26816 2 - Live 0x7f013000
+g_ether 43380 0 - Live 0x7f003000
+# cd /et
+# cd /etc/[J
+# l[Jcat shad
+# cat shadow [J
+root:TQwXqjVn9XBtU:0:0:99999:7:::
+# cat pas
+# cat passwd [J
+root:x:0:0:root:/:/bin/sh
+# cat[J[J[Jnetstat -ln[J[Jan
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      
+tcp        0      0 :::2323                 :::*                    LISTEN      
+udp        0      0 192.168.100.1:161       0.0.0.0:*                           
+udp        0      0 192.168.100.1:162       0.0.0.0:*                           
+udp        0      0 0.0.0.0:67              0.0.0.0:*                           
+Active UNIX domain sockets (servers and established)
+Proto RefCnt Flags       Type       State         I-Node Path
+unix  3      [ ]         DGRAM                       547 /var/tmp/dispatcher_ctrl
+unix  2      [ ]         DGRAM                       630 /var/tmp/cm_snmp_ctrl
+unix  2      [ ]         DGRAM                       656 /var/tmp/cm_evmgr_ctrl
+unix  2      [ ]         DGRAM                       710 
+# cat version
+cat: can't open 'version': No such file or directory
+# cat ver
+# cat versions [J
+IMAGE_NAME=dsdk_4.3.0.39-150813_ubfi.img
+VERSION=4.3.0.39
+FSSTAMP=20150813172731
+# ls[J[Jls
+versions                   services                   hosts
+udhcpd.conf                securetty                  host.conf
+udev                       scripts                    group
+sysctl_mem.conf            rsa_key.priv               gateways
+snmp_cm_nv_test.txt        resolv.conf                fstab
+snmp_cm_nv_production.txt  protocols                  docsis
+snmp_cm_nv_notif.txt       profile                    config
+snmp_cm_nv_nmstrap.txt     passwd                     agent_cm_test.cnf
+snmp_cm_nv_atp.txt         lsddb_default.ini          agent_cm_production.cnf
+snmp_cm_nv.txt             inittab                    agent_cm.cnf
+shells                     init.d
+shadow                     index.html
+# cat ser[Jcur
+# cat securetty [J
+tts/0
+tts/1
+tty
+console
+tty1
+tty2
+pts/0
+pts/1
+# ls
+versions                   services                   hosts
+udhcpd.conf                securetty                  host.conf
+udev                       scripts                    group
+sysctl_mem.conf            rsa_key.priv               gateways
+snmp_cm_nv_test.txt        resolv.conf                fstab
+snmp_cm_nv_production.txt  protocols                  docsis
+snmp_cm_nv_notif.txt       profile                    config
+snmp_cm_nv_nmstrap.txt     passwd                     agent_cm_test.cnf
+snmp_cm_nv_atp.txt         lsddb_default.ini          agent_cm_production.cnf
+snmp_cm_nv.txt             inittab                    agent_cm.cnf
+shells                     init.d
+shadow                     index.html
+# ls /
+var.tar  usr      share    proc     lib      dev
+var      sys      sbin     nvram    etc      bin
+# tar tzf /a[Jvar
+# tar tzf /var[J[J[J[Jvar/tar
+tar: invalid option -- z
+BusyBox v1.19.2 (2015-08-13 17:20:32 CST) multi-call binary.
+
+Usage: tar -[xtmvO] [-f TARFILE] [-C DIR] [FILE]...
+
+# 
+# tar tzf /var/tar[Jf /var/tar[J[10Df /var/tar
+tar: can't open '/var/tar': No such file or directory
+# 
+# tar tf /var/tar[J[J[J[J[J.tar
+var/
+var/lib/
+var/lib/misc/
+var/lib/misc/udhcpd.leases
+var/cache/
+var/cache/dproxy.cache
+var/lock/
+var/proc/
+var/run/
+var/flash/
+var/log/
+var/tmp/
+var/tmp/passwd
+var/tmp/hosts
+var/tmp/group
+var/tmp/shadow
+var/tmp/udhcpd.conf
+var/tmp/resolv.conf
+var/tmp/gateways
+var/dev/
+var/sys/
+# cat /var/cache/dpro
+# cat /var/cache/dproxy.cache [J
+# ls
+versions                   services                   hosts
+udhcpd.conf                securetty                  host.conf
+udev                       scripts                    group
+sysctl_mem.conf            rsa_key.priv               gateways
+snmp_cm_nv_test.txt        resolv.conf                fstab
+snmp_cm_nv_production.txt  protocols                  docsis
+snmp_cm_nv_notif.txt       profile                    config
+snmp_cm_nv_nmstrap.txt     passwd                     agent_cm_test.cnf
+snmp_cm_nv_atp.txt         lsddb_default.ini          agent_cm_production.cnf
+snmp_cm_nv.txt             inittab                    agent_cm.cnf
+shells                     init.d
+shadow                     index.html
+# iptables
+/bin/sh: iptables: not found
+# cat pro
+# cat pro[Jfi
+# cat profile [J
+profile_override_file=/nvram/profile
+if [ -e $profile_override_file ]; then
+    # Override profile
+    if [ "$0" == "/etc/init.d/rcS" ]; then
+        # Log only on 1st access
+        echo "Using profile: $profile_override_file"
+    fi
+    . $profile_override_file
+else
+    # Set default Stack - 64k
+    ulimit -s 64
+
+    # Lock process memory for all processes
+    if [ -e /lib/liblock_mem.so ]; then
+        export LD_PRELOAD="/lib/liblock_mem.so"
+    fi
+fi
+
+# ls -l /lib/libbl[J[Jlo
+# ls -l /lib/liblo[J
+liblock_mem.so         liblogger_ldplugin.so
+
+# ls -l /lib/liblo[J
+liblock_mem.so         liblogger_ldplugin.so
+
+# ls -l /lib/liblo[J
+liblock_mem.so         liblogger_ldplugin.so
+
+# ls -l /lib/liblo[Jck_mem
+# ls -l /lib/liblock_mem.so [J
+-rwxrwxrwx    1      4008 /lib/liblock_mem.so
+# ls
+versions                   services                   hosts
+udhcpd.conf                securetty                  host.conf
+udev                       scripts                    group
+sysctl_mem.conf            rsa_key.priv               gateways
+snmp_cm_nv_test.txt        resolv.conf                fstab
+snmp_cm_nv_production.txt  protocols                  docsis
+snmp_cm_nv_notif.txt       profile                    config
+snmp_cm_nv_nmstrap.txt     passwd                     agent_cm_test.cnf
+snmp_cm_nv_atp.txt         lsddb_default.ini          agent_cm_production.cnf
+snmp_cm_nv.txt             inittab                    agent_cm.cnf
+shells                     init.d
+shadow                     index.html
+# cat [J[J[J[Jupti
+/bin/sh: upti: not found
+# uptime
+/bin/sh: uptime: not found
+# ls
+versions                   services                   hosts
+udhcpd.conf                securetty                  host.conf
+udev                       scripts                    group
+sysctl_mem.conf            rsa_key.priv               gateways
+snmp_cm_nv_test.txt        resolv.conf                fstab
+snmp_cm_nv_production.txt  protocols                  docsis
+snmp_cm_nv_notif.txt       profile                    config
+snmp_cm_nv_nmstrap.txt     passwd                     agent_cm_test.cnf
+snmp_cm_nv_atp.txt         lsddb_default.ini          agent_cm_production.cnf
+snmp_cm_nv.txt             inittab                    agent_cm.cnf
+shells                     init.d
+shadow                     index.html
+# cat /pro
+# cat /proc/[Jload
+# cat /proc/loadavg [J
+0.59 0.40 0.18 1/88 1436
+# 

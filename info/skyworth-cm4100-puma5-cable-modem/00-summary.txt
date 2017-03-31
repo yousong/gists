@@ -1,0 +1,13 @@
+CPU: ARM1176, rev 4
+Flash: 8MB
+RAM: 64MB
+Power: 12V, 1A
+
+1 RJ45 connector
+1 coaxical cable connector
+5 LEDs
+4 UART serial pins
+
+LAN address 192.168.100.1
+Listened on TCP port 2323 for telnet connection
+Root password hash: TQwXqjVn9XBtU

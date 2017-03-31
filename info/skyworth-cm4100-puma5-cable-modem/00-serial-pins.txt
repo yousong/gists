@@ -1,0 +1,5 @@
+With the board placed face up and those LEDs near you, the serial pins are at the bottom-right corner, labeled with "RS232".
+
+    LED(red)  LED(green)  LED(green)  LED(green)  LED(green)  [ o o o o ]
+
+Pin functions from left to right are: VCC, RX, TX, GND
