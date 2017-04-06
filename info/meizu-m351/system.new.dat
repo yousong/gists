@@ -1,0 +1,30 @@
+Line in `updater-script`
+
+	block_image_update("/dev/block/mmcblk0p1", package_extract_file("system.transfer.list"), "system.new.dat", "system.patch.dat");
+
+Relevant files
+
+	system.new.dat
+	system.patch.dat
+	system.transfer.list
+
+Sample `system.transfer.list`
+
+	1
+	206890
+	erase 2,0,262144
+	new 34,0,32770,32833,32835,33347,65535,65536,65538,66050,98301,98304,98306,98369,98371,98883,131071,131072,131074,131586,144683,163840,163842,163905,163907,164419,196607,196608,196610,229376,229378,229441,229443,229955,262143
+
+The first `1` is the version of the mechanism, not the version of the firmware
+
+The second line content `206890` is for total number of blocks to be updated
+
+The third line `erase` is for erasing the target device.  `2` is for indicating that there are 2 numbers for range specification: block range 0-262144.
+
+The fourth line `new` is for writing content from `system.new.dat` to the target device.  `34` is for specififying that there are 17 ranges to be updated.  The updater is expected to read `system.new.dat` sequentially and write them to the specified ranges.
+
+Normally one `BLOCK_SIZE` is 4096 bytes
+
+- Convert sparse Android data image to filesystem ext4 image, https://github.com/xpirt/sdat2img
+- Android5.0的更新包中system.new.dat文件的解包，http://blog.csdn.net/howellzhu/article/details/41967523
+- updater/blockimg.cpp:PerformBlockImageUpdate()

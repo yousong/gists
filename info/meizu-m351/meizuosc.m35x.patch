@@ -1,0 +1,71 @@
+diff --git a/drivers/gpu/pvr/services4/system/exynos5410/sec_dvfs.c b/drivers/gpu/pvr/services4/system/exynos5410/sec_dvfs.c
+index e5e108c..a6423f2 100755
+--- a/drivers/gpu/pvr/services4/system/exynos5410/sec_dvfs.c
++++ b/drivers/gpu/pvr/services4/system/exynos5410/sec_dvfs.c
+@@ -48,7 +48,8 @@
+ /* #define USING_BOOST_UP_MODE */
+ /* #define USING_BOOST_DOWN_MODE */
+ 
+-#define setmask(a, b) (((1 < a) < 24)|b)
++/* NOTE: this was never actually used */
++#define setmask(a, b) (((1 < a) << 24)|b)
+ #define getclockmask(a) ((a | 0xFF000000) > 24)
+ #define getlevelmask(a) (a | 0xFFFFFF)
+ 
+diff --git a/drivers/media/video/exynos/mfc/s5p_mfc.c b/drivers/media/video/exynos/mfc/s5p_mfc.c
+index 394a353..679fd3d 100644
+--- a/drivers/media/video/exynos/mfc/s5p_mfc.c
++++ b/drivers/media/video/exynos/mfc/s5p_mfc.c
+@@ -200,17 +200,6 @@ void mfc_sched_worker(struct work_struct *work)
+ 		mfc_err("no mfc device to run\n");
+ }
+ 
+-inline int clear_hw_bit(struct s5p_mfc_ctx *ctx)
+-{
+-	struct s5p_mfc_dev *dev = ctx->dev;
+-	int ret = -1;
+-
+-	if (!atomic_read(&dev->watchdog_run))
+-		ret = test_and_clear_bit(ctx->num, &dev->hw_lock);
+-
+-	return ret;
+-}
+-
+ /* Helper functions for interrupt processing */
+ /* Remove from hw execution round robin */
+ inline void clear_work_bit(struct s5p_mfc_ctx *ctx)
+diff --git a/drivers/media/video/exynos/mfc/s5p_mfc_common.h b/drivers/media/video/exynos/mfc/s5p_mfc_common.h
+index 271f176..8b7b41e 100644
+--- a/drivers/media/video/exynos/mfc/s5p_mfc_common.h
++++ b/drivers/media/video/exynos/mfc/s5p_mfc_common.h
+@@ -760,7 +760,16 @@ struct s5p_mfc_fmt {
+ };
+ 
+ int get_framerate(struct timeval *to, struct timeval *from);
+-inline int clear_hw_bit(struct s5p_mfc_ctx *ctx);
++static inline int clear_hw_bit(struct s5p_mfc_ctx *ctx)
++{
++	struct s5p_mfc_dev *dev = ctx->dev;
++	int ret = -1;
++
++	if (!atomic_read(&dev->watchdog_run))
++		ret = test_and_clear_bit(ctx->num, &dev->hw_lock);
++
++	return ret;
++}
+ 
+ #if defined(CONFIG_EXYNOS_MFC_V5)
+ #include "regs-mfc-v5.h"
+diff --git a/include/linux/compiler-gcc.h b/include/linux/compiler-gcc.h
+index e5834aa..9e5022a 100644
+--- a/include/linux/compiler-gcc.h
++++ b/include/linux/compiler-gcc.h
+@@ -97,7 +97,7 @@
+ #define __gcc_header(x) #x
+ #define _gcc_header(x) __gcc_header(linux/compiler-gcc##x.h)
+ #define gcc_header(x) _gcc_header(x)
+-#include gcc_header(__GNUC__)
++#include gcc_header(4)
+ 
+ #if !defined(__noclone)
+ #define __noclone	/* not needed */
