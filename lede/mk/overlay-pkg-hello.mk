@@ -1,3 +1,17 @@
+# NOTE: overlay feature is too tricky to get right and the build system has
+# dropped support for it
+#
+# The gist is still here just for archive purposes
+#
+# To customize build behaviours, there are better cleaner ways
+#
+# - Edit directly the code at your hand and try pushing it to the mainstream if
+#   you think the change can also benefit broadwide others.
+# - or, create a feed of packages of your own and tell scripts/feeds to prefer
+#   them instead of the original ones by using the "-p feedname" option.
+#
+#
+#
 # Demo for example usage of OpenWrt/LEDE BuildOverlay.
 #
 # Originally posted to lede-dev mailing list through a link to github gist:
