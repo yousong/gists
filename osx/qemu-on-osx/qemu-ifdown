@@ -1,0 +1,5 @@
+#!/bin/sh
+
+ifname="$1"
+ifconfig bridge1 deletem "$ifname"
+

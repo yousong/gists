@@ -1,0 +1,12 @@
+#!/bin/sh
+#
+# - drive interface virtio will not work on macosx
+# - qemu-bridge-helper at the moment has no support for macosx
+#
+qemu-system-x86_64 \
+	-enable-hax \
+	-drive file=$PWD/disk.img,format=raw,if=ide \
+	-netdev "tap,id=lan,br=bridge1,script=$PWD/qemu-ifup,downscript=$PWD/qemu-ifdown" \
+	-device virtio-net-pci,id=devlan,netdev=lan,mac=52:54:00:55:55:55 \
+	-netdev "tap,id=wan,br=bridge1,script=$PWD/qemu-ifup,downscript=$PWD/qemu-ifdown" \
+	-device virtio-net-pci,id=devwan,netdev=wan,mac=52:54:00:55:55:56
