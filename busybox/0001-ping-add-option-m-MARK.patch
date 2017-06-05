@@ -1,0 +1,95 @@
+From f6bab3888d869c9fceba2bea41c62f9fa1caa588 Mon Sep 17 00:00:00 2001
+From: Yousong Zhou <yszhou4tech@gmail.com>
+Date: Sun, 23 Apr 2017 17:43:08 +0800
+Subject: [PATCH] ping: add option: -m MARK
+
+---
+ networking/ping.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/networking/ping.c b/networking/ping.c
+index ef31e000b..de3480e64 100644
+--- a/networking/ping.c
++++ b/networking/ping.c
+@@ -93,6 +93,7 @@
+ //usage:	IF_PING6(
+ //usage:     "\n	-4,-6		Force IP or IPv6 name resolution"
+ //usage:	)
++//usage:     "\n	-m MARK		use  mark to tag the packets going out"
+ //usage:     "\n	-c CNT		Send only CNT pings"
+ //usage:     "\n	-s SIZE		Send SIZE data bytes in packets (default 56)"
+ //usage:     "\n	-t TTL		Set TTL"
+@@ -341,7 +342,7 @@ static int common_ping_main(sa_family_t af, char **argv)
+ 
+ /* Full(er) version */
+ 
+-#define OPT_STRING ("qvc:+s:t:+w:+W:+I:np:4" IF_PING6("6"))
++#define OPT_STRING ("qvc:+s:t:+w:+W:+I:np:4" IF_PING6("6") "m:")
+ enum {
+ 	OPT_QUIET = 1 << 0,
+ 	OPT_VERBOSE = 1 << 1,
+@@ -355,6 +356,7 @@ enum {
+ 	OPT_p = 1 << 9,
+ 	OPT_IPV4 = 1 << 10,
+ 	OPT_IPV6 = (1 << 11) * ENABLE_PING6,
++	OPT_m = 1 << 12,
+ };
+ 
+ 
+@@ -378,6 +380,8 @@ struct globals {
+ 	void *snd_packet; /* [datalen + ipv4/ipv6_const] */
+ 	const char *hostname;
+ 	const char *dotted;
++	uint32_t mark;
++	bool mark_set;
+ 	union {
+ 		struct sockaddr sa;
+ 		struct sockaddr_in sin;
+@@ -403,6 +407,8 @@ struct globals {
+ #define total_secs   (G.total_secs  )
+ #define hostname     (G.hostname    )
+ #define dotted       (G.dotted      )
++#define mark         (G.mark        )
++#define mark_set     (G.mark_set    )
+ #define pingaddr     (G.pingaddr    )
+ #define rcvd_tbl     (G.rcvd_tbl    )
+ #define INIT_G() do { \
+@@ -837,6 +843,8 @@ static void ping(len_and_sockaddr *lsa)
+ 	printf(": %d data bytes\n", datalen);
+ 
+ 	create_icmp_socket(lsa);
++	if (mark_set && setsockopt(pingsock, SOL_SOCKET, SO_MARK, &mark, sizeof(mark)))
++		bb_perror_msg_and_die("setsockopt(%s) %x", "MARK", mark);
+ 	/* untested whether "-I addr" really works for IPv6: */
+ 	if (str_I)
+ 		setsockopt_bindtodevice(pingsock, str_I);
+@@ -860,13 +868,13 @@ static void ping(len_and_sockaddr *lsa)
+ static int common_ping_main(int opt, char **argv)
+ {
+ 	len_and_sockaddr *lsa;
+-	char *str_s, *str_p;
++	char *str_s, *str_p, *str_m;
+ 
+ 	INIT_G();
+ 
+ 	/* exactly one argument needed; -v and -q don't mix; -c NUM, -t NUM, -w NUM, -W NUM */
+ 	opt_complementary = "=1:q--v:v--q";
+-	opt |= getopt32(argv, OPT_STRING, &pingcount, &str_s, &opt_ttl, &deadline, &timeout, &str_I, &str_p);
++	opt |= getopt32(argv, OPT_STRING, &pingcount, &str_s, &opt_ttl, &deadline, &timeout, &str_I, &str_p, &str_m);
+ 	if (opt & OPT_s)
+ 		datalen = xatou16(str_s); // -s
+ 	if (opt & OPT_I) { // -I
+@@ -879,6 +887,10 @@ static int common_ping_main(int opt, char **argv)
+ 	}
+ 	if (opt & OPT_p)
+ 		G.pattern = xstrtou_range(str_p, 16, 0, 255);
++	if (opt & OPT_m) {
++		mark = xatou32(str_m); // -m
++		mark_set = true;
++	}
+ 
+ 	myid = (uint16_t) getpid();
+ 	hostname = argv[optind];
+-- 
+2.12.2
+
