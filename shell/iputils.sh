@@ -20,7 +20,9 @@ ip_masklen_net() {
 	local masklen="$2"
 	local a b c
 
-	if [ "$masklen" -ge 24 ]; then
+	if [ "$masklen" -ge 32 ]; then
+		echo "$ip/$masklen"
+	elif [ "$masklen" -ge 24 ]; then
 		a="$(echo "$ip" | cut -d . -f 1-3)"
 		b="$(echo "$ip" | cut -d . -f 4)"
 		c="$(((1<<($masklen-24)) - 1))"
@@ -49,6 +51,27 @@ ip_masklen_net() {
 		c="$(($b & $c))"
 		echo "$c.0.0.0/$masklen"
 	fi
+}
+
+ip_masklen_net_test() {
+	local ip masklen
+	local i j k l
+
+	for i in \
+			192.168.33.129/0:0.0.0.0/0 \
+			192.168.33.129/1:128.0.0.0/1 \
+			192.168.33.129/24:192.168.33.0/24 \
+			192.168.33.129/25:192.168.33.128/25 \
+			192.168.33.129/32:192.168.33.129/32 \
+			; do
+		j="${i#*:}"
+		i="${i%:*}"
+		ip="${i%/*}"
+		masklen="${i#*/}"
+		k="$(ip_masklen_net "$ip" "$masklen")"
+		[ "$j" = "$k" ] && l=ok || l=bad
+		echo "$l $i -> $k"
+	done
 }
 
 # longest binary prefix between two integers
