@@ -2,6 +2,8 @@ CONFIG_TARGET_ar71xx=y
 CONFIG_TARGET_ar71xx_generic=y
 CONFIG_TARGET_ar71xx_generic_DEVICE_hiwifi-hc6361=y
 CONFIG_PACKAGE_block-mount=y
+CONFIG_PACKAGE_samba36-server=y
+CONFIG_PACKAGE_minidlna=y
 CONFIG_PACKAGE_luci=y
 
 CONFIG_PACKAGE_openvpn-openssl=y
@@ -11,21 +13,20 @@ CONFIG_OPENCONNECT_OPENSSL=y
 CONFIG_PACKAGE_luci-proto-openconnect=y
 
 CONFIG_PACKAGE_xl2tpd=y
-CONFIG_PACKAGE_osocks=y
-CONFIG_PACKAGE_utdnsd=y
 
 CONFIG_PACKAGE_ddns-scripts=y
 
 CONFIG_PACKAGE_tcpdump-mini=y
 
-CONFIG_PACKAGE_omysocks=y
-CONFIG_PACKAGE_shadowsocks-libev-libopenssl-ss-local=y
+CONFIG_PACKAGE_luci-app-shadowsocks-libev=y
+CONFIG_PACKAGE_shadowsocks-libev-ss-local=y
+CONFIG_PACKAGE_shadowsocks-libev-ss-redir=y
+CONFIG_PACKAGE_shadowsocks-libev-ss-rules=y
+CONFIG_PACKAGE_shadowsocks-libev-ss-tunnel=y
 
 CONFIG_PACKAGE_ip=y
 CONFIG_PACKAGE_ipset=y
 CONFIG_PACKAGE_iptables-mod-conntrack-extra=y
-
-CONFIG_PACKAGE_kmod-macvlan=y
 
 CONFIG_PACKAGE_ppp-mod-pppol2tp=y
 CONFIG_PACKAGE_ppp-mod-pptp=y
