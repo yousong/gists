@@ -1,5 +1,5 @@
-ipset=setblocked
-dns=127.0.0.1#8053
+ipset=ss_rules_dst_forward
+dns=127.0.0.1#8054
 
 # Twitter
 twitter.com
@@ -80,7 +80,7 @@ perl.org
 changeip.com
 lwn.net
 
-ipset=setnormal
+ipset=ss_rules_dst_bypass
 #dns=114.114.114.114
 dns=
 baidu.com

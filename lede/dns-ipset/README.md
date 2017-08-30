@@ -1,9 +1,13 @@
-Configure /etc/config/dhcp to let domains be resolved by specified servers and
-to add the result to specified ipsets
+Generate dnsmasq config snippet to
 
-To use it
+ - resolve select domains using desired dns server
+ - add the resolved result to desired ipset
+
+The genereated by will be `/etc/dnsmasq.ipset` by default.  The output dir can be controlled by environment variable `o_confdir`, e.g.
 
 	./do-dns-ipset.sh dns-ipset.txt
+	o_confdir=/tmp/dnsmasq.d ./do-dns-ipset.sh dns-ipset.txt
 
-This will generate `/tmp/dnsmasq.d/dnsmasq.ipset` file to be included by the
-`--conf-dir` option of dnsmasq.
+To use the generated config file, add the following line to `/etc/dnsmasq.conf`
+
+	conf-file=/etc/dnsmasq.ipset

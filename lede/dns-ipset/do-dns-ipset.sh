@@ -3,7 +3,7 @@
 # Copyright 2016-2017 (c) Yousong Zhou
 #
 #
-o_confdir=/tmp/dnsmasq.d
+o_confdir="${o_confdir:-/etc/}"
 
 __errmsg() {
 	echo "$1" >&2
