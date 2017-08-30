@@ -2,7 +2,7 @@ CONFIG_TARGET_ramips=y
 CONFIG_TARGET_ramips_rt305x=y
 CONFIG_TARGET_ramips_rt305x_DEVICE_vocore-16M=y
 
-CONFIG_PACKAGE_openvpn-polarssl=y
+CONFIG_PACKAGE_openvpn-mbedtls=y
 CONFIG_PACKAGE_luci=y
 CONFIG_PACKAGE_ddns-scripts=y
 # CONFIG_PACKAGE_wpad-mini is not set
