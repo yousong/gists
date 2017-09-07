@@ -3,6 +3,7 @@ import logging
 import time
 import json
 import socket
+import udpio
 
 from tornado.ioloop import IOLoop
 from tornado.tcpserver import TCPServer
@@ -70,6 +71,7 @@ class EchoUDPServer(object):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.setblocking(False)
         self.fd = self.sock.fileno()
+        udpio.want_pktinfo(self.fd)
         if ioloop is None:
             ioloop = IOLoop.current()
         self.ioloop = ioloop
@@ -83,8 +85,9 @@ class EchoUDPServer(object):
         if events & IOLoop.READ:
             ts = time.time()
             localip, localport = self.sock.getsockname()
-            data, remoteaddr = self.sock.recvfrom(4096)
-            remoteip, remoteport = remoteaddr
+            rv, data, from_, to = udpio.recv_from_to(fd, 4096)
+            localip = to[0]
+            remoteip, remoteport = from_
             resp = {
                 'ts': ts,
                 'data': data,
@@ -95,7 +98,7 @@ class EchoUDPServer(object):
             }
             resp = json.dumps(resp)
             resp += '\n'
-            self.sock.sendto(resp, remoteaddr)
+            udpio.send_to_from(fd, resp, from_, (localip, localport))
             logger.info('udp from %s:%s -> %s:%s', remoteip, remoteport, localip, localport)
         elif events & IOLoop.ERROR:
             logger.error('udp %s event error', self.sock.getsockname())
