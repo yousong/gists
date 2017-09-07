@@ -1,3 +1,17 @@
+#
+# Useful links
+#
+#  - Extensions to the python2 sockets module that add 'recvmsg' and 'sendmsg',
+#    https://github.com/metricube/PyXAPI
+#  - PYTHON / CTYPES / SOCKET / DATAGRAM,
+#    https://www.osso.nl/blog/python-ctypes-socket-datagram/
+#
+#    It's useful serving as reference guide or example code even though the
+#    content is about sendto/recvfrom
+#
+#  - socket module of Python 3.3 has sendmsg, recvmsg support,
+#    https://docs.python.org/3/library/socket.html#socket.socket.recvmsg
+#
 import ctypes
 import socket
 import os
