@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) Yousong Zhou <yszhou4tech@gmail.com>
+ *
+ * Use trafgen, mausezahn for more sophisticated scenarios
+ *
+ */
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
 
