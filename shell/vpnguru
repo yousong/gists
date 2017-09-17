@@ -79,13 +79,18 @@ vpnguru_ipset_mkadd() {
 vpnguru_iptchains_init() {
 	iptables-restore --noflush <<-EOF
 		*mangle
-		-I OUTPUT 1 -m set --match-set vpnguru_dst_forward dst -j MARK --set-mark 2
-		-I PREROUTING 1 -m set --match-set vpnguru_dst_forward dst -j MARK --set-mark 2
-		-I PREROUTING 1 -p tcp -m tcp --tcp-flags RST RST -m recent --name vpnguru_recentrst --set --rsource
+		:vpnguru_mark -
+		:vpnguru_mark_ -
+		-I OUTPUT 1 -j vpnguru_mark_
+		-I PREROUTING 1 -j vpnguru_mark
+		-A vpnguru_mark -j vpnguru_mark_
+		-A vpnguru_mark -p tcp -m tcp --tcp-flags RST RST -m recent --name vpnguru_recentrst --set --rsource
+		-A vpnguru_mark_ -m set --match-set vpnguru_dst_bypass_ dst -j RETURN
+		-A vpnguru_mark_ -m set --match-set vpnguru_dst_forward dst -j MARK --set-mark 2
+		-A vpnguru_mark_ -m set --match-set vpnguru_dst_forward_recentrst_ dst -j MARK --set-mark 2
 		COMMIT
 		*nat
 		-I PREROUTING 1 -m recent --name vpnguru_recentrst --rcheck --rdest --seconds 3 --hitcount 3 -j SET --add-set vpnguru_dst_forward_recentrst_ dst --exist
-		-I PREROUTING 1 -m set --match-set vpnguru_dst_forward_recentrst_ dst -j MARK --set-mark 2
 		COMMIT
 	EOF
 }
