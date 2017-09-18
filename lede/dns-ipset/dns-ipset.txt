@@ -1,5 +1,5 @@
-ipset=ss_rules_dst_forward
-dns=127.0.0.1#8054
+ipset=vpnguru_dst_forward
+dns=8.8.8.8
 
 # Twitter
 twitter.com
