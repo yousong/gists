@@ -79,6 +79,8 @@ travis-ci.org
 perl.org
 changeip.com
 lwn.net
+github.com
+medium.com
 
 ipset=ss_rules_dst_bypass
 #dns=114.114.114.114
