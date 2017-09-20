@@ -2,6 +2,13 @@
 #
 # Copyright 2016-2017 (c) Yousong Zhou
 #
+# Automatic ways of making a list
+#
+#	wget -O - https://github.com/gfwlist/tinylist/raw/master/tinylist.txt \
+#		| base64 -d \
+#		| sed -n '/Tiny List Start/,/Tiny List End/p' \
+#		| grep -oE '[^.|/%]+\.[^.|/%]+$' \
+#		| sort -u
 #
 o_confdir="${o_confdir:-/etc/}"
 
