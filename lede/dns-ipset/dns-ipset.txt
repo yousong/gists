@@ -5,25 +5,31 @@ dns=8.8.8.8
 twitter.com
 t.co
 twimg.com
+
 # Facebook
 facebook.com
 fbcdn.net
+
 # Vimeo
 vimeo.com
 vimeocdn.com
 vimeo-hp-videos.global.ssl.fastly.net
 akamaihd.net
+
 # YouTube
 googlevideo.com
 youtube.com
 ytimg.com
 youtube-nocookie.com
 youtu.be
+
 # Amazon AWS
 amazonaws.com
 awsstatic.com
+
 # Wikiepdia
 wikipedia.org
+
 # Google
 google.com
 google.com.hk
@@ -40,47 +46,52 @@ blogspot.sg
 goo.gl
 golang.org
 googlesource.com
+
 # Google Play
 googleusercontent.com
 android.clients.google.com
+
 # Reddit
 reddit.com
 redditstatic.com
 redditmedia.com
+
 # Apple
 #akadns.net
 #edgekey.net
 #akamaiedge.net
 #akamai.net
+
 # New York Times
 nytimes.com
 nyt.com
+
 # Github
 github.com
 githubusercontent.com
+
 # Others
-wordpress.com
+changeip.com
+cloudfront.net
+duolingo.com
+gnu.org
+linuxjournal.com
+lwn.net
+medium.com
 openvpn.net
-torproject.org
 pastebin.com
 pastie.org
-slideshare.net
+perl.org
 psiphon.ca
-duolingo.com
-cloudfront.net
+qemu.org
+slideshare.net
 sourceforge.net
 sprunge.us
-linuxjournal.com
+torproject.org
 torrentproject.se
-gnu.org
-qemu.org
-wp.com
 travis-ci.org
-perl.org
-changeip.com
-lwn.net
-github.com
-medium.com
+wordpress.com
+wp.com
 
 ipset=ss_rules_dst_bypass
 #dns=114.114.114.114
