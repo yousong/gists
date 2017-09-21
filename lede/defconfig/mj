@@ -1,0 +1,6 @@
+CONFIG_TARGET_ar71xx=y
+CONFIG_TARGET_ar71xx_generic=y
+CONFIG_TARGET_ar71xx_generic_DEVICE_tl-wr841-v5=y
+CONFIG_PACKAGE_luci=y
+CONFIG_PACKAGE_luci-mod-admin-full=y
+CONFIG_PACKAGE_openvpn-mbedtls=y
