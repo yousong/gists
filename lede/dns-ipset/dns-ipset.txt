@@ -8,13 +8,13 @@ twimg.com
 
 # Facebook
 facebook.com
+facebook.net
 fbcdn.net
 
 # Vimeo
 vimeo.com
 vimeocdn.com
 vimeo-hp-videos.global.ssl.fastly.net
-akamaihd.net
 
 # YouTube
 googlevideo.com
@@ -59,8 +59,6 @@ redditmedia.com
 # Apple
 #akadns.net
 #edgekey.net
-#akamaiedge.net
-#akamai.net
 
 # New York Times
 nytimes.com
@@ -70,9 +68,19 @@ nyt.com
 github.com
 githubusercontent.com
 
+# Pinterest
+pinterest.com
+pinimg.com
+
+# Akamai
+akamai.net
+akamaiedge.net
+akamaihd.net
+
 # Others
 changeip.com
 cloudfront.net
+cloudflare.com
 duolingo.com
 gnu.org
 linuxjournal.com
