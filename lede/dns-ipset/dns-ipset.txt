@@ -83,6 +83,7 @@ cloudfront.net
 cloudflare.com
 duolingo.com
 gnu.org
+lede-project.org
 linuxjournal.com
 lwn.net
 medium.com
@@ -98,6 +99,7 @@ sprunge.us
 torproject.org
 torrentproject.se
 travis-ci.org
+wireguard.com
 wordpress.com
 wp.com
 
