@@ -34,6 +34,7 @@ wikipedia.org
 google.com
 google.com.hk
 google.co.uk
+google.co.th
 google.com.sg
 google.sg
 googleapis.com
