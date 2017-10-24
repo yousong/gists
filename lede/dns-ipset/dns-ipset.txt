@@ -78,6 +78,14 @@ akamai.net
 akamaiedge.net
 akamaihd.net
 
+# TLD
+cz
+de
+hk
+nl
+th
+tw
+
 # Others
 changeip.com
 cloudfront.net
