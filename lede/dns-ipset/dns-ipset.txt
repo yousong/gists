@@ -79,6 +79,7 @@ akamaiedge.net
 akamaihd.net
 
 # TLD
+ch
 cz
 de
 hk
