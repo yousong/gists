@@ -14,16 +14,22 @@
 # NOTE: it is not expected to work out of box
 #
 
+o_ifname="${o_ifname:-wg0}"
 o_rttable="${o_rttable:-200}"
 o_fwmark="${o_fwmark:-200}"
+o_without_recentrst="${o_without_recentrst}"
+o_recentrst_filter=cat
+if [ -n "$o_without_recentrst" ]; then
+	o_recentrst_filter="grep -v recentrst"
+fi
 o_remote_servers="${o_remote_servers}"
 o_dst_forward="${o_dst_forward:-
 	8.8.8.8
 	208.67.222.222
 	208.67.220.220
 }"
-
-o_dst_bypass_="
+o_dst_bypass="
+	${o_dst_bypass}
 	0.0.0.0/8
 	10.0.0.0/8
 	100.64.0.0/10
@@ -61,11 +67,11 @@ vpnguru_flush() {
 }
 
 vpnguru_ipset_init() {
-	ipset --exist restore <<-EOF
-		create vpnguru_dst_bypass_ hash:net hashsize 64
+	$o_recentrst_filter <<-EOF | ipset --exist restore
+		create vpnguru_dst_bypass hash:net hashsize 64
 		create vpnguru_dst_forward hash:net hashsize 64
 		create vpnguru_dst_forward_recentrst_ hash:ip hashsize 64 timeout 3600
-		$(vpnguru_ipset_mkadd vpnguru_dst_bypass_ "$o_dst_bypass_ $o_remote_servers")
+		$(vpnguru_ipset_mkadd vpnguru_dst_bypass "$o_dst_bypass $o_remote_servers")
 		$(vpnguru_ipset_mkadd vpnguru_dst_forward "$o_dst_forward")
 	EOF
 }
@@ -80,7 +86,7 @@ vpnguru_ipset_mkadd() {
 }
 
 vpnguru_iptchains_init() {
-	iptables-restore --noflush <<-EOF
+	$o_recentrst_filter <<-EOF | iptables-restore --noflush
 		*mangle
 		:vpnguru_mark -
 		:vpnguru_mark_ -
@@ -88,7 +94,7 @@ vpnguru_iptchains_init() {
 		-I PREROUTING 1 -j vpnguru_mark
 		-A vpnguru_mark -j vpnguru_mark_
 		-A vpnguru_mark -p tcp -m tcp --tcp-flags RST RST -m recent --name vpnguru_recentrst --set --rsource
-		-A vpnguru_mark_ -m set --match-set vpnguru_dst_bypass_ dst -j RETURN
+		-A vpnguru_mark_ -m set --match-set vpnguru_dst_bypass dst -j RETURN
 		-A vpnguru_mark_ -m set --match-set vpnguru_dst_forward dst -j MARK --set-mark $o_fwmark
 		-A vpnguru_mark_ -m set --match-set vpnguru_dst_forward_recentrst_ dst -j MARK --set-mark $o_fwmark
 		COMMIT
@@ -100,7 +106,7 @@ vpnguru_iptchains_init() {
 
 vpnguru_route_init() {
 	ip rule add fwmark "$o_fwmark" lookup "$o_rttable"
-	ip route add default dev wg0 table "$o_rttable"
+	ip route add default dev "$o_ifname" table "$o_rttable"
 	ip route flush cache
 }
 
