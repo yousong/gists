@@ -1,0 +1,51 @@
+# vi: ft=sh
+source "$__manifest/params"
+
+# packages
+__package_update_index
+__package_upgrade_all
+for p in $o_pkgs $o_pkgs_dev; do
+	__package "$p" --state present
+done
+
+__user "$o_user" --password "$o_pass"
+__user_groups "$o_user" --group "$o_grup"
+__ssh_authorized_keys "$o_user" --key "$o_pubk"
+
+# sshd_config
+__key_value permit_root_login \
+	--file /etc/ssh/sshd_config \
+	--delimiter ' ' \
+	--key PermitRootLogin \
+	--value without-password \
+	--state present
+__key_value password_authentication \
+	--file /etc/ssh/sshd_config \
+	--delimiter ' ' \
+	--key PasswordAuthentication \
+	--value no \
+	--state present
+
+# sudoers
+__config_file "/etc/sudoers.d/$o_user" \
+	--owner root --group root --mode 600 \
+	--source - \
+	--state present <<-EOF
+		Defaults:    $o_user	env_keep += "PATH"
+		Defaults:    !$o_user	secure_path = /sbin:/bin:/usr/sbin:/usr/bin
+EOF
+__line secure_path \
+	--file "/etc/sudoers" \
+	--regex "secure_path = " \
+	--state absent
+
+__sysctl net.ipv4.ip_forward --value 1
+__iptables_rule "masquerade-$o_ifname_inet" --rule "-t nat -A POSTROUTING -o $o_ifname_inet -j MASQUERADE"
+
+# git-repo
+__git "/home/$o_user/git-repo/build-scripts" \
+	--owner "$o_user" --group "$o_user" \
+	--source https://github.com/yousong/build-scripts
+__git "/home/$o_user/git-repo/dconf" \
+	--owner "$o_user" --group "$o_user" \
+	--source https://github.com/yousong/dconf

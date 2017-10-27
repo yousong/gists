@@ -1,0 +1,33 @@
+# vi: ft=sh
+source "$__manifest/params"
+
+o_ss_conf='whattttt'
+o_ss_run="
+#!/bin/bash
+P=/home/$o_user/.usr"'
+ss_server="$P/bin/ss-server"
+ss_server_conf="$P/etc/shadowsocks-libev/air.conf"
+exec "$ss_server" -c "$ss_server_conf"
+'
+
+__config_file "$o_userprefix/etc/shadowsocks-libev/air.conf" \
+	--owner "$o_user" --group "$o_user" --mode 600 \
+	--source - \
+	--state present <<-EOF
+		$o_ss_conf
+EOF
+__daemontools_service air0 \
+	--servicedir "$o_servicedir"
+	--runfile - <<-EOF
+		$o_ss_run
+EOF
+__daemontools_service air1 \
+	--servicedir "$o_servicedir"
+	--runfile - <<-EOF
+		$o_ss_run
+EOF
+
+__line svcss \
+	--file "/etc/rc.local" \
+	--regex "$o_userprefix/bin/svscanboot &" \
+	--state present

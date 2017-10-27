@@ -1,0 +1,46 @@
+# vi: ft=sh
+source "$__manifest/params"
+
+o_wg_prik=''
+o_wg_port=''
+o_wg_conf="
+[Interface]
+PrivateKey = $o_wg_prik
+ListenPort = $o_wg_port
+
+[Peer]
+PublicKey = xxx
+AllowedIPs = yyy
+"
+o_wg_ifup="
+#!/bin/bash
+
+home=/home/$o_user"'
+
+modprobe udp_tunnel
+modprobe ip6_udp_tunnel
+insmod "$home/.usr/lib/modules/4.9.0-3-amd64/extra/wireguard.ko"
+
+ip link add wg0 type wireguard
+ip addr add 192.168.175.1/24 dev wg0
+"$home/.usr/bin/wg" setconf wg0 "$home/.usr/etc/wireguard/wg0.conf"
+ip link set wg0 up
+'
+
+__config_file "$o_userprefix/etc/wireguard/wg0.conf" \
+	--owner "$o_user" --group "$o_user" --mode 600 \
+	--source - \
+	--state present <<-EOF
+		$o_wg_conf
+EOF
+__config_file "$o_userprefix/etc/wireguard/wg0.sh" \
+	--owner "$o_user" --group "$o_user" --mode 755 \
+	--source - \
+	--state present <<-EOF
+		$o_wg_ifup
+EOF
+
+__line wgifup \
+	--file "/etc/rc.local" \
+	--regex "$o_userprefix/etc/wireguard/wg0.sh" \
+	--state present
