@@ -1,0 +1,83 @@
+# vi: ft=sh
+source "$__manifest/params"
+
+o_wg_prik=''
+
+o_strongswan_pkgs='strongswan strongswan-swanctl libcharon-extra-plugins'
+o_strongswan_swanctl_pool='192.168.174.0/24'
+o_strongswan_swanctl_psk=''
+o_strongswan_swanctl_xauthpass=''
+o_strongswan_swanctl_conf="
+connections {
+	psk-xauth {
+		local {
+			auth = psk
+		}
+		remote {
+			auth = psk
+		}
+		remote2 {
+			auth = xauth
+		}
+		children {
+			net {
+				local_ts = 0.0.0.0/0
+				remote_ts = $o_strongswan_swanctl_pool
+			}
+		}
+		pools = p
+	}
+}
+
+secrets {
+	ike {
+		id = 0.0.0.0/0
+		secret = \"$o_strongswan_swanctl_psk\"
+	}
+	xauth {
+		secret = \"$o_strongswan_swanctl_xauthpass\"
+	}
+}
+
+pools {
+	p {
+		addrs = $o_strongswan_swanctl_pool
+		dns = 8.8.8.8,8.8.4.4
+	}
+}
+"
+
+
+
+for p in $o_strongswan_pkgs; do
+	__package "$p" --state present
+done
+
+
+__config_file /etc/swanctl/swanctl.conf \
+	--owner root --group root --mode 600 \
+	--source - \
+	--state present <<EOF
+$o_strongswan_swanctl_conf
+EOF
+
+
+__config_file /etc/strongswan.d/charon-swanctl.conf \
+	--owner root --group root --mode 644 \
+	--source - \
+	--state present <<"EOF"
+charon {
+	start-scripts {
+		swanctl = /usr/sbin/swanctl --load-all
+	}
+}
+EOF
+
+# start strongswan service at boot
+#
+
+__iptables_rule "ipsec-mss" --rule "-t mangle -A FORWARD -o ens3 \
+	-p tcp -m tcp --tcp-flags SYN,RST SYN \
+	-m conntrack --ctorigsrc 192.168.174.0/24 \
+	-j TCPMSS --set-mss 1360
+"

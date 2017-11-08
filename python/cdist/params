@@ -4,6 +4,7 @@
 #	# build, then
 #	cdist config -v -i ss localhost
 #	cdist config -v -i wg localhost
+#	cdist config -v -i strongswan localhost
 #
 o_user=yousong
 o_pass='passwordhash' # openssl passwd -crypt -salt fh 3
