@@ -19,7 +19,7 @@ home=/home/$o_user"'
 
 modprobe udp_tunnel
 modprobe ip6_udp_tunnel
-insmod "$home/.usr/lib/modules/4.9.0-3-amd64/extra/wireguard.ko"
+insmod "$home/.usr/lib/modules/$(uname -r)/extra/wireguard.ko"
 
 ip link add wg0 type wireguard
 ip addr add 192.168.175.1/24 dev wg0
