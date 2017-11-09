@@ -1,8 +1,6 @@
 # vi: ft=sh
 source "$__manifest/params"
 
-o_wg_prik=''
-
 o_strongswan_pkgs='strongswan strongswan-swanctl libcharon-extra-plugins'
 o_strongswan_swanctl_pool='192.168.174.0/24'
 o_strongswan_swanctl_psk=''
@@ -73,11 +71,10 @@ charon {
 }
 EOF
 
-# start strongswan service at boot
-#
-
-__iptables_rule "ipsec-mss" --rule "-t mangle -A FORWARD -o ens3 \
+__iptables_rule "ipsec-mss" --rule "-t mangle -A FORWARD -o $o_ifname_inet \
 	-p tcp -m tcp --tcp-flags SYN,RST SYN \
-	-m conntrack --ctorigsrc 192.168.174.0/24 \
+	-m conntrack --ctorigsrc $o_strongswan_swanctl_pool \
 	-j TCPMSS --set-mss 1360
 "
+
+__start_on_boot strongswan
