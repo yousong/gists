@@ -7,6 +7,7 @@ __package_upgrade_all
 for p in $o_pkgs $o_pkgs_dev; do
 	__package "$p" --state present
 done
+__golang_from_vendor --version 1.9.2
 
 __user "$o_user" --password "$o_pass"
 __user_groups "$o_user" --group "$o_grup"
@@ -49,3 +50,10 @@ __git "/home/$o_user/git-repo/build-scripts" \
 __git "/home/$o_user/git-repo/dconf" \
 	--owner "$o_user" --group "$o_user" \
 	--source https://github.com/yousong/dconf
+
+__config_file "$o_userenvprefix/.env.sh" \
+	--owner "$o_user" --group "$o_user" --mode 755 \
+	--source - \
+	--state present <<-EOF
+		path_action GOPATH append "$o_gopath"
+EOF

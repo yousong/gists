@@ -26,4 +26,6 @@ o_ifname_inet="ens3"
 
 
 o_userprefix="/home/$o_user/.usr"
+o_userenvprefix="/home/$o_user/.usr.env"
 o_servicedir="$o_userprefix/etc/service"
+o_gopath="/home/$o_user/gop"
