@@ -1,0 +1,21 @@
+# vi: ft=sh
+source "$__manifest/params"
+
+o_gdns_listen="192.168.175.1:8053"
+o_gdns_src="$o_gopath/src/dns-over-https-proxy"
+
+__git "$o_gdns_src" \
+	--owner "$o_user" --group "$o_user" \
+	--source https://github.com/yousong/dns-over-https-proxy
+
+__daemontools_service gdns \
+	--servicedir "$o_servicedir"
+	--runfile - <<-EOF
+		#!/bin/bash
+		bin="$o_gopath/bin/dns-over-https-proxy"
+		if [ ! -x "\$bin" ]; then
+			cd "$o_gdns_src"
+			go install || exit 1
+		fi
+		exec "$o_gopath/bin/dns-over-https-proxy" -address $o_gdns_listen
+EOF
