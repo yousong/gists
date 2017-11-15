@@ -56,4 +56,5 @@ __config_file "$o_userenvprefix/.env.sh" \
 	--source - \
 	--state present <<-EOF
 		path_action GOPATH append "$o_gopath"
+		path_action PATH append "$o_gopath/bin"
 EOF
