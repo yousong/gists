@@ -159,7 +159,7 @@ def main():
             (r'/', EchoRequestHandler),
         ])
         for port in options.http:
-            httpserver = HTTPServer(app)
+            httpserver = HTTPServer(app, xheaders=True)
             httpserver.listen(port)
             httpservers.append(httpserver)
 
