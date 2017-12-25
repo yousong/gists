@@ -26,8 +26,8 @@ class StreamHandler(object):
 
         ts = time.time()
         sock = stream.socket
-        localip, localport = sock.getsockname()
-        remoteip, remoteport = sock.getpeername()
+        localip, localport = sock.getsockname()[:2]
+        remoteip, remoteport = sock.getpeername()[:2]
         self.info = {
             'ts': ts,
             'localip': localip,
@@ -84,7 +84,7 @@ class EchoUDPServer(object):
     def handle_message(self, fd, events):
         if events & IOLoop.READ:
             ts = time.time()
-            localip, localport = self.sock.getsockname()
+            localip, localport = self.sock.getsockname()[:2]
             rv, data, from_, to = udpio.recv_from_to(fd, 4096)
             localip = to[0]
             remoteip, remoteport = from_
@@ -101,7 +101,7 @@ class EchoUDPServer(object):
             udpio.send_to_from(fd, resp, from_, (localip, localport))
             logger.info('udp from %s:%s -> %s:%s', remoteip, remoteport, localip, localport)
         elif events & IOLoop.ERROR:
-            logger.error('udp %s event error', self.sock.getsockname())
+            logger.error('udp %s event error', self.sock.getsockname()[:2])
             self.sock.close()
             self.ioloop.remove_handler(self.fd)
         else:
