@@ -22,3 +22,11 @@
 
 		It seems that some recent OSes disable this option by default so that
 		IPv6 sockets can handle only real IPv6 communications.
+
+	- https://stackoverflow.com/questions/1618240/how-to-support-both-ipv4-and-ipv6-connections
+
+		The best approach is to create an IPv6 server socket that can also
+		accept IPv4 connections. To do so, create a regular IPv6 socket,
+		turn off the socket option IPV6_V6ONLY, bind it to the "any"
+		address, and start receiving. IPv4 addresses will be presented as
+		IPv6 addresses, in the IPv4-mapped format.
