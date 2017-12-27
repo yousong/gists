@@ -68,7 +68,7 @@ class EchoTCPServer(TCPServer):
 
 class EchoUDPServer(object):
     def __init__(self, ioloop=None):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         self.sock.setblocking(False)
         self.fd = self.sock.fileno()
         udpio.want_pktinfo(self.fd)
@@ -76,7 +76,7 @@ class EchoUDPServer(object):
             ioloop = IOLoop.current()
         self.ioloop = ioloop
 
-    def listen(self, port, address='', ioloop=None):
+    def listen(self, port, address='::', ioloop=None):
         self.sock.bind((address, port))
         #self.sock.listen(128)
         self.ioloop.add_handler(self.fd, self.handle_message, IOLoop.READ | IOLoop.ERROR)
@@ -85,7 +85,7 @@ class EchoUDPServer(object):
         if events & IOLoop.READ:
             ts = time.time()
             localip, localport = self.sock.getsockname()[:2]
-            rv, data, from_, to = udpio.recv_from_to(fd, 4096)
+            rv, data, from_, to = udpio.recv_from_to(socket.AF_INET6, fd, 4096)
             localip = to[0]
             remoteip, remoteport = from_
             resp = {
@@ -98,7 +98,7 @@ class EchoUDPServer(object):
             }
             resp = json.dumps(resp)
             resp += '\n'
-            udpio.send_to_from(fd, resp, from_, (localip, localport))
+            udpio.send_to_from(socket.AF_INET6, fd, resp, from_, (localip, localport))
             logger.info('udp from %s:%s -> %s:%s', remoteip, remoteport, localip, localport)
         elif events & IOLoop.ERROR:
             logger.error('udp %s event error', self.sock.getsockname()[:2])

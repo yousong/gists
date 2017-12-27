@@ -32,8 +32,12 @@ want_pktinfo(int fd)
 #ifdef IP_PKTINFO
 	setsockopt(fd, IPPROTO_IP, IP_PKTINFO, &val, sizeof(val));
 #endif
-#if defined(IPV6_PKTINFO)
+#if defined(IPV6_RECVPKTINFO)
+	setsockopt(fd, IPPROTO_IPV6, IPV6_RECVPKTINFO, &val, sizeof(val));
+#elif defined(IPV6_PKTINFO)
 	setsockopt(fd, IPPROTO_IPV6, IPV6_PKTINFO, &val, sizeof(val));
+#else
+#warn no ipv6 pktinfo sock option found
 #endif
 }
 
