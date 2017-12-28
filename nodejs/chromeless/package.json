@@ -1,0 +1,16 @@
+{
+  "name": "chromeless",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "chromeless": "^1.4.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "prep": "'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --disable-translate --disable-extensions --disable-background-networking --safebrowsing-disable-auto-update --disable-sync --metrics-recording-only --disable-default-apps --mute-audio --no-first-run --remote-debugging-port=9222 --user-data-dir='chromeless-user-data-dir/' --headless about:blank",
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
