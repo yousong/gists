@@ -1,0 +1,184 @@
+#!/bin/bash
+
+set -e
+
+o_bridge=bridge9
+o_self="$0"
+o_self_real="$(readlink -f "$0")"
+o_bootpd_net='192.168.173.0'
+o_bootpd_mask='255.255.255.0'
+o_bootpd_masklen='24'
+o_bootpd_gateway='192.168.173.1'
+o_bootpd_ip_start='192.168.173.2'
+o_bootpd_ip_end='192.168.173.10'
+o_bootpd_dns='114.114.114.114'
+o_bootpd_plist='<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bootp_enabled</key>
+	<true/>
+	<key>detect_other_dhcp_server</key>
+	<false/>
+	<key>dhcp_enabled</key>
+	<array>
+		<string>'"$o_bridge"'</string>
+	</array>
+	<key>dhcp_ignore_client_identifier</key>
+	<true/>
+	<key>netboot_enabled</key>
+	<false/>
+	<key>relay_enabled</key>
+	<false/>
+	<key>use_server_config_for_dhcp_options</key>
+	<false/>
+	<key>Subnets</key>
+	<array>
+		<dict>
+			<key>allocate</key>
+			<true/>
+			<key>dhcp_domain_name_server</key>
+			<array>
+				<string>'"$o_bootpd_dns"'</string>
+			</array>
+			<key>dhcp_router</key>
+			<string>'"$o_bootpd_gateway"'</string>
+			<key>name</key>
+			<string>VM NAT Network</string>
+			<key>net_address</key>
+			<string>'"$o_bootpd_net"'</string>
+			<key>net_mask</key>
+			<string>'"$o_bootpd_mask"'</string>
+			<key>net_range</key>
+			<array>
+				<string>'"$o_bootpd_ip_start"'</string>
+				<string>'"$o_bootpd_ip_end"'</string>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>'
+
+setup() {
+	teardown
+
+	ln -sf "$o_self_real" qemu_ifup
+	ln -sf "$o_self_real" qemu_ifdown
+
+	ifconfig "$o_bridge" create
+	# the reason is not yet known but using the following command to configure
+	# address will cause the bridge not forwarding packets
+	#
+	#   ipconfig set "$o_bridge" MANUAL "$o_bootpd_gateway" "$o_bootpd_mask"
+	#
+	ifconfig "$o_bridge" "$o_bootpd_gateway/$o_bootpd_masklen"
+
+	sysctl -w net.inet.ip.forwarding=1
+
+	# nat rule in /etc/pf.conf
+	#
+	#	nat on en0 from bridge1:network to any -> (en0)
+	#
+	# -F nat, flush all nat rules
+	# -N -f xxx, load only nat rules from file xxx
+	# -s nat, show nat rules
+	#
+	# see pfctl(8) for details
+	#
+	pfctl -F all
+	pfctl -N -f /etc/pf.conf
+	#pfctl -s nat
+
+	dhcpup
+}
+
+teardown() {
+	ifconfig "$o_bridge" destroy || true
+	rm -vf qemu_ifup
+	rm -vf qemu_ifdown
+	dhcpdown
+}
+
+dhcpup() {
+	dhcpdown 2>/dev/null
+
+	# This is the OSX builtin DHCP server.
+	#
+	# We can manually start it with the following command and let it stay in
+	# the foreground.  The log will also be availabe in /var/log/system.log
+	#
+	#	/usr/libexec/bootpd -D -d -v -v
+	#	return 0
+	#
+	# To check whether if it's running
+	#
+	#	sudo lsof -iUDP:67 -n -P
+	#
+	echo "$o_bootpd_plist" >/etc/bootpd.plist
+	/bin/launchctl load -w /System/Library/LaunchDaemons/bootps.plist
+}
+
+dhcpdown() {
+	/bin/launchctl unload -w /System/Library/LaunchDaemons/bootps.plist || true
+}
+
+qemu_ifup() {
+	local tapdev="$1"
+
+	ifconfig "$o_bridge" addm "$tapdev"
+}
+
+qemu_ifdown() {
+	local tapdev="$1"
+
+	ifconfig "$o_bridge" deletem "$tapdev"
+}
+
+rand_mac() {
+    hexdump -n 3 -e '"52:54:00:" 2/1 "%02x:" 1/1 "%02x"' /dev/urandom
+}
+
+run() {
+	local hwaddr="$(rand_mac)"
+
+	# archlinux netboot image, https://www.archlinux.org/releng/netboot/
+	sudo qemu-system-x86_64 \
+		-M pc \
+		-m 2048 \
+		-netdev tap,id=netdev0,script=./qemu_ifup,downscript=./qemu_ifdown \
+		-device virtio-net-pci,netdev=netdev0,mac=02:03:04:05:06:02 \
+		-kernel ipxe.28ebfe8a66ac.lkrn
+}
+
+run2() {
+	local lan_hwaddr="$(rand_mac)"
+	local wan_hwaddr="$(rand_mac)"
+
+	# - drive interface virtio will not work on macosx
+	# - qemu-bridge-helper at the moment has no support for macosx
+	sudo qemu-system-x86_64 \
+		-M pc,accel=hax \
+		-m 1024 \
+		-netdev tap,id=lan,script=./qemu_ifup,downscript=./qemu_ifdown \
+		-netdev tap,id=wan,script=./qemu_ifup,downscript=./qemu_ifdown \
+		-device virtio-net-pci,netdev=lan,mac="$lan_hwaddr" \
+		-device virtio-net-pci,netdev=wan,mac="$wan_hwaddr" \
+		-drive "file=lede-17.01.4-x86-64-combined-ext4.img,format=raw,if=ide"
+}
+
+whoami="$(id -u)"
+if [ "$whoami" != 0 ]; then
+	echo "need root privileges to run" >&2
+	exit 1
+fi
+
+whoami="$(basename "$0")"
+case "$whoami" in
+	qemu_ifup|qemu_ifdown) "$whoami" "$@" ;;
+	*)
+		if [ -z "$o_iknow" ]; then
+			echo "$@: can be dangerous" >&2
+			exit 1
+		fi
+		"$@" ;;
+esac
