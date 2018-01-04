@@ -32,14 +32,14 @@ link_gretap_teardown() {
 # value consists of 2 parts
 # - ip address for link_gretap endpoint
 # - ip address to be assigned for the link_gretap interface
-endlocal="172.26.2.210:1.2.3.3"
-endremote="172.26.3.206:1.2.3.4"
+o_endlocal="172.26.2.210:1.2.3.3"
+o_endremote="172.26.3.206:1.2.3.4"
 
 # viewpoint of local host: self
-self="$(hostname)"
-if [ "$self" = "titan" ]; then
-	link_gretap_setup foo "$endlocal" "$endremote" eth0
+o_self="$(hostname)"
+if [ "$o_self" = "titan" ]; then
+	link_gretap_setup foo "$o_endlocal" "$o_endremote" eth0
 else
-	link_gretap_setup foo "$endremote" "$endlocal" eth0
+	link_gretap_setup foo "$o_endremote" "$o_endlocal" eth0
 fi
 
