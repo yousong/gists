@@ -15,7 +15,7 @@ link_6in4_setup() {
 	link_6in4_teardown "$name"
 	sudo ip tunnel add "$name" mode sit local "$left0" remote "$right0" ${dev:+dev "$dev"}
 	sudo ip addr add "$left1" dev "$name"
-	sudo ip link set "$name" up 
+	sudo ip link set "$name" up
 }
 
 link_6in4_teardown() {
@@ -66,7 +66,7 @@ o_dev=foo
 o_p0_addr0="1.1.1.1"
 o_p0_addr1="1:2:3::2/64"
 o_p0_dev="eth1"
-o_p2_addr0="2.2.2.2"
+o_p1_addr0="2.2.2.2"
 o_p1_addr1="1:2:3::3/64"
 o_p1_dev="ens3"
 #o_left
