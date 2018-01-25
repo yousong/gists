@@ -30,10 +30,11 @@ r() {
 	#
 	#	echo disabled >/sys/class/thermal/thermal_zone0/mode
 	#
-	# Known Issues
+	# Known issues
 	#
 	# - allwinner-emac driver cannot initialize mac address correctly
 	# - varius kernel warning for missing devices
+	# - no display support
 	#
 	qemu-system-arm \
 		-M cubieboard \
