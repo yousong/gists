@@ -1,0 +1,171 @@
+#!/bin/bash
+#
+# archlinuxarm has user accounts
+#
+#	alarm:alarm
+#	root:root
+#
+cubieboard_g() {
+	wget -c http://os.archlinuxarm.org/os/ArchLinuxARM-armv7-latest.tar.gz
+}
+
+cubieboard_p() {
+	sudo true
+
+	fallocate -l 2G disk.img
+	mkfs.ext4 -F disk.img
+	mkdir -p disk
+	sudo mount -o loop disk.img disk
+	sudo bsdtar -xpf ArchLinuxARM-armv7-latest.tar.gz -C disk
+	cp disk/boot/initramfs-linux.img .
+	cp disk/boot/zImage .
+	cp disk/boot/dtbs/sun4i-a10-cubieboard.dtb .
+	sudo umount disk/
+}
+
+cubieboard_r() {
+	# To quash thermal_zone0 warning
+	#
+	#	echo disabled >/sys/class/thermal/thermal_zone0/mode
+	#
+	# Known issues
+	#
+	# - allwinner-emac driver cannot initialize mac address correctly
+	# - varius kernel warning for missing devices
+	# - no display support
+	#
+	qemu-system-arm \
+		-M cubieboard \
+		-m 1024M \
+		-nographic \
+		-initrd initramfs-linux.img \
+		-kernel zImage \
+		-dtb sun4i-a10-cubieboard.dtb \
+		-append 'root=/dev/sda rootwait rw ' \
+		-device ide-drive,drive=drv0 \
+		-drive "file=disk.img,format=raw,id=drv0,if=none" \
+		-net nic,macaddr=00:11:22:33:44:55,model=allwinner-emac,netdev=wan \
+		-netdev bridge,id=wan,br=br-wan,helper=/home/yousong/.usr/libexec/qemu-bridge-helper \
+
+}
+
+raspi2_g() {
+	wget -c wget http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-2-latest.tar.gz
+}
+
+raspi2_p() {
+	sudo true
+
+	local dev="$(losetup -f)"
+	if [ ! -b "$dev" ]; then
+		echo "cannot find available loop device" >&2
+		return 1
+	fi
+	fallocate -l 2G "disk.img"
+	sudo losetup "$dev" "disk.img"
+	# WARNING: Re-reading the partition table failed with error 22: Invalid argument.
+	sudo fdisk "$dev" <<-EOF || true
+		o
+		n
+		p
+		1
+
+		+100M
+		t
+		c
+		n
+		p
+		2
+
+
+		w
+	EOF
+	sudo losetup -d "$dev"
+	sudo losetup -P "$dev" "disk.img"
+	sudo mkfs.vfat "${dev}p1"
+	sudo mkfs.ext4 "${dev}p2"
+	mkdir -p boot
+	mkdir -p root
+	sudo mount "${dev}p1" boot
+	sudo mount "${dev}p2" root
+	sudo bsdtar -xpf ArchLinuxARM-rpi-2-latest.tar.gz -C root
+	sudo cp -a root/boot/* boot/
+	cp root/boot/kernel7.img .
+	cp root/boot/bcm2709-rpi-2-b.dtb .
+	cp root/boot/initramfs-linux.img .
+	cp root/boot/cmdline.txt .
+	sudo umount boot/
+	sudo umount root/
+	sudo losetup -d "$dev"
+}
+
+raspi2_r() {
+	#
+	# NOTES
+	#
+	# No "-device sd-card,drive=drv0" here because the "-drive id=drv0,if=sd"
+	# will be automatically connected to sd-bus, see hw/arm/raspi.c for details
+	#
+	# No usb-bus support
+	#
+	#  - No usb-net
+	#  - No mouse and keyboard on display
+	#
+	# A lot of WARNING from
+	#
+	#	drivers/tty/serial/serial_core.c:440 uart_get_baud_rate+0xec/0x154
+	#	drivers/clk/clk.c:652 clk_core_enable+0x90/0x184
+	#
+	# Useful link https://github.com/0xabu/qemu/wiki
+	#
+	qemu-system-arm \
+		-M raspi2 \
+		-display vnc=:1 \
+		-chardev stdio,mux=on,id=char0 \
+		-serial chardev:char0 \
+		-monitor chardev:char0 \
+		-kernel kernel7.img \
+		-initrd initramfs-linux.img \
+		-append "$(cat cmdline.txt)" \
+		-dtb bcm2709-rpi-2-b.dtb \
+		-drive "file=disk.img,format=raw,id=drv0,if=sd" \
+
+}
+
+usage() {
+	cat <<EOF
+Usage: $o_self <machine> <action>
+
+<machine> can be cubieboard, raspi2
+
+<action> can be
+
+	g		get archlinux arm os file
+	p		prepare from os file disk image etc.
+	r		run
+EOF
+}
+
+main() {
+	local func
+
+	if [ "$#" -lt 2 ]; then
+		usage
+		exit 1
+	fi
+	o_machine="$1"; shift
+	o_action="$1"; shift
+	func="${o_machine}_${o_action}"
+	if type "$func" &>/dev/null; then
+		mkdir -p "$o_machine"
+		cd "$o_machine"
+		"$func"
+	else
+		usage
+		exit 1
+	fi
+}
+
+set -e
+o_self="$0"
+main "$@"
