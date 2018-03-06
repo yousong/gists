@@ -71,3 +71,12 @@ print dt1
 print dt2
 print timestr1
 print timestr2
+
+_("-- datetime duration add/substract")
+timestr = 'Tue Mar  6 11:00:10 CST 2018'
+timefmt = '%a %b %d %H:%M:%S CST %Y'
+dt = datetime.datetime.strptime(timestr, timefmt)
+dur = datetime.timedelta(days=38, hours=18, minutes=19)
+print dt
+print dur
+print dt - dur # use "who -b" to read last boot time

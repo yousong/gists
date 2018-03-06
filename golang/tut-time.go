@@ -42,4 +42,14 @@ func main() {
 		fmt.Printf("%s\n", timeLoc)
 		fmt.Printf("sec: %d, nsec: %d\n", sec, nsec)
 	}
+	{
+		// Duration
+		timeFmt := "Mon Jan 2 15:04:05 MST 2006"
+		timeStr := "Tue Mar  6 11:00:10 CST 2018"
+		timeLoc, _ := time.Parse(timeFmt, timeStr)
+		// No definition for units of Day or larger
+		dur := 38*24*time.Hour + 18*time.Hour + 19*time.Minute
+		timeBoot := timeLoc.Add(-dur)
+		fmt.Printf("timeBoot: %s\n", timeBoot)
+	}
 }
