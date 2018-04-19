@@ -74,9 +74,35 @@ initcfg() {
 }
 
 initnet() {
-	sudo sysctl -w net.bridge.bridge-nf-call-iptables=1
-	sudo sysctl -w net.ipv4.conf.all.rp_filter=2
 	sudo sysctl -w net.ipv4.ip_forward=1
+
+	# This is necessary for pod to access services whose backend pods sit on
+	# the same bridge.  Details follow
+	#
+	# Pod A wants to access kube-dns through its service ip 10.96.0.10.  The
+	# udp request will be seen by host netfilter rules doing DNAT to the
+	# kube-dns pod.  Later kube-dns pod on the same node will send udp response
+	# with source/dest ip address being in the same subnet and as such L2
+	# communication will happen without the node host being able to do the
+	# DNAT in the reply direction.  The originating will be see a udp response
+	# from unknown source ip.
+	sudo sysctl -w net.bridge.bridge-nf-call-iptables=1
+
+	# NOTE: the following two rules are for my local network settings.
+	# Otherwise message "Waiting for services and endpoints to be initialized
+	# from apiserver..." will be printed continuously by container kubedns
+	#
+	# kube-dns will contact apiserver on startup to fetch service and
+	# endpoint data to initialize, otherwise it will quit.  API master is
+	# discovered by default using [environment variables](https://kubernetes.io/docs/concepts/containers/container-environment-variables)
+	#
+	# The apiserver listens on eth1 on node host and the service was open to
+	# cluster pods through service ClusterIP.  The mapping between was done
+	# with iptables DNAT rule.  In the response direction, I have policy
+	# routing saying that traffic from primary address of eth1 will do route
+	# lookup in a separate table where only a single default route was present,
+	# thus making it wrong to route traffic to PodCIDR out through eth1 (should
+	# be cni0)
 	sudo ip route add 10.244.0.0/24 dev cni0 proto kernel scope link src 10.244.0.1 table 2
 
 	# flannel is for node-node communications
