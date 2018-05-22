@@ -1,5 +1,6 @@
 package main
 
+import "testing"
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
@@ -99,7 +100,7 @@ func (h *LogFileRotateHook) Fire(e *logrus.Entry) error {
 	return nil
 }
 
-func tLogFile() {
+func TestLogFile(t *testing.T) {
 	logFileHook := LogFileHook{
 		FileDir:  "/tmp/log",
 		FileName: "spf.log",
@@ -112,7 +113,7 @@ func tLogFile() {
 	l.Debugf("hello, world?")
 }
 
-func tLogFileRotate() {
+func TestLogFileRotate(t *testing.T) {
 	logFileHook := LogFileRotateHook{
 		LogFileHook: LogFileHook{
 			FileDir:  "/tmp/log",
@@ -130,9 +131,4 @@ func tLogFileRotate() {
 	for i := 0; i < 3828; i++ {
 		l.Infof("%d", i)
 	}
-}
-
-func main() {
-	tLogFile()
-	tLogFileRotate()
 }
