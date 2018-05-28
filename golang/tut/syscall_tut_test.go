@@ -1,4 +1,4 @@
-package main
+package tut
 
 // package syscall is locked down.  golang.org/x/sys should be used when
 // possible.
