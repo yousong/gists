@@ -3,15 +3,6 @@ set -x
 logdir=/home/yousong/.usr/var/log/openvswitch
 rundir=/home/yousong/.usr/var/run/openvswitch
 
-# TODO
-#
-#  lsp dhcp
-#  lsp same subnet
-#  lsp different subnet
-#  with docker
-#  with tunnel
-#
-
 o_north_sb_ip=10.4.237.52
 o_north_sb_port=6642
 o_north_nb_ip=10.4.237.52
@@ -93,6 +84,8 @@ add_host_port() {
 	local name0="${name}0"
 	local name1="${name}1"
 
+	# openvswitch internal type port may not work for it cannot be put to
+	# ofport up state
 	ip netns add "$name"
 	ip link del dev "$name0"
 	ip link add dev "$name0" type veth peer name "$name1"
