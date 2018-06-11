@@ -14,13 +14,19 @@ rundir=/home/yousong/.usr/var/run/openvswitch
 
 o_north_sb_ip=10.4.237.52
 o_north_sb_port=6642
+o_north_nb_ip=10.4.237.52
+o_north_nb_port=6641
+
+ovn_nbctl() {
+	ovn-nbctl --db="tcp:$o_north_nb_ip:$o_north_nb_port" "$@"
+}
 
 get_encap_ip() {
 	ip -o addr show dev eth1 | grep -oE 'inet [^/ ]+' | cut -d' ' -f2
 }
 
 get_dhcp_uuid() {
-	ovn-nbctl --bare --columns=_uuid find DHCP_Options cidr=192.168.2.0/24
+	ovn_nbctl --bare --columns=_uuid find DHCP_Options cidr=192.168.2.0/24
 }
 
 prep_host() {
@@ -44,22 +50,28 @@ prep_north() {
 
 	# logical switch name does not need to be unique
 	# logical switch port name needs to be unique: iface-id
-	ovn-nbctl \
+	ovn_nbctl \
 		-- --all destroy DHCP_Options \
 		-- --all destroy Logical_Switch \
 		-- --all destroy Logical_Switch_Port \
 
-	ovn-nbctl create DHCP_Options \
+	ovn_nbctl create DHCP_Options \
 				cidr=192.168.2.0/24 \
 				options:server_id=192.168.2.1 \
 				options:server_mac=0a:00:00:00:00:01 \
 				options:lease_time=86400
 
-	ovn-nbctl \
+	ovn_nbctl \
 		-- --id=@ls0 create Logical_Switch  \
 			name=ls0 \
 			other-config:subnet=192.168.2.0/24 \
 
+}
+
+prep_logical() {
+	add_logical_port ls0p0 0a:00:00:00:00:02 192.168.2.2
+	add_logical_port ls0p1 0a:00:00:00:00:03 192.168.2.3
+	add_logical_port ls0p2 0a:00:00:00:00:04 192.168.2.4
 }
 
 add_logical_port() {
@@ -68,8 +80,7 @@ add_logical_port() {
 	local ip="$1"; shift
 
 	local dhcp="$(get_dhcp_uuid)"
-	ovn-nbctl \
-		-- lsp-add ls0 "$name" \
+	ovn_nbctl --may-exist lsp-add ls0 "$name" \
 		-- lsp-set-addresses "$name" "$mac $ip" \
 		-- lsp-set-dhcpv4-options "$name" $dhcp \
 
@@ -95,23 +106,19 @@ add_host_port() {
 	ip netns exec "$name" timeout 3 dhclient -d "$name1"
 }
 
-add_port() {
-	add_logical_port "$@"
-	add_host_port "$@"
-}
-
 init_host0() {
-	add_port ls0p0 0a:00:00:00:00:02 192.168.2.2
-	add_port ls0p1 0a:00:00:00:00:03 192.168.2.3
+	add_host_port ls0p0 0a:00:00:00:00:02 192.168.2.2
+	add_host_port ls0p1 0a:00:00:00:00:03 192.168.2.3
 }
 
 
 init_host1() {
-	add_port ls0p2 0a:00:00:00:00:04 192.168.2.4
+	add_host_port ls0p2 0a:00:00:00:00:04 192.168.2.4
 }
 
 # prep_north
 # prep_host
+# prep_logical
 # init_host0
 # init_host1
 "$@"
