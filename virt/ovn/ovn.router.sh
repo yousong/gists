@@ -47,8 +47,10 @@ prep_logical() {
 	# logical switch port name needs to be unique: iface-id
 	ovn_nbctl \
 		-- --all destroy DHCP_Options \
-		-- --all destroy Logical_Switch \
 		-- --all destroy Logical_Switch_Port \
+		-- --all destroy Logical_Switch \
+		-- --all destroy Logical_Router_Port \
+		-- --all destroy Logical_Router \
 
 	ovn_nbctl \
 		-- create DHCP_Options \
@@ -56,15 +58,26 @@ prep_logical() {
 				options:server_id=192.168.2.1 \
 				options:server_mac=0a:00:00:00:00:01 \
 				options:lease_time=86400 \
+				options:router=192.168.2.1 \
 		-- create DHCP_Options \
 				cidr=192.168.3.0/24 \
 				options:server_id=192.168.3.1 \
 				options:server_mac=0a:00:00:00:01:01 \
-				options:lease_time=86400
+				options:lease_time=86400 \
+				options:router=192.168.3.1 \
 
 	ovn_nbctl \
 		-- ls-add ls0 \
 		-- ls-add ls1 \
+		-- lr-add lr0 \
+		-- lrp-add lr0 lr0ls0 0a:00:00:00:00:01 192.168.2.1/24 \
+		-- lrp-add lr0 lr0ls1 0a:00:00:00:01:01 192.168.3.1/24 \
+		-- lsp-add ls0 ls0lr0 \
+		-- lsp-set-type ls0lr0 router \
+		-- lsp-set-options ls0lr0 router-port=lr0ls0 \
+		-- lsp-add ls1 ls1lr0 \
+		-- lsp-set-type ls1lr0 router \
+		-- lsp-set-options ls1lr0 router-port=lr0ls1 \
 
 	dhcp2=$(get_dhcp_uuid 192.168.2.0/24)
 	dhcp3=$(get_dhcp_uuid 192.168.3.0/24)
