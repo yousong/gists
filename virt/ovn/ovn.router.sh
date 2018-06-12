@@ -74,9 +74,11 @@ prep_logical() {
 		-- lrp-add lr0 lr0ls1 0a:00:00:00:01:01 192.168.3.1/24 \
 		-- lsp-add ls0 ls0lr0 \
 		-- lsp-set-type ls0lr0 router \
+		-- lsp-set-addresses ls0lr0 0a:00:00:00:00:01 \
 		-- lsp-set-options ls0lr0 router-port=lr0ls0 \
 		-- lsp-add ls1 ls1lr0 \
 		-- lsp-set-type ls1lr0 router \
+		-- lsp-set-addresses ls1lr0 0a:00:00:00:01:01 \
 		-- lsp-set-options ls1lr0 router-port=lr0ls1 \
 
 	dhcp2=$(get_dhcp_uuid 192.168.2.0/24)
