@@ -47,10 +47,11 @@ prep_logical() {
 	# logical switch port name needs to be unique: iface-id
 	ovn_nbctl \
 		-- --all destroy DHCP_Options \
-		-- --all destroy Logical_Switch_Port \
 		-- --all destroy Logical_Switch \
-		-- --all destroy Logical_Router_Port \
+		-- --all destroy Logical_Switch_Port \
 		-- --all destroy Logical_Router \
+		-- --all destroy Logical_Router_Port \
+		-- --all destroy DNS \
 
 	ovn_nbctl \
 		-- create DHCP_Options \
@@ -80,6 +81,14 @@ prep_logical() {
 		-- lsp-set-type ls1lr0 router \
 		-- lsp-set-addresses ls1lr0 0a:00:00:00:01:01 \
 		-- lsp-set-options ls1lr0 router-port=lr0ls1 \
+
+	# it's port match
+	ls0="$(ovn_nbctl --bare --columns=_uuid find Logical_Switch name=ls0)"
+	ovn_nbctl \
+		-- --id=@dns create DNS \
+			records:a.com="1.1.1.1 1.1.1.2" \
+			records:b.com="2.2.2.1 2.2.2.2" \
+		-- add Logical_Switch "$ls0" dns_records @dns \
 
 	dhcp2=$(get_dhcp_uuid 192.168.2.0/24)
 	dhcp3=$(get_dhcp_uuid 192.168.3.0/24)
