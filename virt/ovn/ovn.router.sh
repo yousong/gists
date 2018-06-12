@@ -72,6 +72,7 @@ prep_logical() {
 	add_logical_port ls0 ls0p1 0a:00:00:00:00:03 192.168.2.3 "$dhcp2"
 	add_logical_port ls0 ls0p2 0a:00:00:00:00:04 192.168.2.4 "$dhcp2"
 	add_logical_port ls1 ls1p0 0a:00:00:00:01:02 192.168.3.2 "$dhcp3"
+	add_logical_port ls1 ls1p1 0a:00:00:00:01:03 192.168.3.3 "$dhcp3"
 }
 
 add_logical_port() {
