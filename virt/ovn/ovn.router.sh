@@ -101,7 +101,7 @@ add_host_port() {
 	ip link del dev "$name0"
 	ip link add dev "$name0" type veth peer name "$name1"
 	ip link set dev "$name0" up
-	ip link set dev "$name1" netns "$name" address "$mac" up
+	ip link set dev "$name1" netns "$name" address "$mac" mtu 1442 up
 
 	ovs-vsctl --if-exists del-port "$name0"
 	ovs-vsctl --may-exist add-port br0 "$name0" \
