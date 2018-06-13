@@ -68,6 +68,7 @@ prep_logical() {
 		-- --all destroy NAT \
 		-- --all destroy Load_Balancer \
 		-- --all destroy ACL \
+		-- --all destroy Address_Set \
 
 	ovn_nbctl \
 		-- create DHCP_Options \
@@ -164,6 +165,10 @@ prep_logical() {
 		-- acl-add ls0   to-lport  999 "icmp4.type == 8 && icmp4.code == 0" allow-related \
 		-- acl-add ls0 from-lport    0 "ip" drop \
 		-- acl-add ls0   to-lport    0 "ip" drop \
+
+	ovn_nbctl \
+		-- create Address_Set name=intnet addresses="192.168.2.0/24 192.168.3.0/24" \
+		-- acl-add ls0 to-lport 1001 "ip4.src == \$intnet" allow-related \
 
 	# it's port match
 	ls0="$(ovn_nbctl --bare --columns=_uuid find Logical_Switch name=ls0)"
