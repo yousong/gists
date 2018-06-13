@@ -6,8 +6,9 @@
 	lsp tunnel id
 	dns
 	shaping
+	gateway, nat
+	distributed gateway ports
 	qos
-	nat
 	ovsdb cluster
 	with docker
 	with tunnel
