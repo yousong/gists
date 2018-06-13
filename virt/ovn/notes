@@ -5,6 +5,7 @@
 	lsp different subnet
 	lsp tunnel id
 	dns
+	shaping
 	qos
 	nat
 	ovsdb cluster

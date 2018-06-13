@@ -42,6 +42,12 @@ prep_north() {
 
 }
 
+reset() {
+	ovn-ctl stop_northd
+	ovn-ctl stop_controller
+	ovs-ctl stop
+}
+
 prep_logical() {
 	# logical switch name does not need to be unique
 	# logical switch port name needs to be unique: iface-id
@@ -97,6 +103,15 @@ prep_logical() {
 	add_logical_port ls0 ls0p2 0a:00:00:00:00:04 192.168.2.4 "$dhcp2"
 	add_logical_port ls1 ls1p0 0a:00:00:00:01:02 192.168.3.2 "$dhcp3"
 	add_logical_port ls1 ls1p1 0a:00:00:00:01:03 192.168.3.3 "$dhcp3"
+
+	# works on tunnel_egress_iface: inter-chassis
+	# interface line rate as the limit: virtio_net has no such feature and will default 100Mbps
+	# queue_id will be allocated by northd and set on sb db;  correspond to class minor_id - 1
+	# ovs set_queue action will be used to classify traffic: mapped to 0x10000 + queue_id
+	ovn_nbctl \
+		-- lsp-set-options ls1p0 qos_max_rate=30000000 \
+		-- lsp-set-options ls0p0 qos_max_rate=20000000 \
+
 }
 
 add_logical_port() {
