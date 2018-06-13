@@ -64,6 +64,7 @@ prep_logical() {
 		-- --all destroy DNS \
 		-- --all destroy Logical_Router_Static_Route \
 		-- --all destroy NAT \
+		-- --all destroy Load_Balancer \
 
 	ovn_nbctl \
 		-- create DHCP_Options \
@@ -134,6 +135,7 @@ prep_logical() {
 		-- lsp-set-addresses lg0lnetp unknown \
 		-- lsp-set-options lg0lnetp network_name=data-net \
 
+	# default route for gateway router
 	ovn_nbctl \
 		-- lr-route-add lg0 0.0.0.0/0 192.168.5.2 lg0lp \
 
@@ -142,6 +144,14 @@ prep_logical() {
 		-- --id=@nat3 create NAT type=snat logical_ip=192.168.3.0/24 external_ip=192.168.5.1 \
 		-- add Logical_Router lg0 nat @nat2 \
 		-- add Logical_Router lg0 nat @nat3 \
+
+	# lb on ls resides on the client side; real server sees client's real ip
+	# lb on lr; lr must be gateway router; real server cannot see client's real ip
+	ovn_nbctl \
+		-- --id=@lb0 create Load_Balancer name=lb0 vips:192.168.2.5="192.168.2.3,192.168.2.4" \
+		-- --id=@lb1 create Load_Balancer name=lb1 vips:192.168.5.3="192.168.2.3,192.168.2.4" \
+		-- add Logical_Switch ls1 load_balancer @lb0 \
+		-- add Logical_Router lg0 load_balancer @lb1 \
 
 	# it's port match
 	ls0="$(ovn_nbctl --bare --columns=_uuid find Logical_Switch name=ls0)"
@@ -223,11 +233,11 @@ init_host1() {
 	ip link set br-data-net up
 	ip link set lg0lp1 up
 	ip addr add 192.168.5.2/24 dev lg0lp0
+	ip route add 192.168.2.0/24 via 192.168.5.1 dev lg0lp0
+	ip route add 192.168.3.0/24 via 192.168.5.1 dev lg0lp0
 	ip link set lg0lp0 up
 	while iptables -t nat -D POSTROUTING -o eth0 -s 192.168.5.0/24 -j MASQUERADE; do true; done
 	      iptables -t nat -A POSTROUTING -o eth0 -s 192.168.5.0/24 -j MASQUERADE
-	ip route add 192.168.2.0/24 via 192.168.5.1 dev lg0lp0
-	ip route add 192.168.3.0/24 via 192.168.5.1 dev lg0lp0
 
 	add_host_port ls0p2 0a:00:00:00:00:04 192.168.2.4
 	add_host_port ls1p1 0a:00:00:00:01:03 192.168.3.3
