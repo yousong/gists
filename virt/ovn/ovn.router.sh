@@ -226,6 +226,8 @@ init_host1() {
 	ip link set lg0lp0 up
 	while iptables -t nat -D POSTROUTING -o eth0 -s 192.168.5.0/24 -j MASQUERADE; do true; done
 	      iptables -t nat -A POSTROUTING -o eth0 -s 192.168.5.0/24 -j MASQUERADE
+	ip route add 192.168.2.0/24 via 192.168.5.1 dev lg0lp0
+	ip route add 192.168.3.0/24 via 192.168.5.1 dev lg0lp0
 
 	add_host_port ls0p2 0a:00:00:00:00:04 192.168.2.4
 	add_host_port ls1p1 0a:00:00:00:01:03 192.168.3.3
