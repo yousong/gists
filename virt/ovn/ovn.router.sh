@@ -55,6 +55,8 @@ reset() {
 prep_logical() {
 	# logical switch name does not need to be unique
 	# logical switch port name needs to be unique: iface-id
+	#
+	# leaf records not referred to will be pruned automaticlaly
 	ovn_nbctl \
 		-- --all destroy DHCP_Options \
 		-- --all destroy Logical_Switch \
@@ -65,6 +67,7 @@ prep_logical() {
 		-- --all destroy Logical_Router_Static_Route \
 		-- --all destroy NAT \
 		-- --all destroy Load_Balancer \
+		-- --all destroy ACL \
 
 	ovn_nbctl \
 		-- create DHCP_Options \
@@ -152,6 +155,15 @@ prep_logical() {
 		-- --id=@lb1 create Load_Balancer name=lb1 vips:192.168.5.3="192.168.2.3,192.168.2.4" \
 		-- add Logical_Switch ls1 load_balancer @lb0 \
 		-- add Logical_Router lg0 load_balancer @lb1 \
+
+	# allow only (from,to) (ping,http)
+	ovn_nbctl \
+		-- acl-add ls0 from-lport 1000 "tcp.dst == 80" allow-related \
+		-- acl-add ls0   to-lport 1000 "tcp.dst == 80" allow-related \
+		-- acl-add ls0 from-lport  999 "icmp4.type == 8 && icmp4.code == 0" allow-related \
+		-- acl-add ls0   to-lport  999 "icmp4.type == 8 && icmp4.code == 0" allow-related \
+		-- acl-add ls0 from-lport    0 "ip" drop \
+		-- acl-add ls0   to-lport    0 "ip" drop \
 
 	# it's port match
 	ls0="$(ovn_nbctl --bare --columns=_uuid find Logical_Switch name=ls0)"
