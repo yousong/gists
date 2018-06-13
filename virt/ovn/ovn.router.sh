@@ -3,13 +3,17 @@ set -x
 logdir=/home/yousong/.usr/var/log/openvswitch
 rundir=/home/yousong/.usr/var/run/openvswitch
 
-o_north_sb_ip=10.4.237.52
-o_north_sb_port=6642
 o_north_nb_ip=10.4.237.52
 o_north_nb_port=6641
+o_north_sb_ip=10.4.237.52
+o_north_sb_port=6642
 
 ovn_nbctl() {
 	ovn-nbctl --db="tcp:$o_north_nb_ip:$o_north_nb_port" "$@"
+}
+
+ovn_sbctl() {
+	ovn-sbctl --db="tcp:$o_north_sb_ip:$o_north_sb_port" "$@"
 }
 
 get_encap_ip() {
@@ -58,6 +62,7 @@ prep_logical() {
 		-- --all destroy Logical_Router \
 		-- --all destroy Logical_Router_Port \
 		-- --all destroy DNS \
+		-- --all destroy Logical_Router_Static_Route \
 
 	ovn_nbctl \
 		-- create DHCP_Options \
@@ -76,6 +81,8 @@ prep_logical() {
 	ovn_nbctl \
 		-- ls-add ls0 \
 		-- ls-add ls1 \
+
+	ovn_nbctl \
 		-- lr-add lr0 \
 		-- lrp-add lr0 lr0ls0 0a:00:00:00:00:01 192.168.2.1/24 \
 		-- lrp-add lr0 lr0ls1 0a:00:00:00:01:01 192.168.3.1/24 \
@@ -87,6 +94,26 @@ prep_logical() {
 		-- lsp-set-type ls1lr0 router \
 		-- lsp-set-addresses ls1lr0 0a:00:00:00:01:01 \
 		-- lsp-set-options ls1lr0 router-port=lr0ls1 \
+
+	# "name" columne instead of "_uuid"
+	# ping 192.168.4.1 will be tunnelled to the gateway chassis
+	lg0chassis="$(ovn_sbctl --bare --columns=name find Chassis hostname=titan.office.mos)"
+	ovn_nbctl \
+		-- create Logical_Router name=lg0 options:chassis="$lg0chassis" \
+		-- ls-add lg0t \
+		-- lrp-add lg0 lg0tp 0a:00:00:00:02:01 192.168.4.1/24 \
+		-- lsp-add lg0t tlg0p \
+		-- lsp-set-type tlg0p router \
+		-- lsp-set-addresses tlg0p 0a:00:00:00:02:01 \
+		-- lsp-set-options tlg0p router-port=lg0tp \
+		-- lrp-add lr0 lr0lg0t 0a:00:00:00:02:02 192.168.4.2/24 \
+		-- lsp-add lg0t lg0tlr0 \
+		-- lsp-set-type lg0tlr0 router \
+		-- lsp-set-addresses lg0tlr0 0a:00:00:00:02:02 \
+		-- lsp-set-options lg0tlr0 router-port=lr0lg0t \
+		-- lr-route-add lr0 0.0.0.0/0 192.168.4.1 \
+		-- lr-route-add lg0 192.168.2.0/24 192.168.4.2 \
+		-- lr-route-add lg0 192.168.3.0/24 192.168.4.2 \
 
 	# it's port match
 	ls0="$(ovn_nbctl --bare --columns=_uuid find Logical_Switch name=ls0)"
