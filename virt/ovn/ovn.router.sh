@@ -63,6 +63,7 @@ prep_logical() {
 		-- --all destroy Logical_Router_Port \
 		-- --all destroy DNS \
 		-- --all destroy Logical_Router_Static_Route \
+		-- --all destroy NAT \
 
 	ovn_nbctl \
 		-- create DHCP_Options \
@@ -82,6 +83,8 @@ prep_logical() {
 		-- ls-add ls0 \
 		-- ls-add ls1 \
 
+	# logical router only answers arp request for addresses bound on the inport
+	# the mac address on router port is required to avoid implicit drop on ls_in_l2_lkup
 	ovn_nbctl \
 		-- lr-add lr0 \
 		-- lrp-add lr0 lr0ls0 0a:00:00:00:00:01 192.168.2.1/24 \
@@ -100,8 +103,8 @@ prep_logical() {
 	lg0chassis="$(ovn_sbctl --bare --columns=name find Chassis hostname=titan.office.mos)"
 	ovn_nbctl \
 		-- create Logical_Router name=lg0 options:chassis="$lg0chassis" \
-		-- ls-add lg0t \
 		-- lrp-add lg0 lg0tp 0a:00:00:00:02:01 192.168.4.1/24 \
+		-- ls-add lg0t \
 		-- lsp-add lg0t tlg0p \
 		-- lsp-set-type tlg0p router \
 		-- lsp-set-addresses tlg0p 0a:00:00:00:02:01 \
@@ -114,6 +117,31 @@ prep_logical() {
 		-- lr-route-add lr0 0.0.0.0/0 192.168.4.1 \
 		-- lr-route-add lg0 192.168.2.0/24 192.168.4.2 \
 		-- lr-route-add lg0 192.168.3.0/24 192.168.4.2 \
+
+	# integration bridge and br-data-net will be connected by ovn-controller
+	# with patch ports.  Ping from data-net to logical 192.168.5.3 will work
+	#
+	# why /16 not work
+	ovn_nbctl \
+		-- lrp-add lg0 lg0lp 0a:00:00:00:03:01 192.168.5.1/24 \
+		-- ls-add lg0l \
+		-- lsp-add lg0l llg0p \
+		-- lsp-set-type llg0p router \
+		-- lsp-set-addresses llg0p 0a:00:00:00:03:01 \
+		-- lsp-set-options llg0p router-port=lg0lp \
+		-- lsp-add lg0l lg0lnetp \
+		-- lsp-set-type lg0lnetp localnet \
+		-- lsp-set-addresses lg0lnetp unknown \
+		-- lsp-set-options lg0lnetp network_name=data-net \
+
+	ovn_nbctl \
+		-- lr-route-add lg0 0.0.0.0/0 172.26.5.2 lg0lp \
+
+	ovn_nbctl \
+		-- --id=@nat2 create NAT type=snat logical_ip=192.168.2.0/24 external_ip=192.168.5.1 \
+		-- --id=@nat3 create NAT type=snat logical_ip=192.168.3.0/24 external_ip=192.168.5.1 \
+		-- add Logical_Router lg0 nat @nat2 \
+		-- add Logical_Router lg0 nat @nat3 \
 
 	# it's port match
 	ls0="$(ovn_nbctl --bare --columns=_uuid find Logical_Switch name=ls0)"
@@ -184,6 +212,21 @@ init_host0() {
 
 
 init_host1() {
+	ip link del dev lg0lp0
+	ip link add dev lg0lp0 type veth peer name lg0lp1
+	ovs-vsctl \
+		-- set Open_vSwitch . external_ids:ovn-bridge-mappings=data-net:br-data-net \
+		-- --if-exists del-br br-data-net \
+		-- --may-exist add-br br-data-net \
+		-- --may-exist add-port br-data-net lg0lp1 \
+
+	ip link set br-data-net up
+	ip link set lg0lp1 up
+	ip addr add 192.168.5.2/24 dev lg0lp0
+	ip link set lg0lp0 up
+	while iptables -t nat -D POSTROUTING -o eth0 -s 192.168.5.0/24 -j MASQUERADE; do true; done
+	      iptables -t nat -A POSTROUTING -o eth0 -s 192.168.5.0/24 -j MASQUERADE
+
 	add_host_port ls0p2 0a:00:00:00:00:04 192.168.2.4
 	add_host_port ls1p1 0a:00:00:00:01:03 192.168.3.3
 }
