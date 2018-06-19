@@ -165,7 +165,7 @@ prep_logical() {
 
 	# allow only (from,to) (ping,http)
 	ovn_nbctl \
-		-- acl-add ls0 from-lport 1000 "tcp.dst == 80" allow-related \
+		-- acl-add ls0 from-lport 1000 "tcp.dst == 80 || (udp.src == 68 && udp.dst == 67)" allow-related \
 		-- acl-add ls0   to-lport 1000 "tcp.dst == 80" allow-related \
 		-- acl-add ls0 from-lport  999 "icmp4.type == 8 && icmp4.code == 0" allow-related \
 		-- acl-add ls0   to-lport  999 "icmp4.type == 8 && icmp4.code == 0" allow-related \
