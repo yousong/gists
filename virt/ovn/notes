@@ -8,8 +8,15 @@
 	shaping
 	gateway, nat
 	lb
-	distributed gateway ports
 	qos
-	ovsdb cluster
 	with docker
-	with tunnel
+	when to use vxlan
+
+scale and resilence
+
+	gateway high availability
+	distributed gateway ports
+	ovsdb cluster
+	hardware vtep
+
+- OVN gateway high availability plan, http://docs.openvswitch.org/en/latest/topics/high-availability/

@@ -47,6 +47,12 @@ prep_north() {
 }
 
 reset() {
+	ovs-vsctl del-br br0
+	ip link del dev ls0p00
+	ip link del dev ls0p10
+	ip link del dev ls1p00
+	ip link del dev ls0p20
+	ip link del dev ls1p10
 	ovn-ctl stop_northd
 	ovn-ctl stop_controller
 	ovs-ctl stop
