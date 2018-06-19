@@ -135,7 +135,7 @@ prep_logical() {
 		-- lsp-set-options lg0lnetp network_name=data-net \
 
 	ovn_nbctl \
-		-- lr-route-add lg0 0.0.0.0/0 172.26.5.2 lg0lp \
+		-- lr-route-add lg0 0.0.0.0/0 192.168.5.2 lg0lp \
 
 	ovn_nbctl \
 		-- --id=@nat2 create NAT type=snat logical_ip=192.168.2.0/24 external_ip=192.168.5.1 \
