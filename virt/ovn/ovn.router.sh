@@ -155,6 +155,27 @@ prep_logical() {
 		-- add Logical_Router lg0 nat @nat2 \
 		-- add Logical_Router lg0 nat @nat3 \
 
+	# lb on ls resides on the client side; real server sees client's real ip
+	# lb on lr; lr must be gateway router; real server cannot see client's real ip
+	ovn_nbctl \
+		-- --id=@lb0 create Load_Balancer name=lb0 vips:192.168.2.5="192.168.2.3,192.168.2.4" \
+		-- --id=@lb1 create Load_Balancer name=lb1 vips:192.168.5.3="192.168.2.3,192.168.2.4" \
+		-- add Logical_Switch ls1 load_balancer @lb0 \
+		-- add Logical_Router lg0 load_balancer @lb1 \
+
+	# allow only (from,to) (ping,http)
+	ovn_nbctl \
+		-- acl-add ls0 from-lport 1000 "tcp.dst == 80" allow-related \
+		-- acl-add ls0   to-lport 1000 "tcp.dst == 80" allow-related \
+		-- acl-add ls0 from-lport  999 "icmp4.type == 8 && icmp4.code == 0" allow-related \
+		-- acl-add ls0   to-lport  999 "icmp4.type == 8 && icmp4.code == 0" allow-related \
+		-- acl-add ls0 from-lport    0 "ip" drop \
+		-- acl-add ls0   to-lport    0 "ip" drop \
+
+	ovn_nbctl \
+		-- create Address_Set name=intnet addresses="192.168.2.0/24 192.168.3.0/24" \
+		-- acl-add ls0 to-lport 1001 "ip4.src == \$intnet" allow-related \
+
 	# it's port match
 	ls0="$(ovn_nbctl --bare --columns=_uuid find Logical_Switch name=ls0)"
 	ovn_nbctl \
@@ -170,6 +191,14 @@ prep_logical() {
 	add_logical_port ls0 ls0p2 0a:00:00:00:00:04 192.168.2.4 "$dhcp2"
 	add_logical_port ls1 ls1p0 0a:00:00:00:01:02 192.168.3.2 "$dhcp3"
 	add_logical_port ls1 ls1p1 0a:00:00:00:01:03 192.168.3.3 "$dhcp3"
+
+	# works on tunnel_egress_iface: inter-chassis
+	# interface line rate as the limit: virtio_net has no such feature and will default 100Mbps
+	# queue_id will be allocated by northd and set on sb db;  correspond to class minor_id - 1
+	# ovs set_queue action will be used to classify traffic: mapped to 0x10000 + queue_id
+	ovn_nbctl \
+		-- lsp-set-options ls1p0 qos_max_rate=30000000 \
+		-- lsp-set-options ls0p0 qos_max_rate=20000000 \
 
 }
 
