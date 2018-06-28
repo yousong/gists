@@ -212,6 +212,7 @@ add_logical_port() {
 	ovn_nbctl --may-exist lsp-add "$ls" "$lsp" \
 		-- lsp-set-addresses "$lsp" "$mac $ip" \
 		-- lsp-set-dhcpv4-options "$lsp" $dhcp \
+		-- lsp-set-port-security "$lsp" "$mac $ip" \
 
 }
 

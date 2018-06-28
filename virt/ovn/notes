@@ -8,7 +8,8 @@
 	shaping
 	gateway, nat
 	lb
-	qos
+	localport
+	qos, fip bandwidth
 	with docker
 	when to use vxlan
 
@@ -20,3 +21,37 @@ scale and resilence
 	hardware vtep
 
 - OVN gateway high availability plan, http://docs.openvswitch.org/en/latest/topics/high-availability/
+
+
+# DEBUG
+
+	sudo ovsdb-client dump unix:ovnnb_db.sock
+	sudo ovsdb-client dump unix:ovnsb_db.sock
+	sudo ovn-sbctl dump-flows ls0
+	sudo ovn-sbctl --ovs=unix:br0.mgmt --stats dump-flows ls0
+
+trace
+
+	# dhcp
+	sudo ovn-trace ls0 'inport== "ls0p2" && eth.src == 0a:00:00:00:00:04 && eth.dst == ff:ff:ff:ff:ff:ff && ip4.src == 0.0.0.0 && ip4.dst == 255.255.255.255 && udp && udp.src == 68 && udp.dst == 67 && ip.ttl == 64'
+
+	# ping
+	sudo ovn-trace ls0 'inport== "ls0p1" && eth.src == 0a:00:00:00:00:03 && eth.dst == 0a:00:00:00:00:01 && ip4.src == 192.168.2.3 && ip4.dst == 192.168.5.3 && ip.ttl == 64 && icmp4.type == 8 && icmp4.code == 0'
+
+host
+
+	sudo ovs-appctl -t ovn-controller ct-zone-list
+
+# commits
+
+commit 06a26dd2b4b80c2c4159eac245c9cc8e5ccb93e6
+Author: Mickey Spiegel <mickeys.dev@gmail.com>
+Date:   Thu Jan 26 17:31:08 2017 -0800
+
+	ovn: distributed NAT flows
+
+commit 41a15b71ed1ef35aa612a1128082219fbfc3f327
+Author: Mickey Spiegel <mickeys.dev@gmail.com>
+Date:   Sun Jan 8 16:21:14 2017 -0800
+
+    ovn: Introduce distributed gateway port and "chassisredirect" port binding
