@@ -145,3 +145,72 @@ ip_range_net() {
 	fi
 	echo "$net/$masklen"
 }
+
+# ipadd:
+#
+# 1. Add <ip/preflen> to <ifname>
+# 2. Add link route to the net with src ip being <ip>
+# 3. Change/add default route with gw being the first address in specific net
+# 4. Send unsolicitous arp requests to update neighbors' cache
+ipadd() {
+	local ip="$1"
+	local masklen="$2"
+	local ifname="$3"
+	local ipnet net gw
+
+	if [ "$(id -u)" != 0 ]; then
+		echo "$0 requires root privileges" >&2
+		exit 1
+	fi
+
+	ipnet="$ip/$masklen"
+	net="$(ip_masklen_net "$ipnet")"
+	gw="$(net_gw "$net")"
+
+	ip addr add "$ipnet" dev "$ifname"
+	ip route add "$net" dev "$ifname" src "$ip" &>/dev/null || \
+		ip route change "$net" dev "$ifname" src "$ip"
+	ip route change default via "$gw" dev "$ifname" src "$ip" &>/dev/null || \
+		ip route add default via "$gw" dev "$ifname" src "$ip"
+	arping -c 3 -U -I "$ifname" "$ip"
+}
+
+# ipdel:
+#
+# 1. Del <ip/preflen> from <ifname>
+# 2. Del exactly the link route added by "ipadd" command
+# 3. If there is remaining address in <ifname>
+#    1. Try adding link route to its net
+#    2. Change default route by using gw inferred from that address
+ipdel() {
+	local ip="$1"
+	local masklen="$2"
+	local ifname="$3"
+	local ipnet net gw
+
+	if [ "$(id -u)" != 0 ]; then
+		echo "$0 requires root privileges" >&2
+		exit 1
+	fi
+
+	ipnet="$ip/$masklen"
+	net="$(ip_masklen_net "$ip" "$masklen")"
+	gw="$(net_gw "$net")"
+
+	ip addr del "$ipnet" dev "$ifname"
+	ip route del "$net" dev "$ifname" src "$ip" &>/dev/null
+
+	# get remaining address from ifname
+	ipnet="$(ip addr show "$ifname" | awk '/^[ ]+inet ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/ { print $2; exit 0; }' )"
+	if [ -n "$ipnet" ]; then
+		ip="${ipnet%/*}"
+		net="$(ip_masklen_net "$ipnet")"
+		gw="$(net_gw "$net")"
+		ip route change "$net" dev "$ifname" src "$ip" &>/dev/null || \
+			ip route add "$net" dev "$ifname" src "$ip" &>/dev/null
+		ip route change default via "$gw" dev "$ifname" src "$ip" &>/dev/null || \
+			ip route add default via "$gw" dev "$ifname" src "$ip" &>/dev/null
+	fi
+}
+
+"$@"
