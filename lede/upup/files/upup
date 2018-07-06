@@ -1,0 +1,102 @@
+#!/bin/sh
+
+. /lib/functions.sh
+
+_errmsg() {
+	logger -s -t upup -p daemon.info "$@"
+}
+
+_dbgmsg() {
+	logger -s -t upup -p daemon.debug "$@"
+}
+
+upup_ping() {
+	local addr="$1"
+	local check_timeout="${2:-1}"
+	local check_times="${3:-3}"
+	local ncheck=0
+
+	while true; do
+		ping -q -c 1 -W 1 "$addr" &>/dev/null && {
+			_dbgmsg "ping $addr: check $ncheck: ok"
+			return 0
+		}
+		ncheck="$(($ncheck + 1))"
+		_dbgmsg "ping $addr: check $ncheck: bad"
+		[ "$ncheck" -lt "$check_times" ] || return 1
+	done
+}
+
+bridge_turn_on() {
+	local ports
+
+	swconfig dev switch0 vlan "$ports_vlan" set ports "$ports_other $port_bridge"
+	swconfig dev switch0 apply
+	ports="$(swconfig dev switch0 vlan "$ports_vlan" get ports)"
+	_errmsg "bridge turned on: vlan: $ports_vlan, ports: $ports"
+}
+
+bridge_turn_off() {
+	local ports
+
+	swconfig dev switch0 vlan "$ports_vlan" set ports "$ports_other"
+	swconfig dev switch0 apply
+	ports="$(swconfig dev switch0 vlan "$ports_vlan" get ports)"
+	_errmsg "bridge turned off: vlan: $ports_vlan, ports: $ports"
+}
+
+bridge_is_on() {
+	local ports ports_
+
+	ports=" $(swconfig dev switch0 vlan "$ports_vlan" get ports) "
+	ports_="${ports% $port_bridge *}"
+	[ "$ports" != "$ports_" ]
+}
+
+upup_check() {
+	while true; do
+		if upup_ping "$ip_my" "$ip_timeout_my"; then
+			if bridge_is_on; then
+				bridge_turn_off
+			fi
+			sleep 30
+		elif upup_ping "$ip_other" "$ip_timeout_other"; then
+			if ! bridge_is_on; then
+				bridge_turn_on
+			fi
+			sleep 10
+		else
+			if ! bridge_is_on; then
+				bridge_turn_on
+			fi
+			sleep 5
+		fi
+	done
+}
+
+
+upup_init() {
+	local f val
+
+	config_load upup
+
+	for f in \
+		ports_vlan \
+		ports_other \
+		port_bridge \
+		ip_my \
+		ip_other \
+		ip_timeout_my \
+		ip_timeout_other \
+			; do
+		config_get "$f" upup "$f"
+		eval "val=\$$f"
+		[ -n "$val" ] || {
+			_dbgmsg "$f is empty"
+			return 1
+		}
+	done
+}
+
+upup_init \
+	&& upup_check 

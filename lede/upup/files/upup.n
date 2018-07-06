@@ -1,0 +1,148 @@
+#!/bin/sh
+
+. /lib/functions/network.sh
+
+_is_malta="$(grep -o "MIPS Malta" /proc/cpuinfo)"
+
+_err() {
+	logger -s -t upup -p daemon.info "$@"
+}
+
+_dbg() {
+	[ -n "$_is_malta" ] && {
+		logger -s -t upup -p daemon.debug "$@"
+	}
+}
+
+record_and_reboot() {
+	local reason="$1"
+
+	echo "$reason" >/root/upup_reason
+	logread >/root/upup_logread
+	dmesg >/root/upup_dmesg
+	sync
+	reboot -f
+	sleep 7200
+}
+
+checkup_iface() {
+	local iface="$1"
+	local check_times="$2"
+	local check_interval="$3"
+	local action="$4"
+	local ncheck=0
+	local stime="$(date +%s)"
+
+	if [ -z "$action" ]; then
+		_err "iface $iface check without action?"
+		return
+	fi
+	while true; do
+		network_flush_cache
+		network_is_up "$iface" && {
+			_dbg "iface $iface ok"
+			return
+		}
+		ncheck="$(($ncheck + 1))"
+		_dbg "iface $iface not up $ncheck"
+		[ "$ncheck" -gt "$check_times" ] && {
+			ncheck=0
+			_err "iface $iface is not up after $check_times $check_interval seconds' check"
+			eval "$action"
+		}
+		# it's not acceptable that the iface is still not up after 30 minutes
+		# of ping check
+		[ "$ncheck" -eq 0 -a "$(($(date +%s) - $stime))" -gt 1800 ] && {
+			record_and_reboot "iface $iface not up after $(($(date +%s) - $stime)) seconds"
+		}
+		sleep "$check_interval"
+	done
+}
+
+checkup_ping() {
+	local addr="$1"
+	local check_times="${2:-10}"
+	local ncheck=0
+	local stime="$(date +%s)"
+
+	while true; do
+		ncheck="$(($ncheck + 1))"
+		[ "$ncheck" -gt "$check_times" ] && {
+			ncheck=0
+			_err "address $addr is not accessible after $check_times ping check"
+			ifup wan
+			sleep 30
+		}
+		ping -q -c 1 -W 1 "$addr" &>/dev/null && {
+			_dbg "address $addr ok"
+			return 0
+		}
+		_dbg "$ncheck check: address $addr not ok"
+	done
+}
+
+check_wan() {
+	checkup_iface wan 3 30 "ifup wan"
+}
+
+check_sankuai() {
+	checkup_iface sankuai 3 30 'kill -9 "$(pgrep -x xl2tpd-control)"; /etc/init.d/xl2tpd restart; sleep 5; ifup sankuai'
+}
+
+check_maslow() {
+	local ncheck=0
+	local check_times=30
+	local acaddr="$(uci -q get mtclient-ng.default.server_addr | cut -f1 -d:)"
+
+	checkup_ping "$acaddr" "$check_times"
+}
+
+_lastcheck_mtclientng="$(date +%s)"
+check_mtclientng() {
+	local ncheck=0
+	local check_times=30
+	local pid
+	local now
+
+	pid="$(pgrep -x /bin/mtclient-ng)"
+	if [ -z "$pid" ]; then
+		_err "mtclient-ng is not running"
+		/etc/init.d/mtclient-ng restart
+		return
+	fi
+	now="$(date +%s)"
+	if [ "$(($now - $_lastcheck_mtclientng))" -gt 7200 ]; then
+		_err "force restarting mtclient-ng after 2 hours"
+		/etc/init.d/mtclient-ng restart
+	fi
+	_lastcheck_mtclientng="$now"
+}
+
+check_dmesg() {
+	dmesg | grep -q 'Modules linked in:' && {
+		record_and_reboot "scary traces found in dmesg"
+	}
+}
+
+ports_with_bridge_link='0 1 2 3 4'
+ports_without_bridge_link='0 1 2 3'
+ip_ping_check='192.168.1.5'
+
+turn_on_bridge() {
+	swconfig dev switch0 vlan 1 set ports "$ports_with_bridge_link"
+	swconfig dev switch0 apply
+}
+
+turn_down_bridge() {
+	swconfig dev switch0 vlan 1 set ports "$ports_without_bridge_link"
+	swconfig dev switch0 apply
+}
+
+do_check() {
+	while true; do
+		sleep 300
+		checkup_ping 1 30
+	done
+}
+
+do_check
