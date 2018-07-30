@@ -54,3 +54,17 @@ func TestDuration(t *testing.T) {
 	timeBoot := timeLoc.Add(-dur)
 	t.Logf("timeBoot: %s", timeBoot)
 }
+
+func TestTimer(t *testing.T) {
+	var rv bool
+	tm := time.NewTimer(5 * time.Second)
+	rv = tm.Stop()
+	if !rv {
+		t.Errorf("should return true if not already expired/stopped before calling Stop()")
+	}
+	rv = tm.Stop()
+	if rv {
+		t.Errorf("should return false on already stopped.")
+	}
+	<-tm.C
+}

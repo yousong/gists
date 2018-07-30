@@ -43,3 +43,25 @@ func TestFuncOverride(t *testing.T) {
 	t1.Name = "value 1"
 	t.Logf("%s", t1.Hello())
 }
+
+func TestNilSlice(t *testing.T) {
+	var sli []int
+	if len(sli) == 0 {
+		t.Logf("nil slice has length 0")
+	}
+	for _, _ = range sli {
+		t.Logf("nil slice can be ranged 0 times")
+	}
+	t.Logf("nil slice equals nil: %v", sli == nil)
+}
+
+func TestNilMap(t *testing.T) {
+	var m map[string]int
+	if len(m) == 0 {
+		t.Logf("nil map has length 0")
+	}
+	for _, _ = range m {
+		t.Logf("nil map can be ranged 0 times")
+	}
+	t.Logf("nil map equals nil: %v", m == nil)
+}
