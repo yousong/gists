@@ -1,5 +1,7 @@
 export o_dst_bypass="$(cat net.cn.txt)"
 export o_dst_forward="0.0.0.0/1 128.0.0.0/1"
 export o_without_recentrst=1
+export o_ifname=tap1
+export o_gateway=10.0.0.1
 
 bash vpnguru

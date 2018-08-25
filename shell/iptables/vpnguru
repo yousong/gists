@@ -14,9 +14,13 @@
 # NOTE: it is not expected to work out of box
 #
 
-o_ifname="${o_ifname:-wg0}"
+o_ifname="${o_ifname}"
+o_gateway="${o_gateway}"
 o_rttable="${o_rttable:-200}"
 o_fwmark="${o_fwmark:-200}"
+if [ -z "$o_ifname" ]; then
+	exit 1
+fi
 o_without_recentrst="${o_without_recentrst}"
 o_recentrst_filter=cat
 if [ -n "$o_without_recentrst" ]; then
@@ -106,7 +110,7 @@ vpnguru_iptchains_init() {
 
 vpnguru_route_init() {
 	ip rule add fwmark "$o_fwmark" lookup "$o_rttable"
-	ip route add default dev "$o_ifname" table "$o_rttable"
+	ip route add default dev "$o_ifname" "${o_gateway:+via $o_gateway}" table "$o_rttable"
 	ip route flush cache
 }
 
