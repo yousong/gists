@@ -6,3 +6,11 @@ CONFIG_PACKAGE_openvswitch=y
 CONFIG_PACKAGE_openvswitch-ovn-north=y
 CONFIG_PACKAGE_openvswitch-ovn-host=y
 CONFIG_PACKAGE_openvswitch-python=y
+
+#CONFIG_DEVEL=y
+#CONFIG_PACKAGE_kmod-openvswitch-intree=y
+#CONFIG_PACKAGE_kmod-openvswitch-geneve-intree=y
+#CONFIG_PACKAGE_kmod-openvswitch-gre-intree=y
+#CONFIG_PACKAGE_kmod-openvswitch-vxlan-intree=y
+#CONFIG_PACKAGE_kmod-openvswitch-stt-intree=y
+#CONFIG_PACKAGE_kmod-openvswitch-lisp-intree=y
