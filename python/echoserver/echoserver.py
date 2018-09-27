@@ -125,6 +125,9 @@ class EchoRequestHandler(RequestHandler):
         # peerip can be different from remoteip by taking value from
         # X-Forwarded-For or X-Real-IP
         resp['peerip'] = self.request.remote_ip
+        resp['http_host'] = self.request.host
+        resp['http_uri'] = self.request.uri
+        resp['http_headers'] = [(name, value) for name, value in self.request.headers.get_all()]
         resp = json.dumps(resp)
         resp += '\n'
         self.write(resp)
@@ -156,7 +159,7 @@ def main():
 
     if len(options.http) > 0:
         app = Application([
-            (r'/', EchoRequestHandler),
+            (r'/.*', EchoRequestHandler),
         ])
         for port in options.http:
             httpserver = HTTPServer(app, xheaders=True)
