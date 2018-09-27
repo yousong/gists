@@ -10,6 +10,7 @@ from tornado.tcpserver import TCPServer
 from tornado.httpserver import HTTPServer
 from tornado.web import RequestHandler, Application
 from tornado.web import MissingArgumentError
+from tornado.websocket import WebSocketHandler
 from tornado.options import define, options
 
 # How to use this
@@ -108,6 +109,34 @@ class EchoUDPServer(object):
             pass
 
 
+class WsEchoRequestHandler(WebSocketHandler):
+    def __init__(self, *args, **kwargs):
+        super(WsEchoRequestHandler, self).__init__(*args, **kwargs)
+        self.info = None
+
+    def open(self):
+        sh = StreamHandler(self.stream)
+        self.info = sh.info
+        self.log("open")
+
+    def on_message(self, message):
+        info = self.info.copy()
+        info['ts'] = time.time()
+        info['data'] = message
+        self.write_message(json.dumps(info))
+
+    def on_close(self):
+        self.log("close")
+
+    def check_origin(self, origin):
+        return True
+
+    def log(self, what):
+        info = self.info
+        localip, localport = info['localip'], info['localport']
+        remoteip, remoteport = info['remoteip'], info['remoteport']
+        logger.info('ws %s from %s:%s -> %s:%s', what, remoteip, remoteport, localip, localport)
+
 class EchoRequestHandler(RequestHandler):
     def head(self, *args, **kwargs):
         pass
@@ -159,6 +188,7 @@ def main():
 
     if len(options.http) > 0:
         app = Application([
+            (r'/ws', WsEchoRequestHandler),
             (r'/.*', EchoRequestHandler),
         ])
         for port in options.http:
