@@ -157,8 +157,6 @@ class EchoRequestHandler(RequestHandler):
         resp['http_host'] = self.request.host
         resp['http_uri'] = self.request.uri
         resp['http_headers'] = [(name, value) for name, value in self.request.headers.get_all()]
-        resp = json.dumps(resp)
-        resp += '\n'
         self.write(resp)
 
 
