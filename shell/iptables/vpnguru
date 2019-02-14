@@ -96,6 +96,7 @@ vpnguru_iptchains_init() {
 		:vpnguru_mark_ -
 		-I OUTPUT 1 -j vpnguru_mark_
 		-I PREROUTING 1 -j vpnguru_mark
+		-I FORWARD 1 -o $o_ifname -p tcp -m tcp --tcp-flags SYN,RST SYN -m comment --comment "vpnguru_tcpmss" -j TCPMSS --clamp-mss-to-pmtu
 		-A vpnguru_mark -j vpnguru_mark_
 		-A vpnguru_mark -p tcp -m tcp --tcp-flags RST RST -m recent --name vpnguru_recentrst --set --rsource
 		-A vpnguru_mark_ -m set --match-set vpnguru_dst_bypass dst -j RETURN
