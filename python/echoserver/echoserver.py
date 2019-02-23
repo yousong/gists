@@ -141,9 +141,19 @@ class EchoRequestHandler(RequestHandler):
     def head(self, *args, **kwargs):
         pass
 
-    def get(self, *args, **kwargs):
+    def get_request_info(self):
         sh = StreamHandler(self.request.connection.stream)
         info = sh.get_stream_info()
+        # peerip can be different from remoteip by taking value from
+        # X-Forwarded-For or X-Real-IP
+        info['peerip'] = self.request.remote_ip
+        info['http_host'] = self.request.host
+        info['http_uri'] = self.request.uri
+        info['http_headers'] = [(name, value) for name, value in self.request.headers.get_all()]
+        return info
+
+    def get(self, *args, **kwargs):
+        info = self.get_request_info()
         resp = {}
         resp.update(info)
         try:
@@ -151,14 +161,18 @@ class EchoRequestHandler(RequestHandler):
         except MissingArgumentError:
             data = None
         resp['data'] = data
-        # peerip can be different from remoteip by taking value from
-        # X-Forwarded-For or X-Real-IP
-        resp['peerip'] = self.request.remote_ip
-        resp['http_host'] = self.request.host
-        resp['http_uri'] = self.request.uri
-        resp['http_headers'] = [(name, value) for name, value in self.request.headers.get_all()]
         self.write(resp)
 
+    def post(self, *args, **kwargs):
+        resp = {}
+        info = self.get_request_info()
+        resp = {}
+        resp.update(info)
+        resp['query_arguments'] = self.request.arguments
+        resp['body_arguments'] = self.request.body_arguments
+        resp['body'] = self.request.body
+        print self.request.body
+        self.write(resp)
 
 def init_options():
     define('http', type=int, multiple=True, help='ports to serve HTTP')
