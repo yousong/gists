@@ -92,7 +92,7 @@ def threads_trash(service, threads):
     if count > 0:
         batchreq.execute()
 
-def main():
+def main(q):
     """Shows basic usage of the Gmail API.
 
     Creates a Gmail API service object and outputs a list of label names
@@ -102,7 +102,6 @@ def main():
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('gmail', 'v1', http=http)
 
-    q = 'label:qemu-devel is:unread'
     fields = 'threads(id)'
     while True:
         results = service.users().threads().list(userId='me', q=q, fields=fields).execute()
@@ -118,4 +117,19 @@ def main():
             break
 
 if __name__ == '__main__':
-    main()
+    qs = [
+        'label:AD is:unread',
+        'label:ovs-ovs-dev is:unread',
+        'label:ovs-ovs-discuss is:unread',
+        'label:golang is:unread',
+        'label:lua-l is:unread',
+        'label:musl-libc is:unread',
+        'label:openwrt-devel-packages is:unread',
+        'label:openwrt-devel-luci is:unread',
+        'label:core-mentorship is:unread',
+        'label:buildroot-crostool-ng is:unread',
+        'label:nginx-devel is:unread',
+    ]
+    for q in qs:
+        print(q)
+        main(q)
