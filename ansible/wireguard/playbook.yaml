@@ -1,0 +1,30 @@
+---
+- hosts:
+    all
+  roles:
+    - adamruzicka.wireguard
+  tasks:
+    - name: Enable forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        state: present
+        reload: yes
+    - name: Enable masquerading
+      firewalld:
+        zone: public
+        masquerade: yes
+        permanent: yes
+        state: enabled
+    - name: Allow listen port
+      firewalld:
+        zone: public
+        rich_rule: "rule port port='{{ lookup('vars', 'wireguard_' + item + '_interface').listen_port }}' protocol='udp' accept"
+        permanent: yes
+        state: enabled
+      with_items: "{{ wireguard_networks }}"
+    - name: Reload firewalld
+      service:
+        name: firewalld
+        state: restarted
+        enabled: yes

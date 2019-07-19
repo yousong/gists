@@ -1,0 +1,17 @@
+---
+all:
+  hosts:
+    HOSTNAME:
+      ansible_user: root
+      ansible_host: x.x.x.x
+      wireguard_networks:
+        - wg0
+      wireguard_wg0_interface:
+        address: 10.y.y.1/24
+        private_key: wg genkey | tee /dev/tty | wg pubkey
+        listen_port: 1111111
+      wireguard_wg0_peers:
+        oneplus5t:
+          public_key: haha
+          allowed_ips: 10.y.y.2/32
+          persistent_keepalive: 10
