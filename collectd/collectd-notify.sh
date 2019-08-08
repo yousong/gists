@@ -14,8 +14,12 @@
 #
 #	LoadPlugin exec
 #	<Plugin exec>
-#	  NotificationExec root "/root/collectd-notify.sh"
+#	  NotificationExec username-whose-uid-is-not-0 "/root/collectd-notify.sh"
 #	</Plugin>
+#
+# exec uid must not be root, otherwise collectd will reject execute it.
+#
+#	ERROR("exec plugin: Cowardly refusing to exec program as root.");
 #
 
 __newline="
