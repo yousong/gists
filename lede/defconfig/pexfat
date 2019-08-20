@@ -1,0 +1,2 @@
+CONFIG_BUILD_PATENTED=y
+CONFIG_PACKAGE_kmod-fs-exfat=y
