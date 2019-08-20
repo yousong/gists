@@ -1,0 +1,35 @@
+CONFIG_TARGET_ramips=y
+CONFIG_TARGET_ramips_mt7621=y
+CONFIG_TARGET_ramips_mt7621_DEVICE_northbound_zodiac-gx=y
+
+CONFIG_PACKAGE_tcpdump-mini=y
+
+CONFIG_PACKAGE_luci=y
+
+CONFIG_PACKAGE_openvpn-openssl=y
+CONFIG_PACKAGE_wireguard=y
+CONFIG_PACKAGE_luci-proto-wireguard=y
+
+CONFIG_PACKAGE_sqm-scripts=y
+
+CONFIG_PACKAGE_collectd=y
+CONFIG_PACKAGE_collectd-mod-cpu=y
+CONFIG_PACKAGE_collectd-mod-exec=y
+CONFIG_PACKAGE_collectd-mod-netlink=y
+CONFIG_PACKAGE_collectd-mod-network=y
+CONFIG_PACKAGE_collectd-mod-ping=y
+CONFIG_PACKAGE_collectd-mod-threshold=y
+
+CONFIG_PACKAGE_kmod-nf-nathelper=y
+CONFIG_PACKAGE_kmod-nf-nathelper-extra=y
+
+CONFIG_PACKAGE_ip=y
+CONFIG_PACKAGE_ipset=y
+CONFIG_PACKAGE_iptables-mod-conntrack-extra=y
+
+# CONFIG_PACKAGE_dnsmasq is not set
+CONFIG_PACKAGE_dnsmasq-full=y
+CONFIG_PACKAGE_dnsmasq_full_ipset=y
+# CONFIG_PACKAGE_dnsmasq_full_auth is not set
+# CONFIG_PACKAGE_dnsmasq_full_dnssec is not set
+# CONFIG_PACKAGE_dnsmasq_full_dhcpv6 is not set
