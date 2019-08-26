@@ -1,0 +1,21 @@
+---
+all:
+  vars:
+    kubernetes_version: "1.15"
+  children:
+    masters:
+      vars:
+        kubernetes_role: master
+        kubernetes_allow_pods_on_master: true
+      hosts:
+        host02:
+          ansible_host: 10.168.222.204
+          ansible_user: yunion
+          ansible_become: yes
+    nodes:
+      vars:
+        kubernetes_role: node
+      hosts:
+        host02-node:
+          ansible_host: 10.168.222.175
+          ansible_user: root

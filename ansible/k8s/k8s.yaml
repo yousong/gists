@@ -1,10 +1,11 @@
 - hosts: all
-
-  vars:
-    kubernetes_allow_pods_on_master: true
-    kubernetes_version: "1.15"
-
-  roles:
-    - geerlingguy.docker
-    - geerlingguy.kubernetes
-
+  tasks:
+    - sysctl:
+        name: net.bridge.bridge-nf-call-iptables
+        value: "1"
+        reload: yes
+        state: present
+    - include_role:
+        name: geerlingguy.docker
+    - include_role:
+        name: geerlingguy.kubernetes
