@@ -1,9 +1,9 @@
 ---
 - hosts:
     all
-  roles:
-    - adamruzicka.wireguard
   tasks:
+    - include_role:
+        name: adamruzicka.wireguard
     - name: Enable forwarding
       sysctl:
         name: net.ipv4.ip_forward
