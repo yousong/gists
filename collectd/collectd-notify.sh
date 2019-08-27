@@ -5,6 +5,10 @@
 #	LoadPlugin threshold
 #	<Plugin threshold>
 #	  <Plugin "ping">
+#	    <Type "ping">
+#	      FailureMax 90.0
+#	      Hits 1
+#	    </Type>
 #	    <Type "ping_droprate">
 #	      FailureMax 0.95
 #	      Hits 1
@@ -20,6 +24,10 @@
 # exec uid must not be root, otherwise collectd will reject execute it.
 #
 #	ERROR("exec plugin: Cowardly refusing to exec program as root.");
+#
+# most shells including bash, ash, etc. drop privileges from setuid
+#
+# - https://collectd.org/documentation/manpages/collectd.conf.5.shtml#threshold_configuration
 #
 
 __newline="
@@ -82,10 +90,13 @@ parse_notification
 restart_wg0() {
 	case "$collectd_Host" in
 		xxx*)
-			sudo systemctl restart wg-quick@wg0
+			rand="$(hexdump -n 2 -e '1/2 "%u\n"' /dev/urandom)"
+			while ! sudo wg set wg0 listen-port $((20000+(rand%(65536-20000)))); do
+				rand="$(hexdump -n 2 -e '1/2 "%u\n"' /dev/urandom)"
+			done
 			;;
 		OpenWrt*)
-			ifup wg0
+			/root/wghop.sh
 			;;
 		*)
 			log "unknown host: $collectd_Host"
