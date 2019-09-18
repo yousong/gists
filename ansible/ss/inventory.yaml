@@ -1,0 +1,14 @@
+all:
+  hosts:
+    HOST:
+      #ansible_host: localhost
+      #ansible_connection: local
+      ansible_become: yes
+      shadowsocks_libev_servers: [sss0]
+      shadowsocks_libev_server_sss0:
+        server: 0.0.0.0
+        server_port: 55535
+        # hexdump -n 16 -e '"%02x"' /dev/urandom
+        password: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        method: chacha20-ietf-poly1305
+        mode: tcp_and_udp

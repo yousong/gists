@@ -1,0 +1,24 @@
+---
+- hosts: all
+  tasks:
+    - include_role:
+        name: yousong.shadowsocks-libev
+    - name: Allow server listen port
+      firewalld:
+        zone: public
+        rich_rule: "rule port port='{{ lookup('vars', 'shadowsocks_libev_server_' + item).server_port }}' protocol='tcp' accept"
+        permanent: yes
+        state: enabled
+      with_items: "{{ shadowsocks_libev_servers }}"
+    - name: Allow server listen port
+      firewalld:
+        zone: public
+        rich_rule: "rule port port='{{ lookup('vars', 'shadowsocks_libev_server_' + item).server_port }}' protocol='udp' accept"
+        permanent: yes
+        state: enabled
+      with_items: "{{ shadowsocks_libev_servers }}"
+    - name: Reload firewalld
+      service:
+        name: firewalld
+        state: restarted
+        enabled: yes
