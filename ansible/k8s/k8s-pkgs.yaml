@@ -1,0 +1,40 @@
+# task list extracted from role "geerlingguy.kubernetes"
+---
+- hosts: all
+  vars:
+    kubernetes_yum_arch: x86_64
+    kubernetes_packages:
+      - name: kubectl
+        state: present
+  tasks:
+    - name: Ensure Kubernetes repository exists.
+      yum_repository:
+        name: kubernetes
+        description: Kubernetes
+        enabled: true
+        gpgcheck: true
+        repo_gpgcheck: true
+        baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-{{ kubernetes_yum_arch }}
+        gpgkey:
+          - https://packages.cloud.google.com/yum/doc/yum-key.gpg
+          - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+    - name: Add Kubernetes GPG keys.
+      rpm_key:
+        key: "{{ item }}"
+        state: present
+      register: kubernetes_rpm_key
+      with_items:
+        - https://packages.cloud.google.com/yum/doc/yum-key.gpg
+        - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+    - name: Make cache if Kubernetes GPG key changed.
+      command: "yum -q makecache -y --disablerepo='*' --enablerepo='kubernetes'"
+      when: kubernetes_rpm_key is changed
+      args:
+        warn: false
+    - name: Install Kubernetes packages.
+      package:
+        name: "{{ item.name | default(item) }}"
+        state: "{{ item.state | default('present') }}"
+      with_items: "{{ kubernetes_packages }}"
