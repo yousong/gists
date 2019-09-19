@@ -1,13 +1,20 @@
 ---
 - hosts:
     all
+  handlers:
+    - name: reload firewalld
+      service:
+        name: firewalld
+        state: restarted
+        enabled: yes
   tasks:
-    - include_role:
+    - name: install and configure wireguard
+      include_role:
         name: adamruzicka.wireguard
     - name: Enable forwarding
       sysctl:
         name: net.ipv4.ip_forward
-        value: 1
+        value: "1"
         state: present
         reload: yes
     - name: Enable masquerading
@@ -16,6 +23,7 @@
         masquerade: yes
         permanent: yes
         state: enabled
+      notify: reload firewalld
     - name: Allow listen port
       firewalld:
         zone: public
@@ -23,9 +31,16 @@
         permanent: yes
         state: enabled
       with_items: "{{ wireguard_networks }}"
-      register: firewalld
-    - name: Reload firewalld
-      service:
-        name: firewalld
-        state: restarted
-      when: firewalld.changed
+      notify: reload firewalld
+    - name: clamp mss from wireguard interface
+      command: firewall-cmd --permanent --direct --add-rule ipv4 mangle FORWARD 0 -i {{ item }} -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+      register: result
+      changed_when: '" already is in " not in result.stderr'
+      notify: reload firewalld
+      with_items: "{{ wireguard_networks }}"
+    - name: clamp mss to wireguard networks
+      command: firewall-cmd --permanent --direct --add-rule ipv4 mangle FORWARD 0 -o {{ item }} -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+      register: result
+      changed_when: '" already is in " not in result.stderr'
+      notify: reload firewalld
+      with_items: "{{ wireguard_networks }}"
