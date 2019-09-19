@@ -23,8 +23,9 @@
         permanent: yes
         state: enabled
       with_items: "{{ wireguard_networks }}"
+      register: firewalld
     - name: Reload firewalld
       service:
         name: firewalld
         state: restarted
-        enabled: yes
+      when: firewalld.changed
