@@ -35,12 +35,12 @@
     - name: clamp mss from wireguard interface
       command: firewall-cmd --permanent --direct --add-rule ipv4 mangle FORWARD 0 -i {{ item }} -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
       register: result
-      changed_when: '" already is in " not in result.stderr'
+      changed_when: '"ALREADY_ENABLED" not in result.stderr'
       notify: reload firewalld
       with_items: "{{ wireguard_networks }}"
     - name: clamp mss to wireguard networks
       command: firewall-cmd --permanent --direct --add-rule ipv4 mangle FORWARD 0 -o {{ item }} -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
       register: result
-      changed_when: '" already is in " not in result.stderr'
+      changed_when: '"ALREADY_ENABLED" not in result.stderr'
       notify: reload firewalld
       with_items: "{{ wireguard_networks }}"
