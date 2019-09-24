@@ -1,3 +1,7 @@
+# Try kubespray
+
+ - https://github.com/kubernetes-sigs/kubespray
+
 # TODO
 
  - multi-master cluster
