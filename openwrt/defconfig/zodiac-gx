@@ -1,6 +1,8 @@
 CONFIG_TARGET_ramips=y
 CONFIG_TARGET_ramips_mt7621=y
-CONFIG_TARGET_ramips_mt7621_DEVICE_northbound_zodiac-gx=y
+CONFIG_TARGET_ramips_mt7621_DEVICE_northbound-networks_zodiac-gx=y
+
+# CONFIG_TARGET_ROOTFS_INITRAMFS is not set
 
 CONFIG_PACKAGE_tcpdump-mini=y
 
