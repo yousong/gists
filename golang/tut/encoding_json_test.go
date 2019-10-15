@@ -3,7 +3,6 @@ package tut
 import "testing"
 import (
 	"encoding/json"
-	"reflect"
 )
 
 type OwnerTenantOption struct {

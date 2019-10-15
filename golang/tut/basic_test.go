@@ -65,3 +65,22 @@ func TestNilMap(t *testing.T) {
 	}
 	t.Logf("nil map equals nil: %v", m == nil)
 }
+
+type TNilReceiver int
+
+func (a *TNilReceiver) Compare(b *TNilReceiver) bool {
+	if a == nil {
+		return true
+	} else {
+		return false
+	}
+}
+
+func TestNilReceiver(t *testing.T) {
+	var a *TNilReceiver
+	var b *TNilReceiver
+	got := a.Compare(b)
+	if !got {
+		t.Errorf("want %v, got %v", !got, got)
+	}
+}
