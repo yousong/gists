@@ -1,7 +1,17 @@
 ---
 all:
   vars:
+    docker_yum_repo_url: https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+    docker_install_compose: false
+    #_kubernetes_mirror: http://mirror.azure.cn/kubernetes/packages
+    _kubernetes_mirror: https://mirrors.aliyun.com/kubernetes/
     kubernetes_version: "1.15"
+    kubernetes_yum_baseurl: "{{ _kubernetes_mirror }}/yum/repos/kubernetes-el7-{{ kubernetes_yum_arch }}"
+    kubernetes_yum_repo_gpgcheck: true
+    kubernetes_yum_gpgkey:
+      - "{{ _kubernetes_mirror }}/yum/doc/yum-key.gpg"
+      - "{{ _kubernetes_mirror }}/yum/doc/rpm-package-key.gpg"
+    kubernetes_kubeadm_init_extra_opts: --image-repository registry.cn-hangzhou.aliyuncs.com/google_containers
   children:
     masters:
       vars:

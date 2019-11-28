@@ -17,3 +17,8 @@ Kube-proxy IPVS mode
 Network other than flannel, e.g. calico
 
  - https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#pod-network
+
+# tips
+
+	kubeadm config images list
+	kubeadm config images pull --help

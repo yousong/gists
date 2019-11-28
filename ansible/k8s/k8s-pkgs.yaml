@@ -6,6 +6,7 @@
     kubernetes_packages:
       - name: kubectl
         state: present
+    _kubernetes_mirror: https://mirrors.aliyun.com/kubernetes
   tasks:
     - name: Ensure Kubernetes repository exists.
       yum_repository:
@@ -14,10 +15,10 @@
         enabled: true
         gpgcheck: true
         repo_gpgcheck: true
-        baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-{{ kubernetes_yum_arch }}
+        baseurl: {{ _kubernetes_mirror }}/yum/repos/kubernetes-el7-{{ kubernetes_yum_arch }}
         gpgkey:
-          - https://packages.cloud.google.com/yum/doc/yum-key.gpg
-          - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+          - {{ _kubernetes_mirror }}/yum/doc/yum-key.gpg
+          - {{ _kubernetes_mirror }}/yum/doc/rpm-package-key.gpg
 
     - name: Add Kubernetes GPG keys.
       rpm_key:
@@ -25,8 +26,8 @@
         state: present
       register: kubernetes_rpm_key
       with_items:
-        - https://packages.cloud.google.com/yum/doc/yum-key.gpg
-        - https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+        - {{ _kubernetes_mirror }}/yum/doc/yum-key.gpg
+        - {{ _kubernetes_mirror }}/yum/doc/rpm-package-key.gpg
 
     - name: Make cache if Kubernetes GPG key changed.
       command: "yum -q makecache -y --disablerepo='*' --enablerepo='kubernetes'"
