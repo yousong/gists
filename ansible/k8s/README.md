@@ -22,3 +22,6 @@ Network other than flannel, e.g. calico
 
 	kubeadm config images list
 	kubeadm config images pull --help
+
+	# useful on version bump, re-run kubeadm init
+	rm -vf /etc/kubernetes/admin.conf
