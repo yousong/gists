@@ -1,0 +1,32 @@
+---
+- hosts: all
+  vars:
+    centos_major: "7"
+  tasks:
+    - name: epel
+      get_url:
+        url: https://mirrors.aliyun.com/repo/epel-{{ centos_major }}.repo
+        dest: /etc/yum.repos.d/epel.repo
+        force: yes
+        checksum: sha256:c1d39eb3cf4e92cd2a7e122a98824d0792bdb97ef9470781dfe3be7771919044
+        owner: root
+        group: root
+        mode: "0644"
+    - name: epel-testing
+      get_url:
+        url: https://mirrors.aliyun.com/repo/epel-testing.repo
+        dest: /etc/yum.repos.d/epel-testing.repo
+        force: yes
+        checksum: sha256:c8d9304421086cc20c9ca24ddd95780ccdd937003417f5a0a41775e66198db74
+        owner: root
+        group: root
+        mode: "0644"
+    - name: CentOS-Base
+      get_url:
+        url: https://mirrors.aliyun.com/repo/Centos-{{ centos_major }}.repo
+        dest: /etc/yum.repos.d/CentOS-Base.repo
+        force: yes
+        checksum: sha256:02829701771e59ae8ae1f6ebdf858f53795b541906f3e8bd6f5bc8f05b5a4ce9
+        owner: root
+        group: root
+        mode: "0644"
