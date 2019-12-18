@@ -1,0 +1,15 @@
+---
+- hosts: all
+  tasks:
+    - name: epel
+      copy:
+        content: |
+          [nodesource]
+          name=NodeJS 12.x Packages for Enterprise Linux $releasever - $basearch
+          baseurl=https://rpm.nodesource.com/pub_12.x/el/$releasever/$basearch
+          enabled=1
+          gpgcheck=0
+        dest: /etc/yum.repos.d/nodesource.repo
+        owner: root
+        group: root
+        mode: "0644"
