@@ -1,0 +1,33 @@
+---
+- hosts: all
+  vars:
+    # https://grafana.com/grafana/download
+    grafana_version: 6.5.2-1
+    grafana_arch: x86_64
+  handlers:
+    - name: restart grafana
+      service:
+        name: grafana-server
+        state: restarted
+  tasks:
+    - name: Get rpm
+      get_url:
+        url: https://dl.grafana.com/oss/release/grafana-{{ grafana_version }}.{{ grafana_arch }}.rpm
+        dest: /tmp/grafana.rpm
+        checksum: sha256:09b1b713a9985b081939fd4e45aecda10b5405aa4993c01bc6b7312e7b2d5587
+    - name: Install grafana
+      package:
+        name: /tmp/grafana.rpm
+        state: installed
+    - name: Enable anonymous access
+      ini_file:
+        path: /etc/grafana/grafana.ini
+        section: "auth.anonymous"
+        option: enabled
+        value: "true"
+      notify: restart grafana
+    - name: Enable & Start grafana
+      service:
+        name: grafana-server
+        enabled: yes
+        state: started
