@@ -26,6 +26,13 @@
         option: enabled
         value: "true"
       notify: restart grafana
+    - name: Set anonymous access role
+      ini_file:
+        path: /etc/grafana/grafana.ini
+        section: "auth.anonymous"
+        option: org_role
+        value: "Viewer"
+      notify: restart grafana
     - name: Enable & Start grafana
       service:
         name: grafana-server
