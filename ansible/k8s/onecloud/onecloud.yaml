@@ -1,0 +1,104 @@
+- hosts: all
+  tasks:
+    # https://github.com/kubernetes-retired/contrib/blob/master/ansible/roles/node/tasks/swapoff.yml
+    - name: Turn off swap mount
+      mount:
+        name: swap
+        fstype: swap
+        state: absent
+    - name: Turn off swap now
+      command: swapoff -a
+      when: ansible_swaptotal_mb > 0
+
+    - name: Turn off selinux
+      selinux:
+        state: disabled
+
+    - name: Disable systemd services
+      service:
+        name: "{{ item }}"
+        enabled: no
+        state: stopped
+      loop:
+        - firewalld
+        - NetworkManager
+
+    - name: Load br_netfilter
+      modprobe:
+        name: br_netfilter
+        state: present
+    - name: Change sysctl setting
+      sysctl:
+        name: "{{ item }}"
+        value: "1"
+        state: present
+      loop:
+        - net.bridge.bridge-nf-call-iptables
+        - net.bridge.bridge-nf-call-ip6tables
+        - net.ipv4.ip_forward
+
+    - include_role:
+        name: geerlingguy.docker
+    - include_role:
+        name: geerlingguy.kubernetes
+
+    - name: Install mariadb
+      yum:
+        name: mariadb-server
+        state: installed
+    - name: Enable mariadb
+      service:
+        name: mariadb
+        enabled: yes
+        state: started
+    - name: Install MySQL-python
+      package:
+        name: MySQL-python
+        state: installed
+
+    - name: Change root password
+      mysql_user:
+        name: "{{ oc_db_user }}"
+        password: "{{ oc_db_pass }}"
+      ignore_errors: yes
+    - name: Allow remote root access with grant priv
+      mysql_user:
+        name: "{{ oc_db_user }}"
+        host: "%"
+        password: "{{ oc_db_pass }}"
+        priv: "*.*:ALL,GRANT"
+        state: present
+        login_user: "{{ oc_db_user }}"
+        login_password: "{{ oc_db_pass }}"
+    - name: Removes all anonymous user accounts
+      mysql_user:
+        name: ''
+        host_all: yes
+        state: absent
+        login_user: "{{ oc_db_user }}"
+        login_password: "{{ oc_db_pass }}"
+    - name: Remove test database
+      mysql_db:
+        name: test
+        state: absent
+        login_user: "{{ oc_db_user }}"
+        login_password: "{{ oc_db_pass }}"
+
+    - name: Prepare k8s spec file
+      delegate_to: localhost
+      template:
+        src: "{{ item }}"
+        dest: "/tmp/{{ item | basename | splitext | first }}"
+      loop:
+        - templates/traefik.yaml.j2
+        - templates/local-path-provisioner.yaml.j2
+        - templates/onecloud-operator.yaml.j2
+        - templates/onecloud-cluster.yaml.j2
+    - name: Kubectl apply
+      shell:
+        kubectl apply -f "/tmp/{{ item | basename | splitext | first }}"
+      loop:
+        - templates/traefik.yaml.j2
+        - templates/local-path-provisioner.yaml.j2
+        - templates/onecloud-operator.yaml.j2
+        - templates/onecloud-cluster.yaml.j2

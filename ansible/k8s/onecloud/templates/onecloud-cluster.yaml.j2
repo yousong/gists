@@ -1,0 +1,15 @@
+apiVersion: "onecloud.yunion.io/v1alpha1"
+kind: OnecloudCluster
+metadata:
+  name: "{{ oc_cluster_name }}"
+  namespace: "{{ oc_namespace }}"
+spec:
+  mysql:
+    host: "{{ oc_db_host }}"
+    port: {{ oc_db_port }}
+    username: "{{ oc_db_user }}"
+    password: "{{ oc_db_pass }}"
+  region: "{{ oc_cluster_region }}"
+  imageRepository: "{{ oc_cluster_image_repo }}"
+  version: "{{ oc_cluster_version }}"
+  loadBalancerEndpoint: "{{ oc_cluster_access_addr }}"

@@ -1,0 +1,43 @@
+---
+all:
+  vars:
+    docker_yum_repo_url: https://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+    docker_install_compose: false
+    #_kubernetes_mirror: http://mirror.azure.cn/kubernetes/packages
+    _kubernetes_mirror: https://mirrors.aliyun.com/kubernetes/
+    kubernetes_version: "1.16"
+    kubernetes_version_rhel_package: "1.16.3"
+    kubernetes_yum_baseurl: "{{ _kubernetes_mirror }}/yum/repos/kubernetes-el7-{{ kubernetes_yum_arch }}"
+    kubernetes_yum_repo_gpgcheck: true
+    kubernetes_yum_gpgkey:
+      - "{{ _kubernetes_mirror }}/yum/doc/yum-key.gpg"
+      - "{{ _kubernetes_mirror }}/yum/doc/rpm-package-key.gpg"
+    kubernetes_kubeadm_init_extra_opts: --image-repository registry.cn-hangzhou.aliyuncs.com/google_containers
+
+    oc_image_traefik: "traefik:v1.7"
+    oc_image_local_path_provisioner: "rancher/local-path-provisioner:v0.0.11"
+    oc_image_onecloud_operator: "registry.cn-beijing.aliyuncs.com/yunionio/onecloud-operator:latest"
+    oc_namespace: "onecloud"
+    oc_cluster_name: "default"
+    oc_cluster_region: "titan"
+    oc_cluster_image_repo: "registry.cn-beijing.aliyuncs.com/yunionio"
+    oc_cluster_version: "latest"
+    oc_cluster_access_addr: "222.000.111.196"
+    oc_db_host: "222.000.111.196"
+    oc_db_port: 3306
+    oc_db_user: "root"
+    oc_db_pass: "****"
+  children:
+    masters:
+      vars:
+        kubernetes_role: master
+        kubernetes_allow_pods_on_master: true
+      hosts:
+        host02:
+          ansible_host: 222.000.111.196
+          ansible_become: yes
+          ansible_connection: local
+    nodes:
+      vars:
+        kubernetes_role: node
+      hosts:
