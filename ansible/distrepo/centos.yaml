@@ -30,3 +30,13 @@
         owner: root
         group: root
         mode: "0644"
+
+    - name: Disable yum plugins
+      ini_file:
+        path: "/etc/yum/pluginconf.d/{{ item }}.conf"
+        section: main
+        option: enabled
+        value: "0"
+      loop:
+        - fastestmirror
+        - langpacks
