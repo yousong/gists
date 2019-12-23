@@ -1,15 +1,5 @@
 - hosts: all
   tasks:
-    # https://github.com/kubernetes-retired/contrib/blob/master/ansible/roles/node/tasks/swapoff.yml
-    - name: Turn off swap mount
-      mount:
-        name: swap
-        fstype: swap
-        state: absent
-    - name: Turn off swap now
-      command: swapoff -a
-      when: ansible_swaptotal_mb > 0
-
     - name: Turn off selinux
       selinux:
         state: disabled
@@ -36,6 +26,16 @@
         - net.bridge.bridge-nf-call-iptables
         - net.bridge.bridge-nf-call-ip6tables
         - net.ipv4.ip_forward
+
+    # https://github.com/kubernetes-retired/contrib/blob/master/ansible/roles/node/tasks/swapoff.yml
+    - name: Turn off swap mount
+      mount:
+        name: swap
+        fstype: swap
+        state: absent
+    - name: Turn off swap now
+      command: swapoff -a
+      when: ansible_swaptotal_mb > 0
 
     - include_role:
         name: geerlingguy.docker
