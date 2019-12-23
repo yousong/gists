@@ -12,6 +12,7 @@ all:
     kubernetes_yum_gpgkey:
       - "{{ _kubernetes_mirror }}/yum/doc/yum-key.gpg"
       - "{{ _kubernetes_mirror }}/yum/doc/rpm-package-key.gpg"
+    # Sourcehttps://github.com/AliyunContainerService/sync-repo
     kubernetes_kubeadm_init_extra_opts: --image-repository registry.cn-hangzhou.aliyuncs.com/google_containers
   children:
     masters:
