@@ -7,6 +7,11 @@
     docker_compose_path: /usr/bin/docker-compose
     the_package_state: present
     the_user: "{{ ansible_user | default(lookup('env', 'USER')) }}"
+  handlers:
+    - name: restart dockerd
+      service:
+        name: docker
+        state: restarted
   tasks:
     - include_role:
         name: geerlingguy.docker
@@ -16,6 +21,22 @@
       with_items:
         - docker-ce
         - docker-ce-cli
+    - name: Config /etc/docker/daemon.json
+      when: the_package_state == "present"
+      notify: restart dockerd
+      copy:
+        dest: /etc/docker/daemon.json
+        content: |
+          {
+            "data-root": "/var/lib/docker",
+            "live-restore": true,
+            "experimental": true,
+            "registry-mirrors": [
+              "https://docker.mirrors.ustc.edu.cn",
+              "https://hub-mirror.c.163.com",
+              "https://registry.docker-cn.com"
+            ]
+          }
     - user:
         name: "{{ the_user }}"
         append: yes
