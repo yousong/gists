@@ -17,6 +17,14 @@
       modprobe:
         name: br_netfilter
         state: present
+    - name: Load br_netfilter at boot
+      copy:
+        owner: root
+        group: root
+        mode: "0644"
+        dest: /etc/modules-load.d/kubernetes.conf
+        content:
+          br_netfilter
     - name: Change sysctl setting
       sysctl:
         name: "{{ item }}"
