@@ -1,0 +1,42 @@
+---
+- name: Install mariadb
+  yum:
+    name: mariadb-server
+    state: installed
+- name: Enable mariadb
+  service:
+    name: mariadb
+    enabled: yes
+    state: started
+- name: Install MySQL-python
+  package:
+    name: MySQL-python
+    state: installed
+
+- name: Change root password
+  mysql_user:
+    name: "{{ oc_db_user }}"
+    password: "{{ oc_db_pass }}"
+  ignore_errors: yes
+- name: Allow remote root access with grant priv
+  mysql_user:
+    name: "{{ oc_db_user }}"
+    host: "%"
+    password: "{{ oc_db_pass }}"
+    priv: "*.*:ALL,GRANT"
+    state: present
+    login_user: "{{ oc_db_user }}"
+    login_password: "{{ oc_db_pass }}"
+- name: Removes all anonymous user accounts
+  mysql_user:
+    name: ''
+    host_all: yes
+    state: absent
+    login_user: "{{ oc_db_user }}"
+    login_password: "{{ oc_db_pass }}"
+- name: Remove test database
+  mysql_db:
+    name: test
+    state: absent
+    login_user: "{{ oc_db_user }}"
+    login_password: "{{ oc_db_pass }}"
