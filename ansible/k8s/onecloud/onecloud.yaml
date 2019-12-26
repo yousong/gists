@@ -4,11 +4,14 @@
       selinux:
         state: disabled
 
+    - name: Gather service facts
+      service_facts:
     - name: Disable systemd services
       service:
         name: "{{ item }}"
         enabled: no
         state: stopped
+      when: "item + '.service' in ansible_facts.services"
       loop:
         - firewalld
         - NetworkManager
