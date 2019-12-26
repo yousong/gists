@@ -65,21 +65,10 @@
         - python2-openshift
         - python2-pyyaml
 
-    - name: Prepare k8s spec file
-      when: kubernetes_role == "master"
-      delegate_to: localhost
-      template:
-        src: "{{ item }}"
-        dest: "/tmp/{{ item | basename | splitext | first }}"
-      loop:
-        - templates/traefik.yaml.j2
-        - templates/local-path-provisioner.yaml.j2
-        - templates/onecloud-operator.yaml.j2
-        - templates/onecloud-cluster.yaml.j2
     - name: Kubectl apply
       when: kubernetes_role == "master"
       k8s:
-        src: "/tmp/{{ item | basename | splitext | first }}"
+        resource_definition: "{{ lookup('template', item) }}"
         state: present
       loop:
         - templates/traefik.yaml.j2
