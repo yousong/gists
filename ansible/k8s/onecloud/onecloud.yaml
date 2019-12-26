@@ -51,8 +51,19 @@
         name: geerlingguy.kubernetes
 
     - include_tasks: mariadb.yaml
+      when: kubernetes_role == "master"
+ 
+    - name: Install python packages for k8s module
+      when: kubernetes_role == "master"
+      package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - python2-openshift
+        - python2-pyyaml
 
     - name: Prepare k8s spec file
+      when: kubernetes_role == "master"
       delegate_to: localhost
       template:
         src: "{{ item }}"
@@ -63,8 +74,10 @@
         - templates/onecloud-operator.yaml.j2
         - templates/onecloud-cluster.yaml.j2
     - name: Kubectl apply
-      shell:
-        kubectl apply -f "/tmp/{{ item | basename | splitext | first }}"
+      when: kubernetes_role == "master"
+      k8s:
+        src: "/tmp/{{ item | basename | splitext | first }}"
+        state: present
       loop:
         - templates/traefik.yaml.j2
         - templates/local-path-provisioner.yaml.j2
