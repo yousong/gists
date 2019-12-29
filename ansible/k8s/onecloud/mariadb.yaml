@@ -3,6 +3,12 @@
   yum:
     name: mariadb-server
     state: installed
+- name: Enable innodb_file_per_table
+  ini_file:
+    path: /etc/my.cnf
+    section: mysqld
+    option: innodb_file_per_table
+    value: "1"
 - name: Enable mariadb
   service:
     name: mariadb
