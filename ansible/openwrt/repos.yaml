@@ -1,0 +1,24 @@
+# remember to run as <user>
+---
+- hosts: all
+  vars:
+    git_repo_dir: /home/yousong/git-repo
+    git_repo_openwrt_dir: "{{ git_repo_dir }}/openwrt"
+    git_repo_url_base: git://git.openwrt.org
+  tasks:
+    - name: Mkdir -p "{{ git_repo_openwrt_dir }}"
+      file:
+        path: "{{ git_repo_openwrt_dir }}"
+        state: directory
+    - name: Prepare git.openwrt.org repos
+      git:
+        repo: "{{ git_repo_url_base }}/{{ item }}.git"
+        dest: "{{ git_repo_openwrt_dir }}/{{ item | basename }}"
+        update: no
+      loop:
+        - openwrt/openwrt
+        - project/firewall3
+        - project/fstools
+        - project/libubox
+        - project/uci
+        - project/ubus
