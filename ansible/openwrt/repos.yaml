@@ -17,6 +17,7 @@
         update: no
       loop:
         - openwrt/openwrt
+        - project/netifd
         - project/firewall3
         - project/fstools
         - project/libubox
