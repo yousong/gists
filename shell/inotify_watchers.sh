@@ -48,6 +48,6 @@ lsof +c 0 -n -P -u root \
 	| while read name pid fd; do \
 		exe="$(readlink -f /proc/$pid/exe || echo n/a)"; \
 		fdinfo="/proc/$pid/fdinfo/$fd" ; \
-		count="$(grep -c inotify "$fdinfo" || true)"; \
+		count="$(grep -c "^inotify" "$fdinfo" || true)"; \
 		echo "$name $exe $pid $fdinfo $count"; \
 	done
