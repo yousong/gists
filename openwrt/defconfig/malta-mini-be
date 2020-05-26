@@ -4,13 +4,13 @@ CONFIG_TARGET_malta_be_Default=y
 
 CONFIG_PACKAGE_strace=y
 #CONFIG_PACKAGE_gdb=y
-CONFIG_PACKAGE_gdbserver=y
+#CONFIG_PACKAGE_gdbserver=y
 #CONFIG_DEBUG=y
 #CONFIG_NO_STRIP=y
 
-CONFIG_PACKAGE_openvpn-mbedtls=y
-CONFIG_PACKAGE_ip-tiny=y
-CONFIG_PACKAGE_ip-full=m
+#CONFIG_PACKAGE_openvpn-mbedtls=y
+#CONFIG_PACKAGE_ip-tiny=y
+#CONFIG_PACKAGE_ip-full=m
 #CONFIG_PACKAGE_hello=y
 
 #CONFIG_PACKAGE_reaver=y
