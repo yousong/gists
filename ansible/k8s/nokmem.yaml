@@ -1,0 +1,20 @@
+---
+- hosts: all
+  tasks:
+    - name: check /etc/sysconfig/grub
+      shell: grep -q '^GRUB_CMDLINE_LINUX=.*cgroup.memory=nokmem' /etc/sysconfig/grub
+      failed_when: no
+      changed_when: no
+      no_log: yes
+      register: grep
+    - name: edit /etc/sysconfig/grub
+      replace:
+        backup: yes
+        path: /etc/sysconfig/grub
+        regexp: '(^GRUB_CMDLINE_LINUX="[^"]+)"'
+        replace: '\1 cgroup.memory=nokmem"'
+      when: "grep.rc != 0"
+      register: edit
+    - name: generate grub.cfg
+      shell: grub2-mkconfig -o /boot/grub2/grub.cfg
+      when: edit is changed
