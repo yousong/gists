@@ -327,18 +327,18 @@ func main() {
 	ctx := context.Background()
 	ctx, cancelFunc := context.WithCancel(ctx)
 
-	sigCh := make(chan os.Signal)
 	go func() {
+		sigCh := make(chan os.Signal)
+		signal.Notify(sigCh,
+			unix.SIGINT,
+			unix.SIGTERM,
+		)
 		select {
 		case sig := <-sigCh:
 			glog.Infof("received signal %s", sig)
 			cancelFunc()
 		}
 	}()
-	signal.Notify(sigCh,
-		unix.SIGINT,
-		unix.SIGTERM,
-	)
 
 	setRlimit()
 	if argServe {
