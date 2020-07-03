@@ -74,6 +74,7 @@ func (s *server) start(ctx context.Context) {
 	for _, listener := range listeners {
 		go s.serveListener(listener)
 	}
+	<-ctx.Done()
 }
 
 func (s *server) serveListener(listener net.Listener) {
@@ -342,7 +343,7 @@ func main() {
 	setRlimit()
 	if argServe {
 		s := newServer()
-		s.start(ctx)
+		go s.start(ctx)
 	} else {
 		c := newClient()
 		go c.start(ctx)
