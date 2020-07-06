@@ -16,8 +16,6 @@ SUPPORTED_PLATFORMS := \
 	linux-mipsle \
 	darwin-amd64 \
 
-MAKE_TARGETS:=
-
 all: build
 .PHONY: all
 .PHONY: build
@@ -41,23 +39,25 @@ build-$(goarch): build-$(goos)-$(goarch)
 .PHONY: build-$(goos)
 .PHONY: build-$(goarch)
 
-MAKE_TARGETS += build-$(goos)-$(goarch)
-MAKE_TARGETS += build-$(goos)
-MAKE_TARGETS += build-$(goarch)
+MAKE_TARGETS_build-arch-os += build-$(goos)-$(goarch)
+MAKE_TARGETS_build-os += build-$(goos)
+MAKE_TARGETS_build-arch += build-$(goarch)
 
 endef
 
 $(eval $(foreach plat,$(SUPPORTED_PLATFORMS),$(call Build,$(plat))))
+MAKE_TARGETS := $(sort $(MAKE_TARGETS_build-arch)) $(sort $(MAKE_TARGETS_build-os)) $(sort $(MAKE_TARGETS_build-arch-os))
 
 help:
 	@echo Supported targets
 	@echo ""
-	@$(foreach t,$(sort $(MAKE_TARGETS)),echo "$(tab)$(t)";)
+	@$(foreach t,$(MAKE_TARGETS),echo "$(tab)$(t)";)
 .PHONY: help
 
 %:
 	@echo Unknown target: $*
 	@$(MAKE) -s help
+	@false
 
 clean:
 	rm -rv $(BUILDDIR)
