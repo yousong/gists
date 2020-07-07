@@ -52,6 +52,14 @@ MAKE_TARGETS := \
 	$(sort $(MAKE_TARGETS_build-os-arch)) \
 
 
+GOOS:=$(shell go env GOOS)
+GOARCH:=$(shell go env GOARCH)
+build-native: $(BUILDDIR)/tcpconn
+$(BUILDDIR)/tcpconn: build-$(GOOS)-$(GOARCH)
+	ln -sf tcpconn.$(GOOS)-$(GOARCH) $(BUILDDIR)/tcpconn
+.PHONY: build-native
+
+
 help:
 	@echo Supported targets
 	@echo ""
