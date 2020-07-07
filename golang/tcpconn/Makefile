@@ -39,14 +39,18 @@ build-$(goarch): build-$(goos)-$(goarch)
 .PHONY: build-$(goos)
 .PHONY: build-$(goarch)
 
-MAKE_TARGETS_build-arch-os += build-$(goos)-$(goarch)
+MAKE_TARGETS_build-os-arch += build-$(goos)-$(goarch)
 MAKE_TARGETS_build-os += build-$(goos)
 MAKE_TARGETS_build-arch += build-$(goarch)
 
 endef
 
 $(eval $(foreach plat,$(SUPPORTED_PLATFORMS),$(call Build,$(plat))))
-MAKE_TARGETS := $(sort $(MAKE_TARGETS_build-arch)) $(sort $(MAKE_TARGETS_build-os)) $(sort $(MAKE_TARGETS_build-arch-os))
+MAKE_TARGETS := \
+	$(sort $(MAKE_TARGETS_build-arch)) \
+	$(sort $(MAKE_TARGETS_build-os)) \
+	$(sort $(MAKE_TARGETS_build-os-arch)) \
+
 
 help:
 	@echo Supported targets
