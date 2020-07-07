@@ -115,6 +115,7 @@ type client struct {
 	cond   *sync.Cond
 	connCh chan net.Conn
 
+	stats stats
 	fails int32
 }
 
@@ -160,9 +161,9 @@ func (c *client) start(ctx context.Context) {
 func (c *client) report() {
 	p := func() {
 		c.mu.Lock()
-		curr, pending := len(c.conns), c.pendings
+		pending := c.pendings
 		c.mu.Unlock()
-		glog.Infof("current %d, pending %d", curr, pending)
+		glog.Infof("%s pending=%d", c.stats.String(), pending)
 	}
 	tick := time.NewTicker(2 * time.Second)
 
@@ -203,14 +204,18 @@ func (c *client) removeConn(conn net.Conn) {
 }
 
 func (c *client) connectOne() {
+	c.stats.incTotal()
 	connPort := portStart + rand.Intn(portEnd-portStart+1)
 	connAddr := net.JoinHostPort(addr.String(), strconv.FormatInt(int64(connPort), 10))
 	conn, err := net.DialTimeout("tcp", connAddr, 3*time.Second)
 	if err != nil {
-		glog.Errorf("%v", err)
 		atomic.AddInt32(&c.fails, 1)
+		if ei := c.stats.incErr(err); ei == errOth {
+			glog.Errorf("%v", err)
+		}
 	} else {
 		atomic.StoreInt32(&c.fails, 0)
+		c.stats.incCurrent()
 	}
 	c.connCh <- conn
 }
@@ -219,6 +224,7 @@ func (c *client) connectWork(conn net.Conn) {
 	defer func() {
 		conn.Close()
 		c.removeConn(conn)
+		c.stats.decCurrent()
 	}()
 
 	hey := []byte("hey")
