@@ -9,6 +9,8 @@ define newline
 
 endef
 
+GOOS:=$(shell go env GOOS)
+GOARCH:=$(shell go env GOARCH)
 SUPPORTED_PLATFORMS := \
 	linux-amd64 \
 	linux-arm64 \
@@ -16,9 +18,15 @@ SUPPORTED_PLATFORMS := \
 	linux-mipsle \
 	darwin-amd64 \
 
-all: build
+all: build-native
+build-all:
 .PHONY: all
-.PHONY: build
+.PHONY: build-all
+
+build-native: $(BUILDDIR)/tcpconn
+$(BUILDDIR)/tcpconn: build-$(GOOS)-$(GOARCH)
+	ln -sf tcpconn.$(GOOS)-$(GOARCH) $(BUILDDIR)/tcpconn
+.PHONY: build-native
 
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
@@ -27,7 +35,7 @@ define Build
 $(eval goos   := $(word 1,$(subst -, ,$(1))))
 $(eval goarch := $(word 2,$(subst -, ,$(1))))
 
-build: build-$(goos)-$(goarch)
+build-all: build-$(goos)-$(goarch)
 
 build-$(goos)-$(goarch): | $(BUILDDIR)
 build-$(goos)-$(goarch):
@@ -47,17 +55,10 @@ endef
 
 $(eval $(foreach plat,$(SUPPORTED_PLATFORMS),$(call Build,$(plat))))
 MAKE_TARGETS := \
+	build-all \
 	$(sort $(MAKE_TARGETS_build-arch)) \
 	$(sort $(MAKE_TARGETS_build-os)) \
 	$(sort $(MAKE_TARGETS_build-os-arch)) \
-
-
-GOOS:=$(shell go env GOOS)
-GOARCH:=$(shell go env GOARCH)
-build-native: $(BUILDDIR)/tcpconn
-$(BUILDDIR)/tcpconn: build-$(GOOS)-$(GOARCH)
-	ln -sf tcpconn.$(GOOS)-$(GOARCH) $(BUILDDIR)/tcpconn
-.PHONY: build-native
 
 
 help:
