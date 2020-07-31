@@ -28,6 +28,10 @@ settrap() {
 	trap "set +e; $*" EXIT
 }
 
+unsettrap() {
+	trap "" EXIT
+}
+
 preproot() {
 	local peppered="$dir/peppered"
 	local rootdir
@@ -81,6 +85,7 @@ preproot() {
 	umount "$topdir/m/"
 	qemu-nbd -d /dev/nbd1
 	qemu-nbd -d /dev/nbd0
+	unsettrap
 
 	touch "$peppered"
 }
