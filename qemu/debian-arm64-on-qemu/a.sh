@@ -7,10 +7,6 @@ set -o errexit
 set -o pipefail
 
 topdir="$(readlink -f "$(dirname "$0")")"
-baseurl=https://cdimage.debian.org/cdimage/openstack/current
-basefile="debian-10.4.3-20200610-openstack-arm64.qcow2"
-basefileabs="$topdir/$basefile"
-url="$baseurl/$basefile"
 
 if [ -s "$topdir/config" ]; then
 	source "$topdir/config"
@@ -20,9 +16,6 @@ passwd="${passwd:-"v7riKsA/UOR/g"}"
 subnet="${subnet:-192.168.121}"
 memsize="${memsize:-4G}"
 datadisksize="${datadisksize:-2G}"
-
-cd "$topdir"
-: wget -O "$basefileabs" -c "$url"
 
 settrap() {
 	trap "set +e; $*" EXIT
@@ -67,7 +60,7 @@ preproot() {
 		sed -i -e '/\s\+\/opt\s\+/d' "$rootdir/etc/fstab"
 		echo "UUID=$UUID /opt $TYPE defaults 0 0" >>"$rootdir/etc/fstab"
 	fi
-	touch "$rootdir/etc/cloud/cloud-init.disabled"
+	[ ! -d "$rootdir/etc/cloud" ] || touch "$rootdir/etc/cloud/cloud-init.disabled"
 	sed -i -e "s#^root:[^:]*:#root:$passwd:#" "$rootdir/etc/shadow"
 	sed -i -e "s/^#\?PermitRootLogin.*/PermitRootLogin yes/" "$rootdir/etc/ssh/sshd_config"
 	[ -f "$rootdir/etc/ssh/ssh_host_rsa_key" ] || ssh-keygen -N '' -t rsa -f "$rootdir/etc/ssh/ssh_host_rsa_key"
@@ -90,7 +83,52 @@ preproot() {
 	touch "$peppered"
 }
 
-open() {
+run() {
+	local qemu="$1"; shift
+	"$qemu" \
+		-name "$name" \
+		-nographic \
+		-device virtio-keyboard-pci \
+		-device VGA \
+		-display vnc="0.0.0.0:$((10000 + $i))" \
+		-m "$memsize" \
+		-drive "file=$disk0,format=qcow2,if=virtio" \
+		-drive "file=$disk1,format=qcow2,if=virtio" \
+		-device virtio-net-pci,mac="$mac",netdev=wan \
+		-netdev bridge,id=wan,br=br-wan \
+		-device virtio-rng-pci \
+		"$@"
+
+}
+
+runarm64() {
+	run \
+		qemu-system-aarch64 \
+		-M virt,graphics=on,firmware=edk2-aarch64-code.fd \
+		-accel tcg,thread=multi \
+		-cpu cortex-a57 \
+		-smp cpus=4 \
+
+}
+
+runamd64() {
+	run \
+		qemu-system-x86_64 \
+		-M pc \
+		-accel kvm \
+		-cpu host \
+		-smp cpus=4 \
+
+}
+
+openarm64() {
+	local baseurl=https://cdimage.debian.org/cdimage/openstack/current
+	local basefile="debian-10.4.3-20200610-openstack-arm64.qcow2"
+	local basefileabs="$topdir/$basefile"
+	local url="$baseurl/$basefile"
+
+	: wget -O "$basefileabs" -c "$url"
+
 	local i="$1"
 	local name="arm64n$i"
 	local dir="$topdir/$name"
@@ -116,24 +154,10 @@ open() {
 		systemctl restart dnsmasq
 	fi
 
-	qemu-system-aarch64 \
-		-name "$name" \
-		-nographic \
-		-device virtio-keyboard-pci \
-		-device VGA \
-		-display vnc="0.0.0.0:$((10000 + $i))" \
-		-M virt,graphics=on,firmware=edk2-aarch64-code.fd \
-		-accel tcg,thread=multi \
-		-cpu cortex-a57 \
-		-smp cpus=4 \
-		-m "$memsize" \
-		-drive "file=$disk0,format=qcow2,if=virtio" \
-		-drive "file=$disk1,format=qcow2,if=virtio" \
-		-device virtio-net-pci,mac="$mac",netdev=wan \
-		-netdev bridge,id=wan,br=br-wan \
-		-device virtio-rng-pci
-
+	runarm64
 }
+
+cd "$topdir"
 
 if [ -d "$HOME/.usr/bin" ]; then
 	if echo "$PATH" | grep -q "$HOME/.usr/bin"; then
@@ -151,8 +175,8 @@ if ! ip link show br-wan &>/dev/null; then
 	echo "dhcp-range=$subnet.10,$subnet.150,2h" >>/etc/dnsmasq.d/arm64.conf
 	systemctl restart dnsmasq
 fi
-if ! [ -s id_rsa ]; then
-	ssh-keygen -f id_rsa -N ''
+if ! [ -s "$topdir/id_rsa" ]; then
+	ssh-keygen -f "$topdir/id_rsa" -N ''
 fi
 
 set -o xtrace
