@@ -121,6 +121,14 @@ runamd64() {
 
 }
 
+ensure_mac() {
+	if ! [ "$i" -ge 10 -a "$i" -lt 256 ]; then
+		echo "arg 0 should be an integer in range [0,255]" >&2
+		return 1
+	fi
+	mac="62:64:00:12:34:$(printf "%02x" "$i")"
+}
+
 ensure_dhcp() {
 	if ! grep -q "$mac" /etc/dnsmasq.d/arm64.conf; then
 		echo "dhcp-host=$mac,$subnet.$i" >>/etc/dnsmasq.d/arm64.conf
@@ -150,14 +158,11 @@ openarm64() {
 	local dir="$topdir/$name"
 	local disk0="$dir/d0"
 	local disk1="$dir/d1"
+	local mac
 
-	if ! [ "$i" -ge 10 -a "$i" -lt 256 ]; then
-		echo "arg 0 should be an integer in range [0,255]" >&2
-		return 1
-	fi
-	local mac="62:64:00:12:34:$(printf "%02x" "$i")"
 
 	mkdir -p "$dir"
+	ensure_mac
 	ensure_disk
 	preproot
 	ensure_dhcp
