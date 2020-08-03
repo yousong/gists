@@ -121,6 +121,13 @@ runamd64() {
 
 }
 
+ensure_dhcp() {
+	if ! grep -q "$mac" /etc/dnsmasq.d/arm64.conf; then
+		echo "dhcp-host=$mac,$subnet.$i" >>/etc/dnsmasq.d/arm64.conf
+		systemctl restart dnsmasq
+	fi
+}
+
 openarm64() {
 	local baseurl=https://cdimage.debian.org/cdimage/openstack/current
 	local basefile="debian-10.4.3-20200610-openstack-arm64.qcow2"
@@ -149,10 +156,7 @@ openarm64() {
 		qemu-img create -f qcow2 -o preallocation=falloc "$disk1" "$datadisksize"
 	fi
 	preproot
-	if ! grep -q "$mac" /etc/dnsmasq.d/arm64.conf; then
-		echo "dhcp-host=$mac,$subnet.$i" >>/etc/dnsmasq.d/arm64.conf
-		systemctl restart dnsmasq
-	fi
+	ensure_dhcp
 
 	runarm64
 }
