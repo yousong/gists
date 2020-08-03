@@ -83,6 +83,60 @@ preproot() {
 	touch "$peppered"
 }
 
+preproot_centos7() {
+	local peppered="$dir/peppered"
+	local rootdir
+	local trap0
+	local trap1
+
+	if [ -f "$peppered" ]; then
+		return
+	fi
+
+	qemu-nbd -c /dev/nbd0 "$disk0"
+	qemu-nbd -c /dev/nbd1 "$disk1"
+	while ! [ -b /dev/nbd0p1 ]; do sleep 0.1; done
+	while ! lsblk -r | grep ^nbd1; do sleep 0.1; done
+	trap0="qemu-nbd -d /dev/nbd0; qemu-nbd -d /dev/nbd1"; settrap "$trap0"
+
+	mkfs.ext4 -O '^has_journal' /dev/nbd1
+	local UUID TYPE
+	eval "$(blkid -o export /dev/nbd1 | grep -E "^(UUID|TYPE)")"
+
+	rootdir="$topdir/m"
+	mkdir -p "$rootdir"
+	mount /dev/nbd0p1 "$rootdir/"
+	trap1="umount $rootdir/; $trap0"; settrap "$trap1"
+
+	if ! [ -s "$rootdir/root/.ssh/authorized_keys" ]; then
+		mkdir -p "$rootdir/root/.ssh"
+		cat "$topdir/id_rsa.pub" >"$rootdir/root/.ssh/authorized_keys"
+		chown -R 0:0 "$rootdir/root/.ssh"
+		chmod -R 0600 "$rootdir/root/.ssh"
+	fi
+	if ! grep -q "$UUID" "$rootdir/etc/fstab"; then
+		sed -i -e '/\s\+\/opt\s\+/d' "$rootdir/etc/fstab"
+		echo "UUID=$UUID /opt $TYPE defaults 0 0" >>"$rootdir/etc/fstab"
+	fi
+	[ ! -d "$rootdir/etc/cloud" ] || touch "$rootdir/etc/cloud/cloud-init.disabled"
+	sed -i -e "s#^root:[^:]*:#root:$passwd:#" "$rootdir/etc/shadow"
+	sed -i -e "s/^#\?PermitRootLogin.*/PermitRootLogin yes/" "$rootdir/etc/ssh/sshd_config"
+	[ -f "$rootdir/etc/ssh/ssh_host_rsa_key" ] || ssh-keygen -N '' -t rsa -f "$rootdir/etc/ssh/ssh_host_rsa_key"
+	[ -f "$rootdir/etc/ssh/ssh_host_ecdsa_key" ] || ssh-keygen -N '' -t ecdsa -f "$rootdir/etc/ssh/ssh_host_ecdsa_key"
+	[ -f "$rootdir/etc/ssh/ssh_host_ed25519_key" ] || ssh-keygen -N '' -t ed25519 -f "$rootdir/etc/ssh/ssh_host_ed25519_key"
+	echo "$name" >"$rootdir/etc/hostname"
+	cat "$topdir/Centos-7.repo" >"$rootdir/etc/yum.repos.d/CentOS-Base.repo"
+	chown 0:0 "$rootdir/etc/yum.repos.d/CentOS-Base.repo"
+	touch "$rootdir/.autorelabel"
+
+	umount "$topdir/m/"
+	qemu-nbd -d /dev/nbd1
+	qemu-nbd -d /dev/nbd0
+	unsettrap
+
+	touch "$peppered"
+}
+
 run() {
 	local qemu="$1"; shift
 	"$qemu" \
@@ -207,6 +261,37 @@ openarm64() {
 	ensure_dhcp
 
 	runarm64
+}
+
+openamd64() {
+	# centos8 rootfs xfs has features not supported by centos 7 xfs module
+	local baseurl=https://cloud.centos.org/centos/8-stream/x86_64/images
+	local baseurl=http://mirrors.ustc.edu.cn/centos-cloud/centos/8-stream/x86_64/images
+	local basefile="CentOS-Stream-GenericCloud-8-20200113.0.x86_64.qcow2"
+
+	local baseurl=http://mirrors.ustc.edu.cn/centos-cloud/centos/7/images
+	local basefile="CentOS-7-x86_64-GenericCloud.qcow2.xz"
+	local basefile="CentOS-7-x86_64-GenericCloud.qcow2"
+
+	local basefileabs="$topdir/$basefile"
+	local url="$baseurl/$basefile"
+
+	: wget -O "$basefileabs" -c "$url"
+
+	local i="$1"
+	local name="amd64n$i"
+	local dir="$topdir/$name"
+	local disk0="$dir/d0"
+	local disk1="$dir/d1"
+	local mac
+
+	mkdir -p "$dir"
+	ensure_mac
+	ensure_disk
+	preproot_centos7
+	ensure_dhcp
+
+	runamd64
 }
 
 cd "$topdir"
