@@ -128,6 +128,15 @@ ensure_dhcp() {
 	fi
 }
 
+ensure_disk() {
+	if ! [ -s "$disk0" ]; then
+		qemu-img create -f qcow2 -b "$basefileabs" "$disk0"
+	fi
+	if ! [ -s "$disk1" ]; then
+		qemu-img create -f qcow2 -o preallocation=falloc "$disk1" "$datadisksize"
+	fi
+}
+
 openarm64() {
 	local baseurl=https://cdimage.debian.org/cdimage/openstack/current
 	local basefile="debian-10.4.3-20200610-openstack-arm64.qcow2"
@@ -149,12 +158,7 @@ openarm64() {
 	local mac="62:64:00:12:34:$(printf "%02x" "$i")"
 
 	mkdir -p "$dir"
-	if ! [ -s "$disk0" ]; then
-		qemu-img create -f qcow2 -b "$basefileabs" "$disk0"
-	fi
-	if ! [ -s "$disk1" ]; then
-		qemu-img create -f qcow2 -o preallocation=falloc "$disk1" "$datadisksize"
-	fi
+	ensure_disk
 	preproot
 	ensure_dhcp
 
