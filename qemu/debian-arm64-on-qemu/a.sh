@@ -145,6 +145,45 @@ ensure_disk() {
 	fi
 }
 
+relpath_to() {
+	local path0="$1"; shift
+	local path1="$1"; shift
+	local dir0
+
+	set +x
+	if [ -d $path0 ] || ! [ -e "$path0" ]; then
+		dir0="$path0"
+	else
+		dir0="$(dirname "$path0")"
+	fi
+	local d="$dir0"
+	local up
+	while true; do
+		local p="$path1/"
+		if [ "${p#$d/}" != "$p" ]; then
+			break
+		fi
+		if [ "$d" = "/" ]; then
+			break
+		fi
+		d="$(dirname "$d")"
+		up="${up:+$up/}.."
+	done
+	local r="${path1#$d}"
+	if [ "${r:0:1}" = / ]; then
+		r="${r:1}"
+	fi
+	echo "${up:+$up/}$r"
+	set -x
+}
+
+test_relpath_to() {
+	relpath_to "/a/b/c" "/a/b"
+	relpath_to "/a/b/c" "/a/bb"
+	relpath_to "/a/b/c" "/a/c/d"
+	relpath_to "/a/b/c" "/c/c/d"
+}
+
 openarm64() {
 	local baseurl=https://cdimage.debian.org/cdimage/openstack/current
 	local basefile="debian-10.4.3-20200610-openstack-arm64.qcow2"
