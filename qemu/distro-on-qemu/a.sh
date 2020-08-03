@@ -50,23 +50,14 @@ preproot() {
 	mount /dev/nbd0p2 "$rootdir/"
 	trap1="umount $rootdir/; $trap0"; settrap "$trap1"
 
-	if ! [ -s "$rootdir/root/.ssh/authorized_keys" ]; then
-		mkdir -p "$rootdir/root/.ssh"
-		cat "$topdir/id_rsa.pub" >"$rootdir/root/.ssh/authorized_keys"
-		chown -R 0:0 "$rootdir/root/.ssh"
-		chmod -R 0600 "$rootdir/root/.ssh"
-	fi
 	if ! grep -q "$UUID" "$rootdir/etc/fstab"; then
 		sed -i -e '/\s\+\/opt\s\+/d' "$rootdir/etc/fstab"
 		echo "UUID=$UUID /opt $TYPE defaults 0 0" >>"$rootdir/etc/fstab"
 	fi
-	[ ! -d "$rootdir/etc/cloud" ] || touch "$rootdir/etc/cloud/cloud-init.disabled"
-	sed -i -e "s#^root:[^:]*:#root:$passwd:#" "$rootdir/etc/shadow"
-	sed -i -e "s/^#\?PermitRootLogin.*/PermitRootLogin yes/" "$rootdir/etc/ssh/sshd_config"
-	[ -f "$rootdir/etc/ssh/ssh_host_rsa_key" ] || ssh-keygen -N '' -t rsa -f "$rootdir/etc/ssh/ssh_host_rsa_key"
-	[ -f "$rootdir/etc/ssh/ssh_host_ecdsa_key" ] || ssh-keygen -N '' -t ecdsa -f "$rootdir/etc/ssh/ssh_host_ecdsa_key"
-	[ -f "$rootdir/etc/ssh/ssh_host_ed25519_key" ] || ssh-keygen -N '' -t ed25519 -f "$rootdir/etc/ssh/ssh_host_ed25519_key"
-	echo "$name" >"$rootdir/etc/hostname"
+	prep_default_cloudinit_disable
+	prep_default_user_root
+	prep_default_sshd
+	prep_default_hostname
 	echo 'kernel.randomize_va_space=0' >"$rootdir/etc/sysctl.d/00-aslr.conf"
 	cat "$topdir/sources.list" >"$rootdir/etc/apt/sources.list"
 	chown 0:0 "$rootdir/etc/apt/sources.list"
@@ -81,6 +72,31 @@ preproot() {
 	unsettrap
 
 	touch "$peppered"
+}
+
+prep_default_cloudinit_disable() {
+	[ ! -d "$rootdir/etc/cloud" ] || touch "$rootdir/etc/cloud/cloud-init.disabled"
+}
+
+prep_default_user_root() {
+	sed -i -e "s#^root:[^:]*:#root:$passwd:#" "$rootdir/etc/shadow"
+	sed -i -e "s/^#\?PermitRootLogin.*/PermitRootLogin yes/" "$rootdir/etc/ssh/sshd_config"
+	if ! [ -s "$rootdir/root/.ssh/authorized_keys" ]; then
+		mkdir -p "$rootdir/root/.ssh"
+		cat "$topdir/id_rsa.pub" >"$rootdir/root/.ssh/authorized_keys"
+		chown -R 0:0 "$rootdir/root/.ssh"
+		chmod -R 0600 "$rootdir/root/.ssh"
+	fi
+}
+
+prep_default_sshd() {
+	[ -f "$rootdir/etc/ssh/ssh_host_rsa_key" ] || ssh-keygen -N '' -t rsa -f "$rootdir/etc/ssh/ssh_host_rsa_key"
+	[ -f "$rootdir/etc/ssh/ssh_host_ecdsa_key" ] || ssh-keygen -N '' -t ecdsa -f "$rootdir/etc/ssh/ssh_host_ecdsa_key"
+	[ -f "$rootdir/etc/ssh/ssh_host_ed25519_key" ] || ssh-keygen -N '' -t ed25519 -f "$rootdir/etc/ssh/ssh_host_ed25519_key"
+}
+
+prep_default_hostname() {
+	echo "$name" >"$rootdir/etc/hostname"
 }
 
 preproot_centos7() {
@@ -108,23 +124,14 @@ preproot_centos7() {
 	mount /dev/nbd0p1 "$rootdir/"
 	trap1="umount $rootdir/; $trap0"; settrap "$trap1"
 
-	if ! [ -s "$rootdir/root/.ssh/authorized_keys" ]; then
-		mkdir -p "$rootdir/root/.ssh"
-		cat "$topdir/id_rsa.pub" >"$rootdir/root/.ssh/authorized_keys"
-		chown -R 0:0 "$rootdir/root/.ssh"
-		chmod -R 0600 "$rootdir/root/.ssh"
-	fi
 	if ! grep -q "$UUID" "$rootdir/etc/fstab"; then
 		sed -i -e '/\s\+\/opt\s\+/d' "$rootdir/etc/fstab"
 		echo "UUID=$UUID /opt $TYPE defaults 0 0" >>"$rootdir/etc/fstab"
 	fi
-	[ ! -d "$rootdir/etc/cloud" ] || touch "$rootdir/etc/cloud/cloud-init.disabled"
-	sed -i -e "s#^root:[^:]*:#root:$passwd:#" "$rootdir/etc/shadow"
-	sed -i -e "s/^#\?PermitRootLogin.*/PermitRootLogin yes/" "$rootdir/etc/ssh/sshd_config"
-	[ -f "$rootdir/etc/ssh/ssh_host_rsa_key" ] || ssh-keygen -N '' -t rsa -f "$rootdir/etc/ssh/ssh_host_rsa_key"
-	[ -f "$rootdir/etc/ssh/ssh_host_ecdsa_key" ] || ssh-keygen -N '' -t ecdsa -f "$rootdir/etc/ssh/ssh_host_ecdsa_key"
-	[ -f "$rootdir/etc/ssh/ssh_host_ed25519_key" ] || ssh-keygen -N '' -t ed25519 -f "$rootdir/etc/ssh/ssh_host_ed25519_key"
-	echo "$name" >"$rootdir/etc/hostname"
+	prep_default_cloudinit_disable
+	prep_default_user_root
+	prep_default_sshd
+	prep_default_hostname
 	cat "$topdir/Centos-7.repo" >"$rootdir/etc/yum.repos.d/CentOS-Base.repo"
 	chown 0:0 "$rootdir/etc/yum.repos.d/CentOS-Base.repo"
 	touch "$rootdir/.autorelabel"
