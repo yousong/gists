@@ -18,13 +18,35 @@ memsize="${memsize:-4G}"
 datadisksize="${datadisksize:-2G}"
 
 dnsmasqconf="/etc/dnsmasq.d/distro-on-qemu.conf"
+traps=()
 
-settrap() {
-	trap "set +e; $*" EXIT
+settrap_() {
+	local n
+
+	n="${#traps[@]}"
+	n="$(($n - 1))"
+	local f
+	if [ "$n" -ge 0 ]; then
+		for i in `seq 0 $n`; do
+			f="${traps[i]}; $f"
+		done
+		f="set +e; $f"
+	fi
+	trap "$f" EXIT
 }
 
-unsettrap() {
-	trap "" EXIT
+pushtrap() {
+	traps+=("$*")
+	settrap_
+}
+
+poptrap() {
+	local n
+
+	n="${#traps[@]}"
+	n="$(($n - 1))"
+	unset traps[$n]
+	settrap_
 }
 
 preproot() {
@@ -41,7 +63,7 @@ preproot() {
 	qemu-nbd -c /dev/nbd1 "$disk1"
 	while ! [ -b /dev/nbd0p2 ]; do sleep 0.1; done
 	while ! lsblk -r | grep ^nbd1; do sleep 0.1; done
-	trap0="qemu-nbd -d /dev/nbd0; qemu-nbd -d /dev/nbd1"; settrap "$trap0"
+	pushtrap "qemu-nbd -d /dev/nbd0; qemu-nbd -d /dev/nbd1"
 
 	mkfs.ext4 -O '^has_journal' /dev/nbd1
 	local UUID TYPE
@@ -50,7 +72,7 @@ preproot() {
 	rootdir="$topdir/m"
 	mkdir -p "$rootdir"
 	mount /dev/nbd0p2 "$rootdir/"
-	trap1="umount $rootdir/; $trap0"; settrap "$trap1"
+	pushtrap "umount $rootdir/"
 
 	if ! grep -q "$UUID" "$rootdir/etc/fstab"; then
 		sed -i -e '/\s\+\/opt\s\+/d' "$rootdir/etc/fstab"
@@ -69,9 +91,11 @@ preproot() {
 	fi
 
 	umount "$topdir/m/"
+	poptrap
+
 	qemu-nbd -d /dev/nbd1
 	qemu-nbd -d /dev/nbd0
-	unsettrap
+	poptrap
 
 	touch "$peppered"
 }
@@ -115,7 +139,7 @@ preproot_centos7() {
 	qemu-nbd -c /dev/nbd1 "$disk1"
 	while ! [ -b /dev/nbd0p1 ]; do sleep 0.1; done
 	while ! lsblk -r | grep ^nbd1; do sleep 0.1; done
-	trap0="qemu-nbd -d /dev/nbd0; qemu-nbd -d /dev/nbd1"; settrap "$trap0"
+	pushtrap "qemu-nbd -d /dev/nbd0; qemu-nbd -d /dev/nbd1"
 
 	mkfs.ext4 -O '^has_journal' /dev/nbd1
 	local UUID TYPE
@@ -124,7 +148,7 @@ preproot_centos7() {
 	rootdir="$topdir/m"
 	mkdir -p "$rootdir"
 	mount /dev/nbd0p1 "$rootdir/"
-	trap1="umount $rootdir/; $trap0"; settrap "$trap1"
+	pushtrap "umount $rootdir/"
 
 	if ! grep -q "$UUID" "$rootdir/etc/fstab"; then
 		sed -i -e '/\s\+\/opt\s\+/d' "$rootdir/etc/fstab"
@@ -139,9 +163,11 @@ preproot_centos7() {
 	touch "$rootdir/.autorelabel"
 
 	umount "$topdir/m/"
+	poptrap
+
 	qemu-nbd -d /dev/nbd1
 	qemu-nbd -d /dev/nbd0
-	unsettrap
+	poptrap
 
 	touch "$peppered"
 }
