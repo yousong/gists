@@ -17,6 +17,8 @@ subnet="${subnet:-192.168.121}"
 memsize="${memsize:-4G}"
 datadisksize="${datadisksize:-2G}"
 
+dnsmasqconf="/etc/dnsmasq.d/distro-on-qemu.conf"
+
 settrap() {
 	trap "set +e; $*" EXIT
 }
@@ -191,8 +193,8 @@ ensure_mac() {
 }
 
 ensure_dhcp() {
-	if ! grep -q "$mac" /etc/dnsmasq.d/arm64.conf; then
-		echo "dhcp-host=$mac,$subnet.$i" >>/etc/dnsmasq.d/arm64.conf
+	if ! grep -q "$mac" "$dnsmasqconf"; then
+		echo "dhcp-host=$mac,$subnet.$i" >>"$dnsmasqconf"
 		systemctl restart dnsmasq
 	fi
 }
@@ -315,8 +317,8 @@ if ! ip link show br-wan &>/dev/null; then
 	ip addr add "$subnet.1/24" dev br-wan
 	while iptables -t nat -D POSTROUTING -s "$subnet.0/24" -j MASQUERADE; do :; done
 	      iptables -t nat -A POSTROUTING -s "$subnet.0/24" -j MASQUERADE;
-	echo "interface=br-wan" >/etc/dnsmasq.d/arm64.conf
-	echo "dhcp-range=$subnet.10,$subnet.150,2h" >>/etc/dnsmasq.d/arm64.conf
+	echo "interface=br-wan" >"$dnsmasqconf"
+	echo "dhcp-range=$subnet.10,$subnet.150,2h" >>"$dnsmasqconf"
 	systemctl restart dnsmasq
 fi
 if ! [ -s "$topdir/id_rsa" ]; then
