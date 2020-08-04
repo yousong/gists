@@ -15,6 +15,7 @@ fi
 passwd="${passwd:-"v7riKsA/UOR/g"}"
 subnet="${subnet:-192.168.121}"
 memsize="${memsize:-4G}"
+rootdisksize="${rootdisksize:+$rootdisksize}"
 datadisksize="${datadisksize:-2G}"
 
 dnsmasqconf="/etc/dnsmasq.d/distro-on-qemu.conf"
@@ -222,14 +223,21 @@ preproot() {
 		if mount "$pb" "$rootdir/"; then
 			pushtrap "umount $rootdir/"
 			detect_rootfs
+			poptrap
 			if [ -n "$distro" -a -n "$distro_version_id" ]; then
 				break
 			fi
-			poptrap
 		fi
 	done
 
 	[ -n "$distro" -a -n "$distro_version_id" ]
+	if [ -n "$rootdisksize" ]; then
+		growpart "$dev0" "$pi"
+	fi
+
+	mount "$pb" "$rootdir/"
+	pushtrap "umount $rootdir/"
+
 	prep_default_fstab
 	prep_default_cloudinit_disable
 	prep_default_user_root
@@ -334,6 +342,9 @@ ensure_dhcp() {
 ensure_disk() {
 	if ! [ -s "$disk0" ]; then
 		qemu-img create -f qcow2 -o backing_file="$(relpath_to "$(dirname "$disk0")" "$basefileabs")" "$disk0"
+		if [ -n "$rootdisksize" ]; then
+			qemu-img resize -f qcow2 "$disk0" "$rootdisksize"
+		fi
 	fi
 	if ! [ -s "$disk1" ]; then
 		qemu-img create -f qcow2 -o preallocation=falloc "$disk1" "$datadisksize"
