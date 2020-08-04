@@ -220,6 +220,9 @@ preproot() {
 			;;
 		*)
 			echo "unknown distro $distro" >&2
+			pushd "$rootdir"
+			bash
+			popd
 			false
 			;;
 	esac
@@ -328,6 +331,9 @@ openamd64() {
 	local baseurl=http://mirrors.ustc.edu.cn/centos-cloud/centos/7/images
 	local basefile="CentOS-7-x86_64-GenericCloud.qcow2.xz"
 	local basefile="CentOS-7-x86_64-GenericCloud.qcow2"
+	local basefile="debian-10.5.0-openstack-amd64.qcow2"
+	local basefile="xenial-server-cloudimg-amd64-uefi1.img"
+	local basefile="groovy-server-cloudimg-amd64.img"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
