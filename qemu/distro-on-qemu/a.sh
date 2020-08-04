@@ -157,12 +157,13 @@ detect_rootfs() {
 growpart() {
 	local dev="$1"; shift
 	local pi="$1"; shift
+	local pb=${dev0}p$pi
 	local PTTYPE
-	local pinfo pcode pname
 
 	eval "$(blkid -o export -p "$dev" | grep '^PTTYPE')"
 	case "$PTTYPE" in
 		gpt)
+			local pinfo pcode pname
 			pinfo="$(sgdisk --info="$pi" "$dev")"
 			pcode="$(echo "$pinfo" | grep -oE '^Partition GUID code: [^ ]+' | cut -d: -f2 | tr -d ' ')"
 			pname="$(echo "$pinfo" | grep -oE '^Partition name: '           | cut -d: -f2 | tr -d ' ')"
@@ -180,12 +181,22 @@ growpart() {
 				${pname:+--change-name="$pi:$pname"} \
 				"$dev"
 			;;
+		dos)
+			local pid pboot
+			pid="$(sfdisk --print-id "$dev" "$pi")"
+			pboot="$(fdisk -l "$dev" | grep "^$pb[ ]" | grep -m1 -oF '*')"
+			sfdisk \
+				--force \
+				-N "$pi" \
+				"$dev" <<-EOF
+			,+,$pid,$pboot
+			EOF
+			;;
 		*)
 			false
 			;;
 	esac
 
-	local pb=${dev0}p$pi
 	local TYPE
 	eval "$(blkid -o export "$pb" | grep '^TYPE')"
 	case "$TYPE" in
