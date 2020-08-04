@@ -92,10 +92,7 @@ preproot_debian() {
 	mount /dev/nbd0p2 "$rootdir/"
 	pushtrap "umount $rootdir/"
 
-	if ! grep -q "$UUID" "$rootdir/etc/fstab"; then
-		sed -i -e '/\s\+\/opt\s\+/d' "$rootdir/etc/fstab"
-		echo "UUID=$UUID /opt $TYPE defaults 0 0" >>"$rootdir/etc/fstab"
-	fi
+	prep_default_fstab
 	prep_default_cloudinit_disable
 	prep_default_user_root
 	prep_default_sshd
@@ -143,6 +140,13 @@ prep_default_hostname() {
 	echo "$name" >"$rootdir/etc/hostname"
 }
 
+prep_default_fstab() {
+	if ! grep -q "$UUID" "$rootdir/etc/fstab"; then
+		sed -i -e '/\s\+\/opt\s\+/d' "$rootdir/etc/fstab"
+		echo "UUID=$UUID /opt $TYPE defaults 0 0" >>"$rootdir/etc/fstab"
+	fi
+}
+
 detect_rootfs() {
 	local osrelf="$rootdir/etc/os-release"
 	local NAME VERSION ID VERSION_ID
@@ -187,10 +191,7 @@ preproot() {
 	done
 
 	[ -n "$distro" -a -n "$distro_version_id" ]
-	if ! grep -q "$UUID" "$rootdir/etc/fstab"; then
-		sed -i -e '/\s\+\/opt\s\+/d' "$rootdir/etc/fstab"
-		echo "UUID=$UUID /opt $TYPE defaults 0 0" >>"$rootdir/etc/fstab"
-	fi
+	prep_default_fstab
 	prep_default_cloudinit_disable
 	prep_default_user_root
 	prep_default_sshd
