@@ -69,52 +69,6 @@ nbd_connect() {
 	false
 }
 
-preproot_debian() {
-	local peppered="$dir/peppered"
-	local rootdir
-
-	if [ -f "$peppered" ]; then
-		return
-	fi
-
-	qemu-nbd -c /dev/nbd0 "$disk0"
-	qemu-nbd -c /dev/nbd1 "$disk1"
-	while ! [ -b /dev/nbd0p2 ]; do sleep 0.1; done
-	while ! lsblk -r | grep ^nbd1; do sleep 0.1; done
-	pushtrap "qemu-nbd -d /dev/nbd0; qemu-nbd -d /dev/nbd1"
-
-	mkfs.ext4 -O '^has_journal' /dev/nbd1
-	local UUID TYPE
-	eval "$(blkid -o export /dev/nbd1 | grep -E "^(UUID|TYPE)")"
-
-	rootdir="$topdir/m"
-	mkdir -p "$rootdir"
-	mount /dev/nbd0p2 "$rootdir/"
-	pushtrap "umount $rootdir/"
-
-	prep_default_fstab
-	prep_default_cloudinit_disable
-	prep_default_user_root
-	prep_default_sshd
-	prep_default_hostname
-	echo 'kernel.randomize_va_space=0' >"$rootdir/etc/sysctl.d/00-aslr.conf"
-	cat "$topdir/sources.list" >"$rootdir/etc/apt/sources.list"
-	chown 0:0 "$rootdir/etc/apt/sources.list"
-	if ! grep -q audit=0 "$rootdir/boot/grub/grub.cfg"; then
-		sed -i -r -e 's/^(GRUB_CMDLINE_LINUX_DEFAULT="[^"]*)"/\1 audit=0"/' "$rootdir/etc/default/grub"
-		sed -i -r -e 's|linux\s+/boot/vmlinuz-.*|\0 audit=0|' "$rootdir/boot/grub/grub.cfg"
-	fi
-
-	umount "$topdir/m/"
-	poptrap
-
-	qemu-nbd -d /dev/nbd1
-	qemu-nbd -d /dev/nbd0
-	poptrap
-
-	touch "$peppered"
-}
-
 prep_default_cloudinit_disable() {
 	[ ! -d "$rootdir/etc/cloud" ] || touch "$rootdir/etc/cloud/cloud-init.disabled"
 }
@@ -198,6 +152,13 @@ preproot() {
 	prep_default_hostname
 	case "$distro" in
 		debian)
+			echo 'kernel.randomize_va_space=0' >"$rootdir/etc/sysctl.d/00-aslr.conf"
+			cat "$topdir/sources.list" >"$rootdir/etc/apt/sources.list"
+			chown 0:0 "$rootdir/etc/apt/sources.list"
+			if ! grep -q audit=0 "$rootdir/boot/grub/grub.cfg"; then
+				sed -i -r -e 's/^(GRUB_CMDLINE_LINUX_DEFAULT="[^"]*)"/\1 audit=0"/' "$rootdir/etc/default/grub"
+				sed -i -r -e 's|linux\s+/boot/vmlinuz-.*|\0 audit=0|' "$rootdir/boot/grub/grub.cfg"
+			fi
 			;;
 		centos)
 			cat "$topdir/Centos-7.repo" >"$rootdir/etc/yum.repos.d/CentOS-Base.repo"
@@ -331,12 +292,14 @@ openarm64() {
 	local disk0="$dir/d0"
 	local disk1="$dir/d1"
 	local mac
+	local distro
+	local distro_version_id
 
 
 	mkdir -p "$dir"
 	ensure_mac
 	ensure_disk
-	preproot_debian
+	preproot
 	ensure_dhcp
 
 	runarm64
