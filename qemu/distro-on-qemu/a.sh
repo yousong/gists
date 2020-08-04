@@ -45,6 +45,7 @@ poptrap() {
 
 	n="${#traps[@]}"
 	n="$(($n - 1))"
+	set +e; ${traps[$n]}; set -e
 	unset traps[$n]
 	settrap_
 }
