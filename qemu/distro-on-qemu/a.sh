@@ -69,7 +69,7 @@ nbd_connect() {
 	false
 }
 
-preproot() {
+preproot_debian() {
 	local peppered="$dir/peppered"
 	local rootdir
 
@@ -325,7 +325,7 @@ openarm64() {
 	mkdir -p "$dir"
 	ensure_mac
 	ensure_disk
-	preproot
+	preproot_debian
 	ensure_dhcp
 
 	runarm64
