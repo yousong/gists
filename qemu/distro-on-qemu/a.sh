@@ -204,6 +204,12 @@ growpart() {
 			e2fsck -f "$pb"
 			resize2fs "$pb"
 			;;
+		xfs)
+			mount "$pb" "$rootdir"
+			pushtrap "umount $rootdir"
+			xfs_growfs "$rootdir"
+			poptrap
+			;;
 		*)
 			false
 			;;
