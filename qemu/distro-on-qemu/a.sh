@@ -52,8 +52,6 @@ poptrap() {
 preproot() {
 	local peppered="$dir/peppered"
 	local rootdir
-	local trap0
-	local trap1
 
 	if [ -f "$peppered" ]; then
 		return
@@ -128,8 +126,6 @@ prep_default_hostname() {
 preproot_centos7() {
 	local peppered="$dir/peppered"
 	local rootdir
-	local trap0
-	local trap1
 
 	if [ -f "$peppered" ]; then
 		return
