@@ -166,34 +166,27 @@ preproot_centos7() {
 	fi
 
 	nbd_connect dev1 "$disk1"
-	mkfs.ext4 -O '^has_journal' /dev/nbd1
+	mkfs.ext4 -O '^has_journal' "$dev1"
 	local UUID TYPE
-	eval "$(blkid -o export /dev/nbd1 | grep -E "^(UUID|TYPE)")"
+	eval "$(blkid -o export "$dev1" | grep -E "^(UUID|TYPE)")"
 	poptrap
 
 	nbd_connect dev0 "$disk0"
 	rootdir="$topdir/m"
 	mkdir -p "$rootdir"
-	for pi in $(seq 0 15); do
+	for pi in $(seq 16 -1 1); do
 		pb=${dev0}p$pi
-		if ! [ -b "$pb" ]; then
-			pi=$(( $pi - 1 ))
+		if mount "$pb" "$rootdir/"; then
+			pushtrap "umount $rootdir/"
+			detect_rootfs
+			if [ -n "$distro" -a -n "$distro_version_id" ]; then
+				break
+			fi
+			poptrap
 		fi
-	done
-	if [ "$pi" -lt 0 ]; the
-		false
-	fi
-	for pi in $(seq $pi -1 0); do
-		pb=${dev0}p$pi
-		mount "$pb" "$rootdir/"
-		pushtrap "umount $rootdir/"
-		detect_rootfs
-		if [ -n "$distro" -a -n "$distro_version_id" ]; then
-			break
-		fi
-		poptrap
 	done
 
+	[ -n "$distro" -a -n "$distro_version_id" ]
 	if ! grep -q "$UUID" "$rootdir/etc/fstab"; then
 		sed -i -e '/\s\+\/opt\s\+/d' "$rootdir/etc/fstab"
 		echo "UUID=$UUID /opt $TYPE defaults 0 0" >>"$rootdir/etc/fstab"
