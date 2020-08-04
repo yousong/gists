@@ -153,6 +153,51 @@ detect_rootfs() {
 	fi
 }
 
+growpart() {
+	local dev="$1"; shift
+	local pi="$1"; shift
+	local PTTYPE
+	local pinfo pcode pname
+
+	eval "$(blkid -o export -p "$dev" | grep '^PTTYPE')"
+	case "$PTTYPE" in
+		gpt)
+			pinfo="$(sgdisk --info="$pi" "$dev")"
+			pcode="$(echo "$pinfo" | grep -oE '^Partition GUID code: [^ ]+' | cut -d: -f2 | tr -d ' ')"
+			pname="$(echo "$pinfo" | grep -oE '^Partition name: '           | cut -d: -f2 | tr -d ' ')"
+			if [ -z "$pcode" ]; then
+				false
+			fi
+			if [ "$pname" = "''" ]; then
+				pname=''
+			fi
+			sgdisk \
+				--move-second-header \
+				--delete="$pi" \
+				--new="$pi:0:0" \
+				${pcode:+--typecode="$pi:$pcode"} \
+				${pname:+--change-name="$pi:$pname"} \
+				"$dev"
+			;;
+		*)
+			false
+			;;
+	esac
+
+	local pb=${dev0}p$pi
+	local TYPE
+	eval "$(blkid -o export "$pb" | grep '^TYPE')"
+	case "$TYPE" in
+		ext*)
+			e2fsck -f "$pb"
+			resize2fs "$pb"
+			;;
+		*)
+			false
+			;;
+	esac
+}
+
 preproot() {
 	local peppered="$dir/peppered"
 	local dev0 dev1
