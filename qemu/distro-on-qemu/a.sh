@@ -193,7 +193,7 @@ run() {
 runarm64() {
 	run \
 		qemu-system-aarch64 \
-		-M virt,graphics=on,firmware=edk2-aarch64-code.fd \
+		-M virt,gic-version=3,graphics=on,firmware=edk2-aarch64-code.fd \
 		-accel tcg,thread=multi \
 		-cpu cortex-a57 \
 		-smp cpus=4 \
