@@ -123,28 +123,56 @@ prep_default_hostname() {
 	echo "$name" >"$rootdir/etc/hostname"
 }
 
+detect_rootfs() {
+	local osrelf="$rootdir/etc/os-release"
+	local NAME VERSION ID VERSION_ID
+
+	if [ -f "$osrelf" ]; then
+		eval "$(grep -E '^(NAME|VERSION|ID|VERSION_ID)=' "$osrelf")"
+		echo "detected: $NAME $VERSION"
+		distro="$ID"
+		distro_version_id="$VERSION_ID"
+	fi
+}
+
 preproot_centos7() {
 	local peppered="$dir/peppered"
+	local dev0 dev1
+	local pi pb
 	local rootdir
 
 	if [ -f "$peppered" ]; then
 		return
 	fi
 
-	qemu-nbd -c /dev/nbd0 "$disk0"
-	qemu-nbd -c /dev/nbd1 "$disk1"
-	while ! [ -b /dev/nbd0p1 ]; do sleep 0.1; done
-	while ! lsblk -r | grep ^nbd1; do sleep 0.1; done
-	pushtrap "qemu-nbd -d /dev/nbd0; qemu-nbd -d /dev/nbd1"
-
+	nbd_connect dev1 "$disk1"
 	mkfs.ext4 -O '^has_journal' /dev/nbd1
 	local UUID TYPE
 	eval "$(blkid -o export /dev/nbd1 | grep -E "^(UUID|TYPE)")"
+	poptrap
 
+	nbd_connect dev0 "$disk0"
 	rootdir="$topdir/m"
 	mkdir -p "$rootdir"
-	mount /dev/nbd0p1 "$rootdir/"
-	pushtrap "umount $rootdir/"
+	for pi in $(seq 0 15); do
+		pb=${dev0}p$pi
+		if ! [ -b "$pb" ]; then
+			pi=$(( $pi - 1 ))
+		fi
+	done
+	if [ "$pi" -lt 0 ]; the
+		false
+	fi
+	for pi in $(seq $pi -1 0); do
+		pb=${dev0}p$pi
+		mount "$pb" "$rootdir/"
+		pushtrap "umount $rootdir/"
+		detect_rootfs
+		if [ -n "$distro" -a -n "$distro_version_id" ]; then
+			break
+		fi
+		poptrap
+	done
 
 	if ! grep -q "$UUID" "$rootdir/etc/fstab"; then
 		sed -i -e '/\s\+\/opt\s\+/d' "$rootdir/etc/fstab"
@@ -158,11 +186,7 @@ preproot_centos7() {
 	chown 0:0 "$rootdir/etc/yum.repos.d/CentOS-Base.repo"
 	touch "$rootdir/.autorelabel"
 
-	umount "$topdir/m/"
 	poptrap
-
-	qemu-nbd -d /dev/nbd1
-	qemu-nbd -d /dev/nbd0
 	poptrap
 
 	touch "$peppered"
@@ -315,6 +339,8 @@ openamd64() {
 	local disk0="$dir/d0"
 	local disk1="$dir/d1"
 	local mac
+	local distro
+	local distro_version_id
 
 	mkdir -p "$dir"
 	ensure_mac
