@@ -155,7 +155,7 @@ detect_rootfs() {
 	fi
 }
 
-preproot_centos7() {
+preproot() {
 	local peppered="$dir/peppered"
 	local dev0 dev1
 	local pi pb
@@ -358,7 +358,7 @@ openamd64() {
 	mkdir -p "$dir"
 	ensure_mac
 	ensure_disk
-	preproot_centos7
+	preproot
 	ensure_dhcp
 
 	runamd64
