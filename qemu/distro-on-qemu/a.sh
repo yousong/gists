@@ -50,6 +50,25 @@ poptrap() {
 	settrap_
 }
 
+nbd_connect() {
+	local dstvar="$1"; shift
+	local i dev
+
+	for i in $(seq 0 15); do
+		dev="/dev/nbd$i"
+		if ! [ -b "$dev" ]; then
+			continue
+		fi
+		if qemu-nbd -c "$dev" "$@" &>/dev/null; then
+			pushtrap "qemu-nbd -d $dev"
+			while ! lsblk --output name --raw --noheadings | grep -q "^nbd$i\$"; do sleep 0.3; done
+			eval "$dstvar=$dev"
+			return
+		fi
+	done
+	false
+}
+
 preproot() {
 	local peppered="$dir/peppered"
 	local rootdir
