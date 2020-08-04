@@ -196,9 +196,19 @@ preproot() {
 	prep_default_user_root
 	prep_default_sshd
 	prep_default_hostname
-	cat "$topdir/Centos-7.repo" >"$rootdir/etc/yum.repos.d/CentOS-Base.repo"
-	chown 0:0 "$rootdir/etc/yum.repos.d/CentOS-Base.repo"
-	touch "$rootdir/.autorelabel"
+	case "$distro" in
+		debian)
+			;;
+		centos)
+			cat "$topdir/Centos-7.repo" >"$rootdir/etc/yum.repos.d/CentOS-Base.repo"
+			chown 0:0 "$rootdir/etc/yum.repos.d/CentOS-Base.repo"
+			touch "$rootdir/.autorelabel"
+			;;
+		*)
+			echo "unknown distro $distro" >&2
+			false
+			;;
+	esac
 
 	poptrap
 	poptrap
