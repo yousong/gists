@@ -191,13 +191,26 @@ preproot() {
 	prep_default_sshd
 	prep_default_hostname
 	case "$distro" in
-		debian)
+		debian|\
+		ubuntu)
 			echo 'kernel.randomize_va_space=0' >"$rootdir/etc/sysctl.d/00-aslr.conf"
-			cat "$topdir/sources.list" >"$rootdir/etc/apt/sources.list"
+			cat "$topdir/sources.list.$distro" >"$rootdir/etc/apt/sources.list"
 			chown 0:0 "$rootdir/etc/apt/sources.list"
 			if ! grep -q audit=0 "$rootdir/boot/grub/grub.cfg"; then
 				sed -i -r -e 's/^(GRUB_CMDLINE_LINUX_DEFAULT="[^"]*)"/\1 audit=0"/' "$rootdir/etc/default/grub"
 				sed -i -r -e 's|linux\s+/boot/vmlinuz-.*|\0 audit=0|' "$rootdir/boot/grub/grub.cfg"
+			fi
+			if [ -d "$rootdir/etc/netplan" ]; then
+				cat >"$rootdir/etc/netplan/00-networkd.yaml" <<-EOF
+				network:
+				  version: 2
+				  renderer: networkd
+				  ethernets:
+				    id0:
+				      match:
+				        macaddress: $mac
+				      dhcp4: true
+				EOF
 			fi
 			;;
 		centos)
