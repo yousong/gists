@@ -145,13 +145,14 @@ prep_default_fstab() {
 
 detect_rootfs() {
 	local osrelf="$rootdir/etc/os-release"
-	local NAME VERSION ID VERSION_ID
+	local NAME VERSION ID VERSION_ID VERSION_CODENAME
 
 	if [ -f "$osrelf" ]; then
-		eval "$(grep -E '^(NAME|VERSION|ID|VERSION_ID)=' "$osrelf")"
+		eval "$(grep -E '^(NAME|VERSION|ID|VERSION_ID|VERSION_CODENAME)=' "$osrelf")"
 		echo "detected: $NAME $VERSION"
 		distro="$ID"
 		distro_version_id="$VERSION_ID"
+		distro_version_codename="$VERSION_CODENAME"
 	fi
 }
 
@@ -390,6 +391,7 @@ openarm64() {
 	local mac
 	local distro
 	local distro_version_id
+	local distro_version_codename
 
 
 	mkdir -p "$dir"
@@ -428,6 +430,7 @@ openamd64() {
 	local mac
 	local distro
 	local distro_version_id
+	local distro_version_codename
 
 	mkdir -p "$dir"
 	ensure_mac
