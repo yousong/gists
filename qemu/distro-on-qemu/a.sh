@@ -258,6 +258,28 @@ detect_rootfs() {
 		distro="$ID"
 		distro_version_id="$VERSION_ID"
 		distro_version_codename="$VERSION_CODENAME"
+		return
+	fi
+
+	local cpef="$rootdir/etc/system-release-cpe"
+	if [ -f "$cpef" ]; then
+		local cpe="$(< "$cpef")"
+		echo "cpe: $cpe"
+		if [ "$(echo "$cpe" | cut -d/ -f1 )" = cpe: ]; then
+			local hwpart ifs
+
+			hwpart="$(echo "$cpe" | cut -d/ -f2)"
+			ifs=$IFS; IFS=:; set -- $hwpart; IFS=$ifs
+			if [ "$1" = o ]; then
+				if [ "$3" = linux ]; then
+					distro="$2"
+				else
+					distro="$3"
+				fi
+				distro_version_id="$4"
+				return
+			fi
+		fi
 	fi
 }
 
