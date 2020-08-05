@@ -113,10 +113,20 @@ test_relpath_to() {
 
 
 prep_default_cloudinit_disable() {
+	if [ "$distro" = centos -a "$distro_version_id" -le 6 ]; then
+		if [ -f "$rootdir/etc/cloud/cloud.cfg" ]; then
+			mv "$rootdir/etc/cloud/cloud.cfg" "$rootdir/etc/cloud/cloud.cfg.disabled"
+		fi
+	fi
 	[ ! -d "$rootdir/etc/cloud" ] || touch "$rootdir/etc/cloud/cloud-init.disabled"
 }
 
 prep_default_user_root() {
+	if [ "$distro" = centos -a "$distro_version_id" -le 6 ]; then
+		if [ -f "$rootdir/root/firstrun" ]; then
+			rm -v "$rootdir/root/firstrun"
+		fi
+	fi
 	sed -i -e "s#^root:[^:]*:#root:$passwd:#" "$rootdir/etc/shadow"
 	sed -i -e "s/^#\?PermitRootLogin.*/PermitRootLogin yes/" "$rootdir/etc/ssh/sshd_config"
 	if ! [ -s "$rootdir/root/.ssh/authorized_keys" ]; then
@@ -372,7 +382,11 @@ preproot() {
 	[ -n "$distro" -a -n "$distro_version_id" ]
 
 	nbd_connect dev1 "$disk1"
-	mkfs.ext4 -F -E 'lazy_itable_init=1,lazy_journal_init=1' "$dev1"
+	local features
+	if [ "$distro" = centos -a "$distro_version_id" -le 6 ]; then
+		features="${features:+$features,}^metadata_csum,uninit_bg"
+	fi
+	mkfs.ext4 -vv -F -E 'lazy_itable_init=1,lazy_journal_init=1' -O "$features" "$dev1"
 	local UUID TYPE
 	eval "$(blkid -o export "$dev1" | grep -E "^(UUID|TYPE)")"
 	poptrap
@@ -545,6 +559,7 @@ openamd64() {
 	local basefile="xenial-server-cloudimg-amd64-uefi1.img"
 	local basefile="groovy-server-cloudimg-amd64.img"
 	local basefile="Fedora-Cloud-Base-32-1.6.x86_64.qcow2"
+	local basefile="CentOS-6-x86_64-GenericCloud.qcow2"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
