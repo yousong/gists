@@ -355,12 +355,6 @@ preproot() {
 		return
 	fi
 
-	nbd_connect dev1 "$disk1"
-	mkfs.ext4 -F -E 'lazy_itable_init=1,lazy_journal_init=1' "$dev1"
-	local UUID TYPE
-	eval "$(blkid -o export "$dev1" | grep -E "^(UUID|TYPE)")"
-	poptrap
-
 	nbd_connect dev0 "$disk0"
 	rootdir="$topdir/m"
 	mkdir -p "$rootdir"
@@ -376,6 +370,12 @@ preproot() {
 		fi
 	done
 	[ -n "$distro" -a -n "$distro_version_id" ]
+
+	nbd_connect dev1 "$disk1"
+	mkfs.ext4 -F -E 'lazy_itable_init=1,lazy_journal_init=1' "$dev1"
+	local UUID TYPE
+	eval "$(blkid -o export "$dev1" | grep -E "^(UUID|TYPE)")"
+	poptrap
 
 	if [ -n "$rootdisksize" ]; then
 		growpart "$dev0" "$pi"
