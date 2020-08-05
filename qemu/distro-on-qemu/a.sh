@@ -333,7 +333,7 @@ preproot() {
 	fi
 
 	nbd_connect dev1 "$disk1"
-	mkfs.ext4 -F -O '^has_journal' "$dev1"
+	mkfs.ext4 -F -E 'lazy_itable_init=1,lazy_journal_init=1' "$dev1"
 	local UUID TYPE
 	eval "$(blkid -o export "$dev1" | grep -E "^(UUID|TYPE)")"
 	poptrap
