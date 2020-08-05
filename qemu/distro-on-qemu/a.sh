@@ -290,9 +290,7 @@ preproot() {
 			;;
 		*)
 			echo "unknown distro $distro" >&2
-			pushd "$rootdir"
-			bash
-			popd
+			bash -c "cd $rootdir; bash; exit 0"
 			false
 			;;
 	esac
