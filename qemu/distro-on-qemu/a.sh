@@ -22,6 +22,7 @@ dnsmasqconf="/etc/dnsmasq.d/distro-on-qemu.conf"
 traps=()
 
 settrap_() {
+	local i
 	local n
 
 	n="${#traps[@]}"
