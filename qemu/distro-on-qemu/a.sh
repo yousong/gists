@@ -289,6 +289,13 @@ preproot() {
 			chown 0:0 "$rootdir/etc/yum.repos.d/CentOS-Base.repo"
 			touch "$rootdir/.autorelabel"
 			;;
+		fedora)
+			cat "$topdir/fedora.repo" >"$rootdir/etc/yum.repos.d/fedora.repo"
+			cat "$topdir/fedora-updates.repo" >"$rootdir/etc/yum.repos.d/fedora-updates.repo"
+			chown 0:0 "$rootdir/etc/yum.repos.d/fedora.repo"
+			chown 0:0 "$rootdir/etc/yum.repos.d/fedora-updates.repo"
+			touch "$rootdir/.autorelabel"
+			;;
 		*)
 			echo "unknown distro $distro" >&2
 			bash -c "cd $rootdir; bash; exit 0"
@@ -406,6 +413,7 @@ openamd64() {
 	local basefile="debian-10.5.0-openstack-amd64.qcow2"
 	local basefile="xenial-server-cloudimg-amd64-uefi1.img"
 	local basefile="groovy-server-cloudimg-amd64.img"
+	local basefile="Fedora-Cloud-Base-32-1.6.x86_64.qcow2"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
