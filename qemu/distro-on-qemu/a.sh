@@ -375,8 +375,8 @@ preproot() {
 			fi
 		fi
 	done
-
 	[ -n "$distro" -a -n "$distro_version_id" ]
+
 	if [ -n "$rootdisksize" ]; then
 		growpart "$dev0" "$pi"
 	fi
