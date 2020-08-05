@@ -64,6 +64,7 @@ nbd_connect() {
 		if qemu-nbd -c "$dev" "$@" &>/dev/null; then
 			pushtrap "qemu-nbd -d $dev"
 			while ! lsblk --output name --raw --noheadings | grep -q "^nbd$i\$"; do sleep 0.3; done
+			sleep 0.3
 			eval "$dstvar=$dev"
 			return
 		fi
