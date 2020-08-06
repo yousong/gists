@@ -144,6 +144,12 @@ prep_default_sshd() {
 }
 
 prep_default_hostname() {
+	if [ "$distro" = centos -a "$distro_version_id" -le 6 ]; then
+		if [ -f "$rootdir/etc/sysconfig/network" ]; then
+			sed -i -e "s/^HOSTNAME=.*/HOSTNAME=$name/" "$rootdir/etc/sysconfig/network"
+		fi
+		return
+	fi
 	echo "$name" >"$rootdir/etc/hostname"
 }
 
