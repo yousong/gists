@@ -158,31 +158,28 @@ prep_default_debian_sourceslist() {
 	[ -n "$distro_version_codename" ]
 	cat >"$rootdir/etc/apt/sources.list" <<-EOF
 	deb https://mirrors.tuna.tsinghua.edu.cn/debian/ $distro_version_codename main contrib non-free
-	deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ $distro_version_codename main contrib non-free
 	deb https://mirrors.tuna.tsinghua.edu.cn/debian/ $distro_version_codename-updates main contrib non-free
-	deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ $distro_version_codename-updates main contrib non-free
 	deb https://mirrors.tuna.tsinghua.edu.cn/debian/ $distro_version_codename-backports main contrib non-free
-	deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ $distro_version_codename-backports main contrib non-free
 	deb https://mirrors.tuna.tsinghua.edu.cn/debian-security $distro_version_codename/updates main contrib non-free
-	deb-src https://mirrors.tuna.tsinghua.edu.cn/debian-security $distro_version_codename/updates main contrib non-free
+	# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ $distro_version_codename main contrib non-free
+	# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ $distro_version_codename-updates main contrib non-free
+	# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian/ $distro_version_codename-backports main contrib non-free
+	# deb-src https://mirrors.tuna.tsinghua.edu.cn/debian-security $distro_version_codename/updates main contrib non-free
 	EOF
 	chown 0:0 "$rootdir/etc/apt/sources.list"
 }
-
 prep_default_ubuntu_sourceslist() {
 	[ -n "$distro_version_codename" ]
 	cat >"$rootdir/etc/apt/sources.list" <<-EOF
-	# 默认注释了源码镜像以提高 apt update 速度，如有需要可自行取消注释
 	deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ $distro_version_codename main restricted universe multiverse
-	# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ $distro_version_codename main restricted universe multiverse
 	deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ $distro_version_codename-updates main restricted universe multiverse
-	# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ $distro_version_codename-updates main restricted universe multiverse
 	deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ $distro_version_codename-backports main restricted universe multiverse
-	# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ $distro_version_codename-backports main restricted universe multiverse
 	deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ $distro_version_codename-security main restricted universe multiverse
+	# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ $distro_version_codename main restricted universe multiverse
+	# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ $distro_version_codename-updates main restricted universe multiverse
+	# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ $distro_version_codename-backports main restricted universe multiverse
 	# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ $distro_version_codename-security main restricted universe multiverse
 
-	# 预发布软件源，不建议启用
 	# deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ $distro_version_codename-proposed main restricted universe multiverse
 	# deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ $distro_version_codename-proposed main restricted universe multiverse
 	EOF
