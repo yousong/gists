@@ -481,7 +481,7 @@ runarm64() {
 runamd64() {
 	run \
 		qemu-system-x86_64 \
-		-M pc \
+		-M q35 \
 		-accel kvm \
 		-cpu host \
 		-smp cpus=4 \
