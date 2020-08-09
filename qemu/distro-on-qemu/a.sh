@@ -14,6 +14,7 @@ fi
 # 123 by default
 passwd="${passwd:-"v7riKsA/UOR/g"}"
 subnet="${subnet:-192.168.121}"
+ncpu="${ncpu:-4}"
 memsize="${memsize:-4G}"
 rootdisksize="${rootdisksize:+$rootdisksize}"
 datadisksize="${datadisksize:-2G}"
@@ -489,6 +490,7 @@ run() {
 		-device virtio-keyboard-pci \
 		-device VGA \
 		-display vnc="0.0.0.0:$((10000 + $i))" \
+		-smp cpus=${ncpu} \
 		-m "$memsize" \
 		-drive "file=$disk0,format=qcow2,if=virtio" \
 		-drive "file=$disk1,format=qcow2,if=virtio" \
@@ -504,7 +506,6 @@ runarm64() {
 		qemu-system-aarch64 \
 		-M virt,gic-version=3,graphics=on,firmware=edk2-aarch64-code.fd \
 		-cpu cortex-a57 \
-		-smp cpus=4 \
 
 }
 
@@ -513,7 +514,6 @@ runamd64() {
 		qemu-system-x86_64 \
 		-M q35 \
 		-cpu host \
-		-smp cpus=4 \
 
 }
 
