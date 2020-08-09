@@ -369,6 +369,28 @@ update_config() {
 	echo "$name=$value" >>"$dir/00-config-init"
 }
 
+detect_distro_arch() {
+	local elf="$rootdir/bin/sh"
+	local sig endian arch
+
+	sig="$(hexdump -v -s 0 -n 4 -e '4/1 "%02x" "\n"' "$elf")"
+	[ "$sig" = "7f454c46" ]
+	endian="$(hexdump -v -s 5 -n 1 -e '1/1 "%d\n"' "$elf")"
+	arch="$(hexdump -v -s 18 -n 2 -e '2/1 "%02x" "\n"' "$elf")"
+	case "$endian" in
+		1) arch="${arch#??}${arch%??}" ;;
+		2) ;;
+		*) false ;;
+	esac
+	case "$arch" in
+		003e) distro_arch=x86_64 ;;
+		00b7) distro_arch=aarch64 ;;
+		*) false ;;
+	esac
+
+	update_config "distro_arch" "$distro_arch"
+}
+
 preproot() {
 	local peppered="$dir/peppered"
 	local dev0 dev1
