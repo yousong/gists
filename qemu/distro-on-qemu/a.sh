@@ -492,6 +492,7 @@ run() {
 	"$qemu" \
 		"${accel[@]}" \
 		"${cpu[@]}" \
+		-L "$topdir/qemu-firmware" \
 		-name "$name" \
 		-nographic \
 		-device virtio-keyboard-pci \
@@ -636,6 +637,18 @@ if ! ip link show br-wan &>/dev/null; then
 fi
 if ! [ -s "$topdir/id_rsa" ]; then
 	ssh-keygen -f "$topdir/id_rsa" -N ''
+fi
+if ! [ -d "$topdir/qemu-firmware" ]; then
+	mkdir -p "$topdir/qemu-firmware"
+	if [ -s /usr/share/qemu-efi-aarch64/QEMU_EFI.fd ]; then
+		ln -sf /usr/share/qemu-efi-aarch64/QEMU_EFI.fd "$topdir/qemu-firmware/edk2-aarch64-code.fd"
+	fi
+	if [ -s /usr/lib/ipxe/qemu/efi-virtio.rom ]; then
+		ln -sf /usr/lib/ipxe/qemu/efi-virtio.rom "$topdir/qemu-firmware/"
+	fi
+	if [ -s /usr/share/vgabios/vgabios-stdvga.bin ]; then
+		ln -sf /usr/share/vgabios/vgabios-stdvga.bin "$topdir/qemu-firmware/"
+	fi
 fi
 
 set -o xtrace
