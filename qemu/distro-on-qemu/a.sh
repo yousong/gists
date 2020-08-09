@@ -456,6 +456,20 @@ preproot() {
 	touch "$peppered"
 }
 
+the_arch() {
+	local out="$1"; shift
+	local in="$1"; shift
+
+	case "$in" in
+		x86_64|amd64)
+			eval "$out=x86_64" ;;
+		aarch64|arm64)
+			eval "$out=aarch64" ;;
+		*)
+			false
+	esac
+}
+
 run() {
 	local qemu="$1"; shift
 	"$qemu" \
