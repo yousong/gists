@@ -359,6 +359,16 @@ growpart() {
 	esac
 }
 
+update_config() {
+	local name="$1"; shift
+	local value="$1"; shift
+
+	if [ -s "$dir/00-config-init" ]; then
+		sed -i -e "/^$name=/d" "$dir/00-config-init"
+	fi
+	echo "$name=$value" >>"$dir/00-config-init"
+}
+
 preproot() {
 	local peppered="$dir/peppered"
 	local dev0 dev1
