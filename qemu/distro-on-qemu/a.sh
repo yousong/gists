@@ -628,8 +628,8 @@ if ! ip link show br-wan &>/dev/null; then
 	ip link add br-wan type bridge
 	ip link set br-wan up
 	ip addr add "$subnet.1/24" dev br-wan
-	while iptables -t nat -D POSTROUTING -s "$subnet.0/24" -j MASQUERADE; do :; done
-	      iptables -t nat -A POSTROUTING -s "$subnet.0/24" -j MASQUERADE;
+	while iptables -t nat -D POSTROUTING -s "$subnet.0/24" '!' -d "$subnet.0/24" -j MASQUERADE; do :; done
+	      iptables -t nat -A POSTROUTING -s "$subnet.0/24" '!' -d "$subnet.0/24" -j MASQUERADE;
 	echo "interface=br-wan" >"$dnsmasqconf"
 	echo "dhcp-range=$subnet.10,$subnet.150,2h" >>"$dnsmasqconf"
 	systemctl restart dnsmasq
