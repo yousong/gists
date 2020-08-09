@@ -409,10 +409,12 @@ preproot() {
 		if mount "$pb" "$rootdir/"; then
 			pushtrap "umount $rootdir/"
 			detect_rootfs
-			poptrap
 			if [ -n "$distro" -a -n "$distro_version_id" ]; then
+				detect_distro_arch
+				poptrap
 				break
 			fi
+			poptrap
 		fi
 	done
 	[ -n "$distro" -a -n "$distro_version_id" ]
@@ -639,6 +641,7 @@ openamd64() {
 	local distro
 	local distro_version_id
 	local distro_version_codename
+	local distro_arch
 
 	mkdir -p "$dir"
 	ensure_mac
@@ -646,7 +649,14 @@ openamd64() {
 	preproot
 	ensure_dhcp
 
-	runamd64
+	local f
+	for f in $(find "$dir" -maxdepth 2 -type f -name "??-config-*"); do
+		source "$f"
+	done
+	case "$distro_arch" in
+		x86_64) runamd64 ;;
+		*) false ;;
+	esac
 }
 
 cd "$topdir"
