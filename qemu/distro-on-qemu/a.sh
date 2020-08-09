@@ -584,34 +584,6 @@ ensure_disk() {
 	fi
 }
 
-openarm64() {
-	local baseurl=https://cdimage.debian.org/cdimage/openstack/current
-	local basefile="debian-10.4.3-20200610-openstack-arm64.qcow2"
-	local basefileabs="$topdir/$basefile"
-	local url="$baseurl/$basefile"
-
-	: wget -O "$basefileabs" -c "$url"
-
-	local i="$1"
-	local name="arm64n$i"
-	local dir="$topdir/$name"
-	local disk0="$dir/d0"
-	local disk1="$dir/d1"
-	local mac
-	local distro
-	local distro_version_id
-	local distro_version_codename
-
-
-	mkdir -p "$dir"
-	ensure_mac
-	ensure_disk
-	preproot
-	ensure_dhcp
-
-	runarm64
-}
-
 open() {
 	# centos8 rootfs xfs has features not supported by centos 7 xfs module
 	local baseurl=https://cloud.centos.org/centos/8-stream/x86_64/images
