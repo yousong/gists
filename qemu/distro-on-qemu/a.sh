@@ -475,16 +475,23 @@ run() {
 	local qemu="$1"; shift
 	local hostarch targetarch
 	local accel
+	local cpu
 
 	the_arch hostarch "$(uname -m)"
 	the_arch targetarch "${qemu##*-}"
 	if [ "$hostarch" = "$targetarch" ]; then
 		accel=(-accel kvm)
+		cpu=(-cpu host)
 	else
 		accel=(-accel tcg,thread=multi)
+		case "$targetarch" in
+			aarch64) cpu=(-cpu cortex-a57) ;;
+			*) false ;;
+		esac
 	fi
 	"$qemu" \
 		"${accel[@]}" \
+		"${cpu[@]}" \
 		-name "$name" \
 		-nographic \
 		-device virtio-keyboard-pci \
@@ -505,7 +512,6 @@ runarm64() {
 	run \
 		qemu-system-aarch64 \
 		-M virt,gic-version=3,graphics=on,firmware=edk2-aarch64-code.fd \
-		-cpu cortex-a57 \
 
 }
 
@@ -513,7 +519,6 @@ runamd64() {
 	run \
 		qemu-system-x86_64 \
 		-M q35 \
-		-cpu host \
 
 }
 
