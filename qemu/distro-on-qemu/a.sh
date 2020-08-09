@@ -612,7 +612,7 @@ openarm64() {
 	runarm64
 }
 
-openamd64() {
+open() {
 	# centos8 rootfs xfs has features not supported by centos 7 xfs module
 	local baseurl=https://cloud.centos.org/centos/8-stream/x86_64/images
 	local baseurl=http://mirrors.ustc.edu.cn/centos-cloud/centos/8-stream/x86_64/images
@@ -633,7 +633,7 @@ openamd64() {
 	: wget -O "$basefileabs" -c "$url"
 
 	local i="$1"
-	local name="amd64n$i"
+	local name="vm$i"
 	local dir="$topdir/$name"
 	local disk0="$dir/d0"
 	local disk1="$dir/d1"
@@ -655,6 +655,7 @@ openamd64() {
 	done
 	case "$distro_arch" in
 		x86_64) runamd64 ;;
+		aarch64) runarm64 ;;
 		*) false ;;
 	esac
 }
