@@ -701,7 +701,10 @@ open() {
 	mkdir -p "$dir"
 	ensure_mac
 	ensure_disk
-	preproot
+	case "${basefileabs##*.}" in
+		iso) prepiso ;;
+		*) preproot ;;
+	esac
 	ensure_dhcp
 
 	local f
