@@ -529,6 +529,10 @@ run() {
 		-L "$topdir/qemu-firmware" \
 		-name "$name" \
 		-nographic \
+		-nodefaults \
+		-chardev stdio,mux=on,signal=off,id=chr0 \
+		-serial chardev:chr0 \
+		-mon chardev=chr0 \
 		-device virtio-keyboard-pci \
 		-device VGA \
 		-display vnc="0.0.0.0:$((10000 + $i))" \
