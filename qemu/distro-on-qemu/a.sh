@@ -681,6 +681,7 @@ open() {
 	local basefile="groovy-server-cloudimg-amd64.img"
 	local basefile="Fedora-Cloud-Base-32-1.6.x86_64.qcow2"
 	local basefile="CentOS-6-x86_64-GenericCloud.qcow2"
+	local basefile="alpine-virt-3.12.0-x86_64.iso"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
