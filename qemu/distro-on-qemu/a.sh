@@ -396,7 +396,7 @@ detect_distro_arch() {
 		endian="$(hexdump -v -s 5 -n 1 -e '1/1 "%d\n"' "$elf")"
 		arch="$(hexdump -v -s 18 -n 2 -e '2/1 "%02x" "\n"' "$elf")"
 		case "$endian" in
-			1) arch="${arch#??}${arch%??}" ;;
+			1) swap16 arch "$arch" ;;
 			2) ;;
 			*) false ;;
 		esac
