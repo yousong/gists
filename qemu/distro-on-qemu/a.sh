@@ -551,6 +551,8 @@ run() {
 	local hostarch targetarch
 	local accel
 	local cpu
+	local drives=()
+	local boot
 
 	the_arch hostarch "$(uname -m)"
 	the_arch targetarch "${qemu##*-}"
@@ -564,6 +566,13 @@ run() {
 			*) false ;;
 		esac
 	fi
+	case "${basefileabs##*.}" in
+		iso)
+			drives+=( -drive file="$basefileabs,media=cdrom,if=ide" )
+			boot=(-boot order=cd,menu=on)
+			;;
+		*) ;;
+	esac
 	"$qemu" \
 		"${accel[@]}" \
 		"${cpu[@]}" \
@@ -581,6 +590,8 @@ run() {
 		-m "$memsize" \
 		-drive "file=$disk0,format=qcow2,if=virtio" \
 		-drive "file=$disk1,format=qcow2,if=virtio" \
+		"${drives[@]}" \
+		"${boot[@]}" \
 		-device virtio-net-pci,mac="$mac",netdev=wan \
 		-netdev bridge,id=wan,br=br-wan \
 		-device virtio-rng-pci \
