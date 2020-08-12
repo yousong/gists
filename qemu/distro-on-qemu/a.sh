@@ -460,8 +460,9 @@ detect_distro_arch() {
 		esac
 	fi
 
-	[ -n "$distro_arch" ]
-	update_config "distro_arch" "$distro_arch"
+	if [ -n "$distro_arch" ]; then
+		update_config "distro_arch" "$distro_arch"
+	fi
 }
 
 preproot() {
