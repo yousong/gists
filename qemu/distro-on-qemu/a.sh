@@ -619,10 +619,17 @@ ensure_dhcp() {
 
 ensure_disk() {
 	if ! [ -s "$disk0" ]; then
-		qemu-img create -f qcow2 -o backing_file="$(relpath_to "$(dirname "$disk0")" "$basefileabs")" "$disk0"
-		if [ -n "$rootdisksize" ]; then
-			qemu-img resize -f qcow2 "$disk0" "$rootdisksize"
-		fi
+		case "${basefileabs##*.}" in
+			iso)
+				qemu-img create -f qcow2 "$disk0" "$rootdisksize"
+				;;
+			*)
+				qemu-img create -f qcow2 -o backing_file="$(relpath_to "$(dirname "$disk0")" "$basefileabs")" "$disk0"
+				if [ -n "$rootdisksize" ]; then
+					qemu-img resize -f qcow2 "$disk0" "$rootdisksize"
+				fi
+				;;
+		esac
 	fi
 	if ! [ -s "$disk1" ]; then
 		qemu-img create -f qcow2 -o preallocation=falloc "$disk1" "$datadisksize"
