@@ -725,6 +725,7 @@ open() {
 	local basefile="CentOS-6-x86_64-GenericCloud.qcow2"
 	local basefile="alpine-virt-3.12.0-x86_64.iso"
 	local basefile="alpine-virt-3.12.0-aarch64.iso"
+	local basefile="SLES15-SP2-JeOS.x86_64-15.2-OpenStack-Cloud-GM.qcow2"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
