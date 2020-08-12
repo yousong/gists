@@ -490,7 +490,12 @@ preproot() {
 			fi
 		fi
 	done
-	[ -n "$distro" -a -n "$distro_version_id" ]
+
+	if ! [ -n "$distro" -a -n "$distro_version_id" ]; then
+		poptrap
+		touch "$peppered"
+		return
+	fi
 
 	nbd_connect dev1 "$disk1"
 	local features
