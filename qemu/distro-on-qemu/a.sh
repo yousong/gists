@@ -611,6 +611,7 @@ run() {
 	local cpu
 	local drives=()
 	local boot
+	local helper
 
 	the_arch hostarch "$(uname -m)"
 	the_arch targetarch "${qemu##*-}"
@@ -635,6 +636,8 @@ run() {
 			;;
 		*) ;;
 	esac
+	helper="$("$qemu" -help | grep -m1 -o '/.*qemu-bridge-helper')"
+	[ -x "$helper" ]
 	"$qemu" \
 		"${accel[@]}" \
 		"${cpu[@]}" \
@@ -655,7 +658,7 @@ run() {
 		"${drives[@]}" \
 		"${boot[@]}" \
 		-device virtio-net-pci,mac="$mac",netdev=wan \
-		-netdev bridge,id=wan,br=br-wan \
+		-netdev tap,id=wan,br=br-wan,helper="$helper",vhost=on \
 		-device virtio-rng-pci \
 		"$@"
 
