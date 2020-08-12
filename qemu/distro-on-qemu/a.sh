@@ -549,6 +549,14 @@ preproot() {
 			chown 0:0 "$rootdir/etc/yum.repos.d/fedora-updates.repo"
 			touch "$rootdir/.autorelabel"
 			;;
+		sles)
+			prep_default_suse_zypprepo
+			cat >"$rootdir/etc/sysconfig/network/ifcfg-eth0" <<-EOF
+			STARTMODE=auto
+			BOOTPROTO=dhcp
+			EOF
+			chown 0:0 "$rootdir/etc/sysconfig/network/ifcfg-eth0"
+			;;
 		*)
 			echo "unknown distro $distro" >&2
 			bash -c "cd $rootdir; bash; exit 0"
