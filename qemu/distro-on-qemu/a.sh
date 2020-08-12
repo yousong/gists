@@ -53,6 +53,23 @@ poptrap() {
 	settrap_
 }
 
+swap16() {
+	local dstvar="$1"; shift
+	local v="$1"; shift
+
+	eval "$dstvar=${v#??}${v%??}"
+}
+
+swap32() {
+	local dstvar="$1"; shift
+	local v="$1"; shift
+	local v0 v1
+
+	swap16 v0 "${v#????}"
+	swap16 v1 "${v%????}"
+	eval "$dstvar=${v0}${v1}"
+}
+
 nbd_connect() {
 	local dstvar="$1"; shift
 	local i dev
