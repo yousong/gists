@@ -279,6 +279,36 @@ prep_default_centos_yumrepo() {
 	chown 0:0 "$rootdir/etc/yum.repos.d/CentOS-Base.repo"
 }
 
+prep_default_suse_zypprepo() {
+	[ -n "$distro_version_id" ]
+	cat >"$rootdir/etc/zypp/repos.d/zypp.repo" <<-EOF
+	[update-oss]
+	enabled=1
+	autorefresh=1
+	baseurl=http://mirrors.tuna.tsinghua.edu.cn/opensuse/update/leap/$distro_version_id/oss
+	type=NONE
+
+	[update-non-oss]
+	enabled=1
+	autorefresh=1
+	baseurl=http://mirrors.tuna.tsinghua.edu.cn/opensuse/update/leap/$distro_version_id/non-oss
+	type=NONE
+
+	[dist-oss]
+	enabled=1
+	autorefresh=1
+	baseurl=http://mirrors.tuna.tsinghua.edu.cn/opensuse/distribution/leap/$distro_version_id/repo/oss
+	type=NONE
+
+	[dist-non-oss]
+	enabled=1
+	autorefresh=1
+	baseurl=http://mirrors.tuna.tsinghua.edu.cn/opensuse/distribution/leap/$distro_version_id/repo/non-oss
+	type=NONE
+	EOF
+	chown 0:0 "$rootdir/etc/zypp/repos.d/zypp.repo"
+}
+
 detect_rootfs() {
 	local osrelf="$rootdir/etc/os-release"
 	local NAME VERSION ID VERSION_ID VERSION_CODENAME
