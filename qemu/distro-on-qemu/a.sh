@@ -532,6 +532,26 @@ preproot() {
 	touch "$peppered"
 }
 
+prepiso() {
+	local peppered="$dir/prepiso"
+	local rootdir
+
+	if [ -f "$peppered" ]; then
+		return
+	fi
+
+	rootdir="$topdir/m"
+	mount "$basefileabs" "$rootdir"
+	pushtrap "umount $rootdir/"
+
+	detect_rootfs
+	detect_distro_arch
+
+	poptrap
+
+	touch "$peppered"
+}
+
 the_arch() {
 	local out="$1"; shift
 	local in="$1"; shift
