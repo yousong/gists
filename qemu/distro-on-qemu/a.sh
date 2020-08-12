@@ -588,7 +588,11 @@ run() {
 	fi
 	case "${basefileabs##*.}" in
 		iso)
-			drives+=( -drive file="$basefileabs,media=cdrom,if=ide" )
+			case "$targetarch" in
+				x86_64) drives+=( -drive file="$basefileabs,media=cdrom,if=ide" ) ;;
+				aarch64) drives+=( -drive file="$basefileabs,media=cdrom,if=virtio" ) ;;
+				*) false ;;
+			esac
 			boot=(-boot order=cd,menu=on)
 			;;
 		*) ;;
