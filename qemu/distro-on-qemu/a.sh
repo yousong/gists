@@ -483,12 +483,11 @@ preproot() {
 		if mount "$pb" "$rootdir/"; then
 			pushtrap "umount $rootdir/"
 			detect_rootfs
-			if [ -n "$distro" -a -n "$distro_version_id" ]; then
-				detect_distro_arch
-				poptrap
+			detect_distro_arch
+			poptrap
+			if [ -n "$distro" -a -n "$distro_version_id" -a -n "$distro_arch" ]; then
 				break
 			fi
-			poptrap
 		fi
 	done
 	[ -n "$distro" -a -n "$distro_version_id" ]
