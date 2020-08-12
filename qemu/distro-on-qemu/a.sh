@@ -407,6 +407,27 @@ detect_distro_arch() {
 		esac
 	fi
 
+	if [ -d "$rootdir/efi" ]; then
+		local pe
+		local sig off mach
+		pe="$(find "$rootdir/efi" -type f -iname "*.efi" | head -n 1)"
+		sig="$(hexdump -v -s 0 -n 2 -e '2/1 "%02x" "\n"' "$pe")"
+		[ "$sig" = 4d5a ]
+
+		off="$(hexdump -v -s 60 -n 4 -e '4/1 "%02x" "\n"' "$pe")"
+		swap32 off "$off"
+		sig="$(hexdump -v -s "$((0x$off))" -n 4 -e '4/1 "%02x" "\n"' "$pe")"
+		[ "$sig" = 50450000 ]
+
+		mach="$(hexdump -v -s "$((0x$off + 4))" -n 2 -e '2/1 "%02x" "\n"' "$pe")"
+		swap16 mach "$mach"
+		case "$mach" in
+			8664) distro_arch=x86_64 ;;
+			aa64) distro_arch=aarch64 ;;
+			*) false ;;
+		esac
+	fi
+
 	[ -n "$distro_arch" ]
 	update_config "distro_arch" "$distro_arch"
 }
