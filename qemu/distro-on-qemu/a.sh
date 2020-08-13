@@ -474,8 +474,8 @@ detect_distro_arch() {
 		endian="$(hexdump -v -s 5 -n 1 -e '1/1 "%d\n"' "$elf")"
 		arch="$(hexdump -v -s 18 -n 2 -e '2/1 "%02x" "\n"' "$elf")"
 		case "$endian" in
-			1) swap16 arch "$arch" ;;
-			2) ;;
+			1) distro_arch_endian=le; swap16 arch "$arch" ;;
+			2) distro_arch_endian=be ;;
 			*) false ;;
 		esac
 		case "$arch" in
@@ -502,8 +502,8 @@ detect_distro_arch() {
 		mach="$(hexdump -v -s "$((0x$off + 4))" -n 2 -e '2/1 "%02x" "\n"' "$pe")"
 		swap16 mach "$mach"
 		case "$mach" in
-			8664) distro_arch=x86_64 ;;
-			aa64) distro_arch=aarch64 ;;
+			8664) distro_arch_endian=le; distro_arch=x86_64 ;;
+			aa64) distro_arch_endian=  ; distro_arch=aarch64 ;;
 			*) false ;;
 		esac
 	fi
@@ -816,6 +816,7 @@ open() {
 	local distro_version_id
 	local distro_version_codename
 	local distro_arch
+	local distro_arch_endian
 
 	mkdir -p "$dir"
 	ensure_mac
