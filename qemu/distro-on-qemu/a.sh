@@ -502,6 +502,9 @@ detect_distro_arch() {
 	if [ -d "$efidir" ]; then
 		pe="$(find "$efidir" -type f -iname "*.efi" | head -n 1)"
 	fi
+	if [ -z "$pe" ]; then
+		pe="$(find "$rootdir" -maxdepth 2 -iname "*.exe" | head -n 1)"
+	fi
 	if [ -s "$pe" ]; then
 		local sig off mach
 		sig="$(hexdump -v -s 0 -n 2 -e '2/1 "%02x" "\n"' "$pe")"
