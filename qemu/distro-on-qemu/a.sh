@@ -808,6 +808,7 @@ open() {
 	local basefile="SLES15-SP2-JeOS.x86_64-15.2-OpenStack-Cloud-GM.qcow2"
 	local basefile="cirros-0.5.1-x86_64-disk.img"
 	local basefile="cirros-0.5.1-aarch64-disk.img"
+	local basefile="debian-10.4.3-20200610-openstack-arm64.qcow2"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
