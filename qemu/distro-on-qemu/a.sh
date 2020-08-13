@@ -796,6 +796,7 @@ open() {
 	local basefile="alpine-virt-3.12.0-x86_64.iso"
 	local basefile="alpine-virt-3.12.0-aarch64.iso"
 	local basefile="SLES15-SP2-JeOS.x86_64-15.2-OpenStack-Cloud-GM.qcow2"
+	local basefile="cirros-0.5.1-x86_64-disk.img"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
