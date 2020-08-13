@@ -519,6 +519,7 @@ detect_distro_arch() {
 		swap16 mach "$mach"
 		case "$mach" in
 			8664) distro_arch_endian=le; distro_arch=x86_64 ;;
+			014c) distro_arch_endian=le; distro_arch=i386 ;;
 			aa64) distro_arch_endian=  ; distro_arch=aarch64 ;;
 			*) false ;;
 		esac
