@@ -675,18 +675,21 @@ run() {
 	local drives=()
 	local boot
 	local helper
+	local vhost
 
 	the_arch hostarch "$(uname -m)"
 	the_arch targetarch "${qemu##*-}"
 	if [ "$hostarch" = "$targetarch" ]; then
 		accel=(-accel kvm)
 		cpu=(-cpu host)
+		vhost=on
 	else
 		accel=(-accel tcg,thread=multi)
 		case "$targetarch" in
 			aarch64) cpu=(-cpu cortex-a57) ;;
 			*) false ;;
 		esac
+		vhost=off
 	fi
 	case "${basefileabs##*.}" in
 		iso)
@@ -725,7 +728,7 @@ run() {
 		"${drives[@]}" \
 		"${boot[@]}" \
 		-device virtio-net-pci,mac="$mac",netdev=wan \
-		-netdev tap,id=wan,br=br-wan,helper="$helper",vhost=on \
+		-netdev tap,id=wan,br=br-wan,helper="$helper",vhost="$vhost" \
 		-device virtio-rng-pci \
 		"$@"
 
