@@ -309,6 +309,42 @@ prep_default_suse_zypprepo() {
 	chown 0:0 "$rootdir/etc/zypp/repos.d/zypp.repo"
 }
 
+mkds_nocloud() {
+	local ncdisk="$dir/nocloud.raw"
+	local ncdir="$dir/nocloud"
+
+	dd if=/dev/zero of="$ncdisk" bs=1M count=2
+	mkfs.ext4 -m 0 -L cidata "$ncdisk"
+
+	mkdir -p "$ncdir"
+	mount "$ncdisk" "$ncdir"
+	pushtrap "rmdir $ncdir"
+	pushtrap "umount $ncdir"
+
+	cat >"$ncdir/meta-data" <<-EOF
+	{
+		"instance-id": "$(uuidgen)",
+		"name": "$name",
+		"hostname": "$name",
+		"public-keys": "$(cat $topdir/id_rsa.pub)"
+	}
+	EOF
+
+	if [ "$distro" = cirros ]; then
+		cat >"$ncdir/user-data" <<-EOF
+		#!/bin/sh
+		dev="\$(blkid -l -t UUID=$UUID -o device)"
+		if [ -b "\$dev" ]; then
+			echo "\$dev /opt $TYPE defaults 0 0" >>/etc/fstab
+			mount /opt
+		fi
+		EOF
+	fi
+
+	poptrap
+	poptrap
+}
+
 detect_rootfs() {
 	local osrelf="$rootdir/etc/os-release"
 	local NAME VERSION ID VERSION_ID VERSION_CODENAME
