@@ -70,6 +70,30 @@ swap32() {
 	eval "$dstvar=${v0}${v1}"
 }
 
+parse_elf() {
+	local dstarch="$1"; shift
+	local dstarch_endian="$1"; shift
+	local elf="$1"; shift
+
+	if [ -e "$elf" ]; then
+		local sig endian arch
+		sig="$(hexdump -v -s 0 -n 4 -e '4/1 "%02x" "\n"' "$elf")"
+		[ "$sig" = "7f454c46" ]
+		endian="$(hexdump -v -s 5 -n 1 -e '1/1 "%d\n"' "$elf")"
+		arch="$(hexdump -v -s 18 -n 2 -e '2/1 "%02x" "\n"' "$elf")"
+		case "$endian" in
+			1) eval "$dstarch_endian=le"; swap16 arch "$arch" ;;
+			2) eval "$dstarch_endian=be" ;;
+			*) false ;;
+		esac
+		case "$arch" in
+			003e) eval "$dstarch=x86_64" ;;
+			00b7) eval "$dstarch=aarch64" ;;
+			*) false ;;
+		esac
+	fi
+}
+
 nbd_connect() {
 	local dstvar="$1"; shift
 	local i dev
