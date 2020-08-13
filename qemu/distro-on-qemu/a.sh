@@ -342,6 +342,18 @@ detect_rootfs() {
 			fi
 		fi
 	fi
+
+	local menulst
+	menulst="$(find "$rootdir" -maxdepth 3 -type f -iname menu.lst -type f | head -n1)"
+	if [ -s "$menulst" ]; then
+		if grep -m1 -q " LABEL=cirros-rootfs" "$menulst"; then
+			distro="cirros"
+			local initrd
+			initrd="$(find "$rootdir" -maxdepth 1 -name initrd.img | head -n1)"
+			distro_version_id="$(gunzip -c "$initrd" | cpio --to-stdout --quiet -i etc/cirros/version)"
+			return
+		fi
+	fi
 }
 
 growpart() {
