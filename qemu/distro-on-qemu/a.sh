@@ -796,19 +796,19 @@ open() {
 	local basefile="CentOS-Stream-GenericCloud-8-20200113.0.x86_64.qcow2"
 
 	local baseurl=http://mirrors.ustc.edu.cn/centos-cloud/centos/7/images
+	local basefile="CentOS-6-x86_64-GenericCloud.qcow2"
 	local basefile="CentOS-7-x86_64-GenericCloud.qcow2.xz"
 	local basefile="CentOS-7-x86_64-GenericCloud.qcow2"
+	local basefile="Fedora-Cloud-Base-32-1.6.x86_64.qcow2"
 	local basefile="debian-10.5.0-openstack-amd64.qcow2"
+	local basefile="debian-10.4.3-20200610-openstack-arm64.qcow2"
 	local basefile="xenial-server-cloudimg-amd64-uefi1.img"
 	local basefile="groovy-server-cloudimg-amd64.img"
-	local basefile="Fedora-Cloud-Base-32-1.6.x86_64.qcow2"
-	local basefile="CentOS-6-x86_64-GenericCloud.qcow2"
 	local basefile="alpine-virt-3.12.0-x86_64.iso"
 	local basefile="alpine-virt-3.12.0-aarch64.iso"
 	local basefile="SLES15-SP2-JeOS.x86_64-15.2-OpenStack-Cloud-GM.qcow2"
 	local basefile="cirros-0.5.1-x86_64-disk.img"
 	local basefile="cirros-0.5.1-aarch64-disk.img"
-	local basefile="debian-10.4.3-20200610-openstack-arm64.qcow2"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
