@@ -497,11 +497,13 @@ detect_distro_arch() {
 	fi
 
 	local efidir
+	local pe
 	efidir="$(find "$rootdir" -maxdepth 1 -type d -iname efi | head -n 1)"
 	if [ -d "$efidir" ]; then
-		local pe
-		local sig off mach
 		pe="$(find "$efidir" -type f -iname "*.efi" | head -n 1)"
+	fi
+	if [ -s "$pe" ]; then
+		local sig off mach
 		sig="$(hexdump -v -s 0 -n 2 -e '2/1 "%02x" "\n"' "$pe")"
 		[ "$sig" = 4d5a ]
 
