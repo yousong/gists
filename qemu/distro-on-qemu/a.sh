@@ -489,24 +489,11 @@ update_config() {
 }
 
 detect_distro_arch() {
-	local elf="$rootdir/bin/sh"
-
-	if [ -e "$elf" ]; then
-		local sig endian arch
-		sig="$(hexdump -v -s 0 -n 4 -e '4/1 "%02x" "\n"' "$elf")"
-		[ "$sig" = "7f454c46" ]
-		endian="$(hexdump -v -s 5 -n 1 -e '1/1 "%d\n"' "$elf")"
-		arch="$(hexdump -v -s 18 -n 2 -e '2/1 "%02x" "\n"' "$elf")"
-		case "$endian" in
-			1) distro_arch_endian=le; swap16 arch "$arch" ;;
-			2) distro_arch_endian=be ;;
-			*) false ;;
-		esac
-		case "$arch" in
-			003e) distro_arch=x86_64 ;;
-			00b7) distro_arch=aarch64 ;;
-			*) false ;;
-		esac
+	parse_elf distro_arch distro_arch_endian "$rootdir/bin/sh"
+	if [ -n "$distro_arch" -a -n "$distro_arch_endian" ]; then
+		update_config "distro_arch" "$distro_arch"
+		update_config "distro_arch_endian" "$distro_arch_endian"
+		return
 	fi
 
 	local efidir
@@ -530,10 +517,8 @@ detect_distro_arch() {
 			aa64) distro_arch_endian=  ; distro_arch=aarch64 ;;
 			*) false ;;
 		esac
-	fi
-
-	if [ -n "$distro_arch" ]; then
 		update_config "distro_arch" "$distro_arch"
+		update_config "distro_arch_endian" "$distro_arch_endian"
 	fi
 }
 
