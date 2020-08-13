@@ -693,23 +693,21 @@ the_arch() {
 
 run() {
 	local qemu="$1"; shift
-	local hostarch targetarch
+	local hostarch hostarch_endian
 	local accel
 	local cpu
 	local drives=()
 	local boot
 	local helper
-	local vhost
+	local vhost=on
 
-	the_arch hostarch "$(uname -m)"
-	the_arch targetarch "${qemu##*-}"
-	if [ "$hostarch" = "$targetarch" ]; then
+	parse_elf hostarch hostarch_endian /bin/bash
+	if [ "$hostarch" = "$distro_arch" ]; then
 		accel=(-accel kvm)
 		cpu=(-cpu host)
-		vhost=on
 	else
 		accel=(-accel tcg,thread=multi)
-		case "$targetarch" in
+		case "$distro_arch" in
 			aarch64) cpu=(-cpu cortex-a57) ;;
 			*) false ;;
 		esac
