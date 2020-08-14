@@ -693,7 +693,7 @@ run() {
 	local vhost=on
 
 	parse_elf hostarch hostarch_endian /bin/bash
-	if [ "$hostarch" = "$distro_arch" ]; then
+	if [ "$hostarch" = "$distro_arch" ] || [ "$hostarch" = x86_64 -a "$distro_arch" = i386 ]; then
 		accel=(-accel kvm)
 		cpu=(-cpu host)
 	else
@@ -847,7 +847,7 @@ open() {
 		source "$f"
 	done
 	case "$distro_arch" in
-		x86_64) runamd64 ;;
+		x86_64|i386) runamd64 ;;
 		aarch64) runarm64 ;;
 		*) false ;;
 	esac
