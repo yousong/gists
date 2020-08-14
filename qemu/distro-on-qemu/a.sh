@@ -535,6 +535,19 @@ detect_distro_arch() {
 		update_config "distro_arch_endian" "$distro_arch_endian"
 		return
 	fi
+
+	local grubmoddir
+	grubmoddir="$(findone "$rootdir" -maxdepth 2 -type d -iname grub)"
+	if [ -n "$grubmoddir" ]; then
+		local mod
+		mod="$(findone "$grubmoddir" -maxdepth 2 -type f -iname '*.mod')"
+		parse_elf distro_arch distro_arch_endian "$mod"
+		if [ -n "$distro_arch" -a -n "$distro_arch_endian" ]; then
+			update_config "distro_arch" "$distro_arch"
+			update_config "distro_arch_endian" "$distro_arch_endian"
+			return
+		fi
+	fi
 }
 
 preproot() {
