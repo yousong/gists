@@ -525,6 +525,7 @@ detect_distro_arch() {
 		esac
 		update_config "distro_arch" "$distro_arch"
 		update_config "distro_arch_endian" "$distro_arch_endian"
+		return
 	fi
 }
 
