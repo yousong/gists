@@ -837,6 +837,7 @@ open() {
 	local basefile="SLES15-SP2-JeOS.x86_64-15.2-OpenStack-Cloud-GM.qcow2"
 	local basefile="cirros-0.5.1-x86_64-disk.img"
 	local basefile="cirros-0.5.1-aarch64-disk.img"
+	local basefile="ubuntu-20.04.1-live-server-arm64.iso"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
