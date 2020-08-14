@@ -53,6 +53,14 @@ poptrap() {
 	settrap_
 }
 
+findone() {
+	local v
+	find "$@" | while read v; do
+		echo "$v"
+		cat >/dev/null
+	done
+}
+
 swap16() {
 	local dstvar="$1"; shift
 	local v="$1"; shift
