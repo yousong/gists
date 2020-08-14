@@ -412,12 +412,12 @@ detect_rootfs() {
 	fi
 
 	local menulst
-	menulst="$(find "$rootdir" -maxdepth 3 -type f -iname menu.lst -type f | head -n1)"
+	menulst="$(findone "$rootdir" -maxdepth 3 -type f -iname menu.lst -type f)"
 	if [ -s "$menulst" ]; then
 		if grep -m1 -q " LABEL=cirros-rootfs" "$menulst"; then
 			distro="cirros"
 			local initrd
-			initrd="$(find "$rootdir" -maxdepth 1 -name initrd.img | head -n1)"
+			initrd="$(findone "$rootdir" -maxdepth 1 -name initrd.img)"
 			distro_version_id="$(gunzip -c "$initrd" | cpio --to-stdout --quiet -i etc/cirros/version)"
 			return
 		fi
@@ -506,12 +506,12 @@ detect_distro_arch() {
 
 	local efidir
 	local pe
-	efidir="$(find "$rootdir" -maxdepth 1 -type d -iname efi | head -n 1)"
+	efidir="$(findone "$rootdir" -maxdepth 1 -type d -iname efi)"
 	if [ -d "$efidir" ]; then
-		pe="$(find "$efidir" -type f -iname "*.efi" | head -n 1)"
+		pe="$(findone "$efidir" -type f -iname "*.efi")"
 	fi
 	if [ -z "$pe" ]; then
-		pe="$(find "$rootdir" -maxdepth 2 -iname "*.exe" | head -n 1)"
+		pe="$(findone "$rootdir" -maxdepth 2 -iname "*.exe")"
 	fi
 	if [ -s "$pe" ]; then
 		local sig off mach
