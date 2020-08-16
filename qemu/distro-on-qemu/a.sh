@@ -738,7 +738,7 @@ run() {
 		*) ;;
 	esac
 	if [ -s "$dir/nocloud.raw" ]; then
-		drives+=( -drive "file=$dir/nocloud.raw,format=raw,if=virtio" )
+		drives+=( -drive "file=$dir/nocloud.raw,format=raw,if=virtio,readonly" )
 	fi
 
 	helper="$("$qemu" -help | grep -m1 -o '/.*qemu-bridge-helper')"
