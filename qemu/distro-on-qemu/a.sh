@@ -7,6 +7,8 @@ set -o errexit
 set -o pipefail
 
 topdir="$(readlink -f "$(dirname "$0")")"
+script="$(readlink -f "$0")"
+prog="$(basename "$0")"
 
 if [ -s "$topdir/config" ]; then
 	source "$topdir/config"
@@ -711,7 +713,6 @@ run() {
 	local cpu
 	local drives=()
 	local boot
-	local helper
 	local vhost=on
 
 	parse_elf hostarch hostarch_endian /bin/bash
@@ -741,8 +742,6 @@ run() {
 		drives+=( -drive "file=$dir/nocloud.raw,format=raw,if=virtio,readonly" )
 	fi
 
-	helper="$("$qemu" -help | grep -m1 -o '/.*qemu-bridge-helper')"
-	[ -x "$helper" ]
 	"$qemu" \
 		"${accel[@]}" \
 		"${cpu[@]}" \
@@ -763,10 +762,9 @@ run() {
 		"${drives[@]}" \
 		"${boot[@]}" \
 		-device virtio-net-pci,mac="$mac",netdev=wan \
-		-netdev tap,id=wan,br=br-wan,helper="$helper",vhost="$vhost" \
+		-netdev tap,id=wan,ifname="distro-vm$i",script="$topdir/qemu_ifup",downscript="$topdir/qemu_ifdown",vhost="$vhost" \
 		-device virtio-rng-pci \
 		"$@"
-
 }
 
 runarm64() {
@@ -876,6 +874,16 @@ open() {
 	esac
 }
 
+qemu_ifup() {
+	local name="$1"; shift
+
+	ip link set "$name" master br-wan up
+}
+
+qemu_ifdown() {
+	local name="$1"; shift
+}
+
 cd "$topdir"
 
 if [ -d "$HOME/.usr/bin" ]; then
@@ -909,6 +917,13 @@ if ! [ -d "$topdir/qemu-firmware" ]; then
 		ln -sf /usr/share/vgabios/vgabios-stdvga.bin "$topdir/qemu-firmware/"
 	fi
 fi
+if ! [ -h "$topdir/qemu_ifdown" ]; then
+	ln -sf "$(relpath_to "$topdir" "$script")"   "$topdir/qemu_ifup"
+	ln -sf "$(relpath_to "$topdir" "$script")" "$topdir/qemu_ifdown"
+fi
 
 set -o xtrace
-"$@"
+case "$prog" in
+	qemu_ifup|qemu_ifdown) "$prog" "$@" ;;
+	*) "$@" ;;
+esac
