@@ -761,8 +761,8 @@ run() {
 		-drive "file=$disk1,format=qcow2,if=virtio" \
 		"${drives[@]}" \
 		"${boot[@]}" \
-		-device virtio-net-pci,mac="$mac",netdev=wan \
-		-netdev tap,id=wan,ifname="distro-vm$i",script="$topdir/qemu_ifup",downscript="$topdir/qemu_ifdown",vhost="$vhost" \
+		-device virtio-net-pci,mac="$mac",netdev=wan,mq=on \
+		-netdev tap,id=wan,ifname="distro-vm$i",script="$topdir/qemu_ifup",downscript="$topdir/qemu_ifdown",queues="$ncpu",vhost="$vhost" \
 		-device virtio-rng-pci \
 		"$@"
 }
