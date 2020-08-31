@@ -426,6 +426,20 @@ detect_rootfs() {
 	fi
 }
 
+detect_rootfs_iso() {
+	if [ -s "$rootdir/esx_ui.v00" ]; then
+		distro="esx"
+		if [ -s "$rootdir/efi/boot/boot.cfg" ]; then
+			distro_version_id="$(grep -m1 "^build=" "$rootdir/efi/boot/boot.cfg" | cut -d= -f2 | cut -d. -f1)"
+		fi
+		update_config "distro" "$distro"
+		update_config "distro_version_id" "$distro_version_id"
+		return
+	fi
+
+	detect_rootfs
+}
+
 growpart() {
 	local dev="$1"; shift
 	local pi="$1"; shift
@@ -684,7 +698,7 @@ prepiso() {
 	mount "$basefileabs" "$rootdir"
 	pushtrap "umount $rootdir/"
 
-	detect_rootfs
+	detect_rootfs_iso
 	detect_distro_arch
 
 	poptrap
