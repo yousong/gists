@@ -868,6 +868,7 @@ open() {
 	local basefile="cirros-0.5.1-x86_64-disk.img"
 	local basefile="cirros-0.5.1-aarch64-disk.img"
 	local basefile="ubuntu-20.04.1-live-server-arm64.iso"
+	local basefile="VMware-VMvisor-Installer-7.0b-16324942.x86_64.iso"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
