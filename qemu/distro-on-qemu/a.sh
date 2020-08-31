@@ -728,6 +728,7 @@ run() {
 	local drives=()
 	local boot
 	local vhost=on
+	local netdev
 
 	parse_elf hostarch hostarch_endian /bin/bash
 	if [ "$hostarch" = "$distro_arch" ] || [ "$hostarch" = x86_64 -a "$distro_arch" = i386 ]; then
@@ -756,6 +757,18 @@ run() {
 		drives+=( -drive "file=$dir/nocloud.raw,format=raw,if=virtio,readonly" )
 	fi
 
+	if [ "$distro" = esx ]; then
+		netdev=(
+			-device vmxnet3,mac="$mac",netdev=wan
+			-netdev tap,id=wan,ifname="distro-vm$i",script="$topdir/qemu_ifup",downscript="$topdir/qemu_ifdown"
+		)
+	else
+		netdev=(
+			-device virtio-net-pci,mac="$mac",netdev=wan,mq=on
+			-netdev tap,id=wan,ifname="distro-vm$i",script="$topdir/qemu_ifup",downscript="$topdir/qemu_ifdown",queues="$ncpu",vhost="$vhost"
+		)
+	fi
+
 	"$qemu" \
 		"${accel[@]}" \
 		"${cpu[@]}" \
@@ -775,8 +788,7 @@ run() {
 		-drive "file=$disk1,format=qcow2,if=virtio" \
 		"${drives[@]}" \
 		"${boot[@]}" \
-		-device virtio-net-pci,mac="$mac",netdev=wan,mq=on \
-		-netdev tap,id=wan,ifname="distro-vm$i",script="$topdir/qemu_ifup",downscript="$topdir/qemu_ifdown",queues="$ncpu",vhost="$vhost" \
+		"${netdev[@]}" \
 		-device virtio-rng-pci \
 		"$@"
 }
