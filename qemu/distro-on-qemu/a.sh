@@ -758,11 +758,19 @@ run() {
 	fi
 
 	if [ "$distro" = esx ]; then
+		drives+=(
+			-drive "file=$disk0,format=qcow2,if=ide" \
+			-drive "file=$disk1,format=qcow2,if=ide" \
+		)
 		netdev=(
 			-device vmxnet3,mac="$mac",netdev=wan
 			-netdev tap,id=wan,ifname="distro-vm$i",script="$topdir/qemu_ifup",downscript="$topdir/qemu_ifdown"
 		)
 	else
+		drives+=(
+			-drive "file=$disk0,format=qcow2,if=virtio" \
+			-drive "file=$disk1,format=qcow2,if=virtio" \
+		)
 		netdev=(
 			-device virtio-net-pci,mac="$mac",netdev=wan,mq=on
 			-netdev tap,id=wan,ifname="distro-vm$i",script="$topdir/qemu_ifup",downscript="$topdir/qemu_ifdown",queues="$ncpu",vhost="$vhost"
@@ -784,8 +792,6 @@ run() {
 		-display vnc="0.0.0.0:$((10000 + $i))" \
 		-smp cpus=${ncpu} \
 		-m "$memsize" \
-		-drive "file=$disk0,format=qcow2,if=virtio" \
-		-drive "file=$disk1,format=qcow2,if=virtio" \
 		"${drives[@]}" \
 		"${boot[@]}" \
 		"${netdev[@]}" \
