@@ -870,6 +870,7 @@ open() {
 	local basefile="ubuntu-20.04.1-live-server-arm64.iso"
 	local basefile="VMware-VMvisor-Installer-7.0b-16324942.x86_64.iso"
 	local basefile="archlinux-2020.08.01-x86_64.iso"
+	local basefile="android-x86_64-9.0-r2.iso"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
