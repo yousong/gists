@@ -313,6 +313,64 @@ prep_default_centos_yumrepo() {
 	chown 0:0 "$rootdir/etc/yum.repos.d/CentOS-Base.repo"
 }
 
+prep_default_fedora_yumrepo() {
+	cat >"$rootdir/etc/yum.repos.d/fedora.repo" <<-"EOF"
+	[fedora]
+	name=Fedora $releasever - $basearch - aliyun
+	failovermethod=priority
+	baseurl=http://mirrors.aliyun.com/fedora/releases/$releasever/Everything/$basearch/os/
+	enabled=1
+	metadata_expire=7d
+	gpgcheck=1
+	gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$basearch
+	
+	[fedora-debuginfo]
+	name=Fedora $releasever - $basearch - Debug - aliyun
+	failovermethod=priority
+	baseurl=http://mirrors.aliyun.com/fedora/releases/$releasever/Everything/$basearch/debug/
+	enabled=0
+	metadata_expire=7d
+	gpgcheck=1
+	gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$basearch
+	
+	[fedora-source]
+	name=Fedora $releasever - Source - aliyun
+	failovermethod=priority
+	baseurl=http://mirrors.aliyun.com/fedora/releases/$releasever/Everything/source/SRPMS/
+	enabled=0
+	metadata_expire=7d
+	gpgcheck=1
+	gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$basearch
+	EOF
+	cat >"$rootdir/etc/yum.repos.d/fedora-updates.repo" <<-"EOF"
+	[updates]
+	name=Fedora $releasever - $basearch - Updates - aliyun
+	failovermethod=priority
+	baseurl=http://mirrors.aliyun.com/fedora/updates/$releasever/Everything/$basearch/
+	enabled=1
+	gpgcheck=1
+	gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$basearch
+	
+	[updates-debuginfo]
+	name=Fedora $releasever - $basearch - Updates - Debug -aliyun
+	failovermethod=priority
+	baseurl=http://mirrors.aliyun.com/fedora/updates/$releasever/Everything/$basearch/debug/
+	enabled=0
+	gpgcheck=1
+	gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$basearch
+	
+	[updates-source]
+	name=Fedora $releasever - Updates Source - aliyun
+	failovermethod=priority
+	baseurl=http://mirrors.aliyun.com/fedora/updates/$releasever/Everything/SRPMS/
+	enabled=0
+	gpgcheck=1
+	gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-$basearch
+	EOF
+	chown 0:0 "$rootdir/etc/yum.repos.d/fedora.repo"
+	chown 0:0 "$rootdir/etc/yum.repos.d/fedora-updates.repo"
+}
+
 prep_default_suse_zypprepo() {
 	[ -n "$distro_version_id" ]
 	cat >"$rootdir/etc/zypp/repos.d/zypp.repo" <<-EOF
@@ -659,10 +717,7 @@ preproot() {
 			touch "$rootdir/.autorelabel"
 			;;
 		fedora)
-			cat "$topdir/fedora.repo" >"$rootdir/etc/yum.repos.d/fedora.repo"
-			cat "$topdir/fedora-updates.repo" >"$rootdir/etc/yum.repos.d/fedora-updates.repo"
-			chown 0:0 "$rootdir/etc/yum.repos.d/fedora.repo"
-			chown 0:0 "$rootdir/etc/yum.repos.d/fedora-updates.repo"
+			prep_default_fedora_yumrepo
 			touch "$rootdir/.autorelabel"
 			;;
 		sles)
