@@ -1,0 +1,12 @@
+*.qcow2
+*.iso
+*.img
+*.xz
+*.zip
+
+qemu_ifup
+qemu_ifdown
+id_rsa*
+qemu-firmware
+
+config
