@@ -963,6 +963,7 @@ open() {
 	local basefile="android-x86_64-9.0-r2.iso"
 	local basefile="cm-x86_64-14.1-r4-k419.iso"
 	local basefile="FreeBSD-12.1-RELEASE-amd64.qcow2"
+	local basefile="i386-disc1.iso" # centos 2.1
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
