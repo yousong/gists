@@ -495,6 +495,16 @@ detect_rootfs_iso() {
 		return
 	fi
 
+	if [ -d "$rootdir/CentOS" ]; then
+		distro=centos
+		if [ "$(find "$rootdir/CentOS" -name "*.i386.rpm" | head -n 8 | wc -l)" = 8 ]; then
+			distro_arch=i386
+		fi
+		update_config "distro" "$distro"
+		update_config "distro_arch" "$distro_arch"
+		return
+	fi
+
 	detect_rootfs
 }
 
