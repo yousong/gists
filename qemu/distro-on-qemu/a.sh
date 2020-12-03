@@ -794,6 +794,7 @@ run() {
 	local boot
 	local vhost=on
 	local netdev
+	local use_ide
 
 	parse_elf hostarch hostarch_endian /bin/bash
 	if [ "$hostarch" = "$distro_arch" ] || [ "$hostarch" = x86_64 -a "$distro_arch" = i386 ]; then
@@ -807,13 +808,23 @@ run() {
 		esac
 		vhost=off
 	fi
+
+	[ "$distro" != esx ] || use_ide=1
+	[ "$distro_arch" != i386 ] || use_ide=1
 	case "${basefileabs##*.}" in
 		iso)
-			drives+=(
-				-device virtio-scsi-pci,id=scsi0
-				-drive file="$basefileabs,media=cdrom,if=none,id=scsi0cd0"
-				-device scsi-cd,drive=scsi0cd0
-			)
+			if [ "$use_ide" = 1 ]; then
+				drives+=(
+					-drive file="$basefileabs,media=cdrom,if=none,id=ide0-cd0"
+					-device ide-cd,drive=ide0-cd0
+				)
+			else
+				drives+=(
+					-device virtio-scsi-pci,id=scsi0
+					-drive file="$basefileabs,media=cdrom,if=none,id=scsi0-cd0"
+					-device scsi-cd,drive=scsi0-cd0
+				)
+			fi
 			boot=(-boot order=cd,menu=on)
 			;;
 		*) ;;
@@ -822,20 +833,29 @@ run() {
 		drives+=( -drive "file=$dir/nocloud.raw,format=raw,if=virtio,readonly" )
 	fi
 
-	if [ "$distro" = esx ]; then
+	if [ "$use_ide" = 1 ]; then
 		drives+=(
 			-drive "file=$disk0,format=qcow2,if=ide" \
 			-drive "file=$disk1,format=qcow2,if=ide" \
-		)
-		netdev=(
-			-device vmxnet3,mac="$mac",netdev=wan
-			-netdev tap,id=wan,ifname="distro-vm$i",script="$topdir/qemu_ifup",downscript="$topdir/qemu_ifdown"
 		)
 	else
 		drives+=(
 			-drive "file=$disk0,format=qcow2,if=virtio" \
 			-drive "file=$disk1,format=qcow2,if=virtio" \
 		)
+	fi
+
+	if [ "$distro" = esx ]; then
+		netdev=(
+			-device vmxnet3,mac="$mac",netdev=wan
+			-netdev tap,id=wan,ifname="distro-vm$i",script="$topdir/qemu_ifup",downscript="$topdir/qemu_ifdown"
+		)
+	elif [ "$distro_arch" = i386 ]; then
+		netdev=(
+			-device e1000,mac="$mac",netdev=wan
+			-netdev tap,id=wan,ifname="distro-vm$i",script="$topdir/qemu_ifup",downscript="$topdir/qemu_ifdown"
+		)
+	else
 		netdev=(
 			-device virtio-net-pci,mac="$mac",netdev=wan,mq=on
 			-netdev tap,id=wan,ifname="distro-vm$i",script="$topdir/qemu_ifup",downscript="$topdir/qemu_ifdown",queues="$ncpu",vhost="$vhost"
