@@ -892,9 +892,14 @@ runarm64() {
 }
 
 runamd64() {
+	local mach=q35
+
+	if [ "$distro_arch" = i386 ]; then
+		mach=pc
+	fi
 	run \
 		qemu-system-x86_64 \
-		-M q35 \
+		-M "$mach" \
 
 }
 
