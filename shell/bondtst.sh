@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Ref: https://www.kernel.org/doc/Documentation/networking/bonding.txt
+
 set -o errexit
 set -o pipefail
 
