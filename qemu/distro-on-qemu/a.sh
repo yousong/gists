@@ -927,6 +927,7 @@ open() {
 	local basefile="archlinux-2020.08.01-x86_64.iso"
 	local basefile="android-x86_64-9.0-r2.iso"
 	local basefile="cm-x86_64-14.1-r4-k419.iso"
+	local basefile="FreeBSD-12.1-RELEASE-amd64.qcow2"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
@@ -954,6 +955,7 @@ open() {
 	esac
 	ensure_dhcp
 
+	distro_arch=x86_64
 	local f
 	for f in $(find "$dir" -maxdepth 2 -type f -name "??-config-*"); do
 		source "$f"
@@ -969,6 +971,7 @@ qemu_ifup() {
 	local name="$1"; shift
 
 	ip link set "$name" master br-wan up
+	#ethtool -K "$name" tx off
 }
 
 qemu_ifdown() {
