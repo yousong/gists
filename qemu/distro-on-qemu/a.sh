@@ -505,6 +505,16 @@ detect_rootfs_iso() {
 		return
 	fi
 
+	if [ -d "$rootdir/reactos" ]; then
+		distro=reactos
+		update_config "distro" "$distro"
+		if [ -s "$rootdir/reactos/reactos.exe" ]; then
+			if detect_set_distro_arch_pe "$rootdir/reactos/reactos.exe"; then
+				return
+			fi
+		fi
+	fi
+
 	detect_rootfs
 }
 
@@ -978,6 +988,7 @@ open() {
 	local basefile="cm-x86_64-14.1-r4-k419.iso"
 	local basefile="FreeBSD-12.1-RELEASE-amd64.qcow2"
 	local basefile="i386-disc1.iso" # centos 2.1
+	local basefile="reactos-bootcd-0.4.15-dev-1397-g19779b3-x86-gcc-lin-rel.iso"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
