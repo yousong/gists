@@ -989,6 +989,7 @@ open() {
 	local basefile="FreeBSD-12.1-RELEASE-amd64.qcow2"
 	local basefile="i386-disc1.iso" # centos 2.1
 	local basefile="reactos-bootcd-0.4.15-dev-1397-g19779b3-x86-gcc-lin-rel.iso"
+	local basefile="proxmox-ve_6.3-1.iso"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
