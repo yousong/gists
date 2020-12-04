@@ -592,6 +592,31 @@ detect_set_distro_arch_elf() {
 	return 1
 }
 
+detect_set_distro_arch_pe() {
+	local pe="$1"; shift
+	local sig off mach
+
+	sig="$(hexdump -v -s 0 -n 2 -e '2/1 "%02x" "\n"' "$pe")"
+	[ "$sig" = 4d5a ] || return 1
+
+	off="$(hexdump -v -s 60 -n 4 -e '4/1 "%02x" "\n"' "$pe")"
+	swap32 off "$off"
+	sig="$(hexdump -v -s "$((0x$off))" -n 4 -e '4/1 "%02x" "\n"' "$pe")"
+	[ "$sig" = 50450000 ] || return 1
+
+	mach="$(hexdump -v -s "$((0x$off + 4))" -n 2 -e '2/1 "%02x" "\n"' "$pe")"
+	swap16 mach "$mach"
+	case "$mach" in
+		8664) distro_arch_endian=le; distro_arch=x86_64 ;;
+		014c) distro_arch_endian=le; distro_arch=i386 ;;
+		aa64) distro_arch_endian=  ; distro_arch=aarch64 ;;
+		*) return 1 ;;
+	esac
+	update_config "distro_arch" "$distro_arch"
+	update_config "distro_arch_endian" "$distro_arch_endian"
+	return 0
+}
+
 detect_distro_arch() {
 	if detect_set_distro_arch_elf "$rootdir/bin/sh"; then
 		return
@@ -607,26 +632,9 @@ detect_distro_arch() {
 		pe="$(findone "$rootdir" -maxdepth 2 -iname "*.exe")"
 	fi
 	if [ -s "$pe" ]; then
-		local sig off mach
-		sig="$(hexdump -v -s 0 -n 2 -e '2/1 "%02x" "\n"' "$pe")"
-		[ "$sig" = 4d5a ]
-
-		off="$(hexdump -v -s 60 -n 4 -e '4/1 "%02x" "\n"' "$pe")"
-		swap32 off "$off"
-		sig="$(hexdump -v -s "$((0x$off))" -n 4 -e '4/1 "%02x" "\n"' "$pe")"
-		[ "$sig" = 50450000 ]
-
-		mach="$(hexdump -v -s "$((0x$off + 4))" -n 2 -e '2/1 "%02x" "\n"' "$pe")"
-		swap16 mach "$mach"
-		case "$mach" in
-			8664) distro_arch_endian=le; distro_arch=x86_64 ;;
-			014c) distro_arch_endian=le; distro_arch=i386 ;;
-			aa64) distro_arch_endian=  ; distro_arch=aarch64 ;;
-			*) false ;;
-		esac
-		update_config "distro_arch" "$distro_arch"
-		update_config "distro_arch_endian" "$distro_arch_endian"
-		return
+		if detect_set_distro_arch_pe "$pe"; then
+			return
+		fi
 	fi
 
 	local grubmoddir
