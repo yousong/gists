@@ -580,11 +580,20 @@ update_config() {
 	echo "$name=$value" >>"$dir/00-config-init"
 }
 
-detect_distro_arch() {
-	parse_elf distro_arch distro_arch_endian "$rootdir/bin/sh"
+detect_set_distro_arch_elf() {
+	local f="$1"; shift
+
+	parse_elf distro_arch distro_arch_endian "$f"
 	if [ -n "$distro_arch" -a -n "$distro_arch_endian" ]; then
 		update_config "distro_arch" "$distro_arch"
 		update_config "distro_arch_endian" "$distro_arch_endian"
+		return 0
+	fi
+	return 1
+}
+
+detect_distro_arch() {
+	if detect_set_distro_arch_elf "$rootdir/bin/sh"; then
 		return
 	fi
 
@@ -625,10 +634,7 @@ detect_distro_arch() {
 	if [ -n "$grubmoddir" ]; then
 		local mod
 		mod="$(findone "$grubmoddir" -maxdepth 2 -type f -iname '*.mod')"
-		parse_elf distro_arch distro_arch_endian "$mod"
-		if [ -n "$distro_arch" -a -n "$distro_arch_endian" ]; then
-			update_config "distro_arch" "$distro_arch"
-			update_config "distro_arch_endian" "$distro_arch_endian"
+		if detect_set_distro_arch_elf "$mod"; then
 			return
 		fi
 	fi
