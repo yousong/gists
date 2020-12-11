@@ -437,6 +437,34 @@ mkds_nocloud() {
 	poptrap
 }
 
+mkds_configdrive() {
+	local ncdisk="$dir/configdrive.raw"
+	local ncdir="$dir/configdrive"
+
+	dd if=/dev/zero of="$ncdisk" bs=1M count=2
+	mkfs.fat -n config-2 "$ncdisk"
+
+	mkdir -p "$ncdir"
+	mount "$ncdisk" "$ncdir"
+	pushtrap "rmdir $ncdir"
+	pushtrap "umount $ncdir"
+
+	mkdir -p "$ncdir/openstack/latest"
+	cat >"$ncdir/openstack/latest/meta_data.json" <<-EOF
+	{
+		"uuid": "$(uuidgen)",
+		"name": "$name",
+		"hostname": "$name",
+		"public_keys": {
+			"sysadmin": "$(cat $topdir/id_rsa.pub)"
+		}
+	}
+	EOF
+
+	poptrap
+	poptrap
+}
+
 detect_rootfs() {
 	local osrelf="$rootdir/etc/os-release"
 	local NAME VERSION ID VERSION_ID VERSION_CODENAME
