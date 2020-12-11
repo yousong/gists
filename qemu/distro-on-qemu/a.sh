@@ -729,6 +729,13 @@ preproot() {
 	poptrap
 
 	case "$distro" in
+		clear-linux-os)
+			mkds_configdrive
+
+			poptrap
+			touch "$peppered"
+			return
+			;;
 		cirros)
 			mkds_nocloud
 
@@ -949,13 +956,38 @@ runarm64() {
 
 runamd64() {
 	local mach=q35
+	local args=()
 
 	if [ "$distro_arch" = i386 ]; then
 		mach=pc
 	fi
+
+	if [ "$distro" = "clear-linux-os" ]; then
+		local romdirs="$(qemu-system-x86_64 -M "$mach" -L help)"
+		local edk2code="edk2-x86_64-code.fd"
+		local edk2vars="edk2-i386-vars.fd"
+		local rom romdir
+		local found
+		for rom in "$edk2code" "$edk2vars"; do
+			found=
+			for romdir in $romdirs; do
+				if [ -s "$romdir/$rom" ]; then
+					cp "$romdir/$rom" "$dir/$rom"
+					found=1
+					break
+				fi
+			done
+			[ -n "$found" ]
+		done
+		args+=(
+			-drive file="$dir/$edk2code",if=pflash,format=raw,unit=0,readonly=on
+			-drive file="$dir/$edk2vars",if=pflash,format=raw,unit=1
+		)
+	fi
 	run \
 		qemu-system-x86_64 \
 		-M "$mach" \
+		"${args[@]}" \
 
 }
 
@@ -1023,6 +1055,7 @@ open() {
 	local basefile="reactos-bootcd-0.4.15-dev-1397-g19779b3-x86-gcc-lin-rel.iso"
 	local basefile="proxmox-ve_6.3-1.iso"
 	local basefile="guix-system-vm-image-1.2.0.x86_64-linux.qcow2"
+	local basefile="clear-34000-cloudguest.img"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
