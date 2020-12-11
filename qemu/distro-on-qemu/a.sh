@@ -700,13 +700,15 @@ preproot() {
 	eval "$(blkid -o export "$dev1" | grep -E "^(UUID|TYPE)")"
 	poptrap
 
-	if [ "$distro" = cirros ]; then
-		mkds_nocloud
+	case "$distro" in
+		cirros)
+			mkds_nocloud
 
-		poptrap
-		touch "$peppered"
-		return
-	fi
+			poptrap
+			touch "$peppered"
+			return
+			;;
+	esac
 
 	if [ -n "$rootdisksize" ]; then
 		growpart "$dev0" "$pi"
