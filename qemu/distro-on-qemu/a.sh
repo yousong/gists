@@ -856,6 +856,7 @@ run() {
 	local vhost=on
 	local netdev
 	local use_ide
+	local driveif=virtio
 
 	parse_elf hostarch hostarch_endian /bin/bash
 	if [ "$hostarch" = "$distro_arch" ] || [ "$hostarch" = x86_64 -a "$distro_arch" = i386 ]; then
@@ -890,21 +891,18 @@ run() {
 			;;
 		*) ;;
 	esac
+
 	if [ "$use_ide" = 1 ]; then
-		drives+=(
-			-drive "file=$disk0,format=qcow2,if=ide" \
-			-drive "file=$disk1,format=qcow2,if=ide" \
-		)
-	else
-		drives+=(
-			-drive "file=$disk0,format=qcow2,if=virtio" \
-			-drive "file=$disk1,format=qcow2,if=virtio" \
-		)
+		driveif=ide
 	fi
+	drives+=(
+		-drive "file=$disk0,format=qcow2,if=$driveif"
+		-drive "file=$disk1,format=qcow2,if=$driveif"
+	)
 	if [ -s "$dir/nocloud.raw" ]; then
-		drives+=( -drive "file=$dir/nocloud.raw,format=raw,if=virtio,readonly" )
+		drives+=( -drive "file=$dir/nocloud.raw,format=raw,if=$driveif,readonly" )
 	elif [ -s "$dir/configdrive.raw" ]; then
-		drives+=( -drive "file=$dir/configdrive.raw,format=raw,if=virtio,readonly" )
+		drives+=( -drive "file=$dir/configdrive.raw,format=raw,if=$driveif,readonly" )
 	fi
 
 
