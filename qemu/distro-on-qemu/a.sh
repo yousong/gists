@@ -406,7 +406,7 @@ mkds_nocloud() {
 	local ncdir="$dir/nocloud"
 
 	dd if=/dev/zero of="$ncdisk" bs=1M count=2
-	mkfs.ext4 -m 0 -L cidata "$ncdisk"
+	mkfs.fat -n cidata "$ncdisk"
 
 	mkdir -p "$ncdir"
 	mount "$ncdisk" "$ncdir"
