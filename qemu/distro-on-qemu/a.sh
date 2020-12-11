@@ -890,12 +890,6 @@ run() {
 			;;
 		*) ;;
 	esac
-	if [ -s "$dir/nocloud.raw" ]; then
-		drives+=( -drive "file=$dir/nocloud.raw,format=raw,if=virtio,readonly" )
-	elif [ -s "$dir/configdrive.raw" ]; then
-		drives+=( -drive "file=$dir/configdrive.raw,format=raw,if=virtio,readonly" )
-	fi
-
 	if [ "$use_ide" = 1 ]; then
 		drives+=(
 			-drive "file=$disk0,format=qcow2,if=ide" \
@@ -907,6 +901,12 @@ run() {
 			-drive "file=$disk1,format=qcow2,if=virtio" \
 		)
 	fi
+	if [ -s "$dir/nocloud.raw" ]; then
+		drives+=( -drive "file=$dir/nocloud.raw,format=raw,if=virtio,readonly" )
+	elif [ -s "$dir/configdrive.raw" ]; then
+		drives+=( -drive "file=$dir/configdrive.raw,format=raw,if=virtio,readonly" )
+	fi
+
 
 	if [ "$distro" = esx ]; then
 		netdev=(
