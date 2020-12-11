@@ -857,6 +857,7 @@ run() {
 	local netdev
 	local use_ide
 	local driveif=virtio
+	local cidrive
 
 	parse_elf hostarch hostarch_endian /bin/bash
 	if [ "$hostarch" = "$distro_arch" ] || [ "$hostarch" = x86_64 -a "$distro_arch" = i386 ]; then
@@ -899,12 +900,14 @@ run() {
 		-drive "file=$disk0,format=qcow2,if=$driveif"
 		-drive "file=$disk1,format=qcow2,if=$driveif"
 	)
-	if [ -s "$dir/nocloud.raw" ]; then
-		drives+=( -drive "file=$dir/nocloud.raw,format=raw,if=$driveif,readonly" )
-	elif [ -s "$dir/configdrive.raw" ]; then
-		drives+=( -drive "file=$dir/configdrive.raw,format=raw,if=$driveif,readonly" )
-	fi
-
+	for cidrive in \
+			"$dir/nocloud.raw" \
+			"$dir/configdrive.raw" \
+			; do
+		if [ -s "$cidrive" ]; then
+			drives+=( -drive "file=$cidrive,format=raw,if=$driveif,readonly" )
+		fi
+	done
 
 	if [ "$distro" = esx ]; then
 		netdev=(
