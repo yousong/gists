@@ -938,7 +938,7 @@ run() {
 		-serial chardev:chr0 \
 		-mon chardev=chr0 \
 		-device virtio-keyboard-pci \
-		-device VGA \
+		-device VGA,vgamem_mb=32 \
 		-display vnc="0.0.0.0:$((10000 + $i))" \
 		-smp cpus=${ncpu} \
 		-m "$memsize" \
