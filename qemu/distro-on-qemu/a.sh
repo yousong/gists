@@ -971,6 +971,9 @@ runamd64() {
 		local rom romdir
 		local found
 		for rom in "$edk2code" "$edk2vars"; do
+			if [ -s "$dir/$rom" ]; then
+				continue
+			fi
 			found=
 			for romdir in $romdirs; do
 				if [ -s "$romdir/$rom" ]; then
