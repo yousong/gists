@@ -717,6 +717,7 @@ preproot() {
 		touch "$peppered"
 		return
 	fi
+	update_config distro "$distro"
 
 	nbd_connect dev1 "$disk1"
 	local features
