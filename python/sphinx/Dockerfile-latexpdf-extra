@@ -1,0 +1,24 @@
+FROM sphinxdoc/sphinx-latexpdf:latest
+
+MAINTAINER Yousong Zhou <yszhou4tech@gmail.com>
+
+# fonts-freefont-otf: FreeSerif
+# xindy: index generation when latex_engine is xelatex
+# texlive-latex-extra: \substitutefont
+# texlive-lang-greek: lgrenc.def
+RUN true \
+	&& apt-get update \
+	&& apt-get install -y \
+		fonts-freefont-otf \
+		xindy \
+		texlive-latex-extra \
+		texlive-lang-cyrillic \
+		texlive-lang-greek \
+	&& true
+
+# sphinxcontrib-websupport: sphinxcontrib.websupport imported by docs of sphinx itself
+RUN true \
+	&& pip install sphinxcontrib-websupport \
+	&& true
+
+# vi: ft=dockerfile
