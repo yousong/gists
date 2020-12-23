@@ -1062,6 +1062,7 @@ open() {
 	local basefile="guix-system-vm-image-1.2.0.x86_64-linux.qcow2"
 	local basefile="clear-34000-cloudguest.img"
 	local basefile="void-live-x86_64-musl-20191109.iso"
+	local basefile="pfSense-CE-2.4.5-RELEASE-p1-amd64.iso"
 
 	local basefileabs="$topdir/$basefile"
 	local url="$baseurl/$basefile"
