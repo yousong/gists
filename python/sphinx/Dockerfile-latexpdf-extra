@@ -21,4 +21,9 @@ RUN true \
 	&& pip install sphinxcontrib-websupport \
 	&& true
 
+# texlive-plain-generic: listofitems.sty, required by riscv/riscv-isa-manual
+RUN true \
+	&& apt-get install -y \
+		texlive-plain-generic
+
 # vi: ft=dockerfile

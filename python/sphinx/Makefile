@@ -1,5 +1,5 @@
 dockerBuildName=yousong/sphinx-latexpdf-extra
-dockerBuildTag=0.0.1
+dockerBuildTag=0.0.2
 
 docker-image-build:
 	docker build \
