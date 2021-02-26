@@ -1,0 +1,28 @@
+/*
+ * Usage
+ *
+ * 	stap -x `pgrep ovs-vswitchd` -d /usr/sbin/ovs-vswitchd --ldd uflame.stp -o uflame.stp.out
+ * 	stackcollapse-stap.pl uflame.stp.out >uflame.stp.out2
+ * 	flamegraph.pl uflame.stp.out2 >uflame.stp.svg
+ *
+ */
+
+global stks
+global quit = 0
+
+probe timer.profile {
+	if (pid() == target()) {
+		if (quit) {
+			foreach (stk in stks-) {
+				print_usyms(stk)
+				printf("\t%d\n", @count(stks[stk]))
+			}
+			exit()
+		}
+		stks[ucallers(-1)] <<< 1
+	}
+}
+
+probe timer.s(5) {
+	quit = 1
+}
