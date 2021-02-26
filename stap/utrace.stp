@@ -1,0 +1,12 @@
+/*
+ *
+ * Usage:
+ *
+ * 	stap utrace.stp -d /usr/sbin/ovs-vswitchd --ldd /lib64/libofproto-2.10.so.0 do_xlate_actions
+ *
+ */
+
+probe process(@1).function(@2) {
+	print_ubacktrace()
+	exit()
+}
