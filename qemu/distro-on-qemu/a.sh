@@ -869,7 +869,7 @@ run() {
 		accel=(-accel tcg,thread=multi)
 		case "$distro_arch" in
 			aarch64) cpu=(-cpu cortex-a57) ;;
-			*) false ;;
+			*) cpu=(-cpu max) ;;
 		esac
 		vhost=off
 	fi
