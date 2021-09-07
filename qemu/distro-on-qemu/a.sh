@@ -822,6 +822,7 @@ prepiso() {
 	fi
 
 	rootdir="$topdir/m"
+	mkdir -p "$rootdir"
 	mount "$basefileabs" "$rootdir"
 	pushtrap "umount $rootdir/"
 
