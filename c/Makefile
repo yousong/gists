@@ -1,4 +1,4 @@
-BINS:=tg pthreads_do
+BINS:=tg pthreads_do mdio
 
 all: $(BINS)
 
@@ -8,6 +8,9 @@ tg: tg.c
 
 pthreads_do: pthreads_do.c
 	$(CC) -o $@ -Wall -lpthread $(CFLAGS) $(CPPFLAGS) $^
+
+mdio: mdio.c
+	$(CC) -o $@ -static -Wall $(CFLAGS) $(CPPFLAGS) $^
 
 clean:
 	rm -vf $(BINS)
