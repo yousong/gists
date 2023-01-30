@@ -1,0 +1,269 @@
+#!/bin/sh -e
+#
+# Copyright (C) 2023 Yousong Zhou <yszhou4tech@gmail.com>
+#
+# This is free software, licensed under the GNU General Public License v3.
+# See /LICENSE for more information.
+#
+# Script for diverting selected traffics through vpn interface
+#
+#  - create and initialize ipt/nft set
+#  - install ipt/nft rules to mark packets
+#  - install ip rule and routes
+#
+# NOTE: it is not expected to work out of box
+#
+
+o_ifname="${o_ifname}"
+o_gateway="${o_gateway}"
+o_rttable="${o_rttable:-200}"
+o_fwmark="${o_fwmark:-200}"
+if [ -z "$o_ifname" ]; then
+	exit 1
+fi
+o_remote_servers="${o_remote_servers}"
+o_dst_forward="${o_dst_forward-
+	8.8.8.8
+	1.1.1.1
+}"
+o_dst_bypass="
+	${o_dst_bypass}
+	0.0.0.0/8
+	10.0.0.0/8
+	100.64.0.0/10
+	127.0.0.0/8
+	169.254.0.0/16
+	172.16.0.0/12
+	192.0.0.0/24
+	192.0.2.0/24
+	192.31.196.0/24
+	192.52.193.0/24
+	192.88.99.0/24
+	192.168.0.0/16
+	192.175.48.0/24
+	198.18.0.0/15
+	198.51.100.0/24
+	203.0.113.0/24
+	224.0.0.0/4
+	240.0.0.0/4
+	255.255.255.255
+"
+
+__errmsg() {
+	echo "vpnguru: $1" >&2
+}
+
+__die() {
+	__errmsg "$1"
+	exit 1
+}
+
+ip() {
+	command ip "$@"
+}
+
+vpnguru_nftset_init() {
+	vpnguru_nftset_init_ vpnguru_dst_bypass "$o_dst_bypass $o_remote_servers"
+	vpnguru_nftset_init_ vpnguru_dst_forward "$o_dst_forward"
+}
+
+vpnguru_nftset_init_() {
+	local setname="$1"; shift
+	local el
+
+	cat <<EOF
+set $setname {
+	type ipv4_addr;
+	flags interval;
+	auto-merge;
+	elements = {
+EOF
+
+	for el in $1; do
+	cat <<EOF
+		$el,
+EOF
+	done | sed '$s/,$//'
+	cat <<EOF
+	}
+}
+EOF
+}
+
+vpnguru_nftchains_init() {
+	cat <<EOF
+chain vpnguru_prerouting {
+	type filter hook prerouting priority mangle;
+	goto vpnguru_mark;
+}
+chain vpnguru_output {
+	type route hook output priority mangle;
+	goto vpnguru_mark;
+}
+chain vpnguru_mark {
+	ip daddr @vpnguru_dst_bypass accept;
+	ip daddr @vpnguru_dst_forward meta mark set $o_fwmark;
+}
+EOF
+}
+
+vpnguru_nft_flush() {
+	nft flush table vpnguru
+}
+
+vpnguru_ipset_init() {
+	cat <<-EOF
+		create vpnguru_dst_bypass hash:net hashsize 64
+		create vpnguru_dst_forward hash:net hashsize 64
+		$(vpnguru_ipset_mkadd_ vpnguru_dst_bypass "$o_dst_bypass $o_remote_servers")
+		$(vpnguru_ipset_mkadd_ vpnguru_dst_forward "$o_dst_forward")
+	EOF
+}
+
+vpnguru_ipset_mkadd_() {
+	local setname="$1"; shift
+	local i
+
+	for i in $*; do
+		echo "add $setname $i"
+	done
+}
+
+vpnguru_iptchains_init() {
+	cat <<-EOF
+		*mangle
+		:vpnguru_mark -
+		:vpnguru_mark_ -
+		-I OUTPUT 1 -j vpnguru_mark
+		-I PREROUTING 1 -j vpnguru_mark
+		-I FORWARD 1 -o $o_ifname -p tcp -m tcp --tcp-flags SYN,RST SYN -m comment --comment "vpnguru_tcpmss" -j TCPMSS --clamp-mss-to-pmtu
+		-A vpnguru_mark -m set --match-set vpnguru_dst_bypass dst -j RETURN
+		-A vpnguru_mark -m set --match-set vpnguru_dst_forward dst -j MARK --set-mark $o_fwmark
+		COMMIT
+	EOF
+}
+
+vpnguru_ipt_flush() {
+	local setname
+	iptables-save --counters | grep -v vpnguru_ | iptables-restore --counters
+	for setname in $(ipset -n list | grep "vpnguru_"); do
+		ipset destroy "$setname" 2>/dev/null || true
+	done
+}
+
+vpnguru_route_init() {
+	ip rule add fwmark "$o_fwmark" lookup "$o_rttable"
+	ip route add default dev "$o_ifname" ${o_gateway:+via "$o_gateway"} table "$o_rttable"
+	ip route flush cache
+}
+
+vpnguru_route_flush() {
+	ip route flush table "$o_rttable"
+	while ip rule del fwmark "$o_fwmark" lookup "$o_rttable" 2>/dev/null; do true; done
+}
+
+arg_ipt=${arg_ipt}
+arg_nft=${arg_nft}
+arg_nft_print_table=${arg_nft_print_table}
+arg_nft_print_chain=${arg_nft_print_chain}
+arg_ipt_print_ipset=${arg_ipt_print_ipset}
+arg_ipt_print_rule=${arg_ipt_print_rule}
+arg_flush_only=${arg_flush_only}
+arg_nft_print_=
+arg_route_do_=1
+arg_ipt_filter_ipset_=
+arg_ipt_filter_rule_=
+
+while test "$#" -gt 0; do
+	case "$1" in
+		--ipt) arg_ipt=1 ;;
+		--nft) arg_nft=1 ;;
+		--nft-print-table) arg_nft_print_table=1 ;;
+		--nft-print-chain) arg_nft_print_chain=1 ;;
+		--ipt-print-ipset) arg_ipt_print_ipset=1 ;;
+		--ipt-print-rule) arg_ipt_print_rule=1 ;;
+		--flush-only) arg_flush_only=1 ;;
+		--no-ipt) arg_ipt= ;;
+		--no-nft) arg_nft= ;;
+		--no-nft-print-table) arg_nft_print_table= ;;
+		--no-nft-print-chain) arg_nft_print_chain= ;;
+		--no-ipt-print-ipset) arg_ipt_print_ipset= ;;
+		--no-ipt-print-rule) arg_ipt_print_rule= ;;
+		--no-flush-only) arg_flush_only= ;;
+		*) __die "unknown arg $1";;
+	esac
+	shift
+done
+if test -n "$arg_nft" && test -n "$arg_ipt"; then
+	__die "--ipt and --nft are exclusive to each other"
+fi
+if test -z "$arg_nft" && test -z "$arg_ipt"; then
+	__die "--ipt or --nft need to be enabled"
+fi
+if test -n "$arg_nft_print_table" && test -n "$arg_nft_print_chain"; then
+	__die "--nft-print-table and --nft-print-chain are exclusive to each other"
+fi
+if test -n "$arg_ipt_print_ipset" && test -n "$arg_ipt_print_rule"; then
+	__die "--ipt-print-ipset and --ipt-print-rule are exclusive to each other"
+fi
+if test -n "$arg_nft_print_table" || test -n "$arg_nft_print_chain"; then
+	arg_nft_print_=1
+	arg_route_do_=
+fi
+if test -n "$arg_ipt_print_ipset" || test -n "$arg_ipt_print_rule"; then
+	arg_ipt_print_=1
+	arg_route_do_=
+	if test -n "$arg_ipt_print_ipset"; then
+		arg_ipt_filter_ipset_=cat
+		arg_ipt_filter_rule_=:
+	else
+		arg_ipt_filter_ipset_=:
+		arg_ipt_filter_rule_=cat
+	fi
+fi
+if test -n "$arg_flush_only" && test -n "$arg_nft_print_$arg_ipt_print_"; then
+	__die "--flush-only cannot be used with print arguments"
+fi
+
+
+if test -n "$arg_route_do_"; then
+	vpnguru_route_flush
+fi
+
+if test -n "$arg_nft"; then
+	if test -z "$arg_nft_print_"; then
+	       vpnguru_nft_flush
+	fi
+	if test -z "$arg_flush_only"; then
+		{
+			test -n "$arg_nft_print_chain" || echo 'table inet vpnguru {'
+			{
+				vpnguru_nftset_init
+				vpnguru_nftchains_init
+			} | {
+				test -n "$arg_nft_print_chain" && cat || sed -e 's/^/\t/'
+			}
+			test -n "$arg_nft_print_chain" || echo '}'
+		} | {
+			test -n "$arg_nft_print_" && cat || nft -f -
+		}
+	fi
+elif test -n "$arg_ipt"; then
+	if test -z "$arg_ipt_print_"; then
+		vpnguru_ipt_flush
+	fi
+	if test -z "$arg_flush_only"; then
+		vpnguru_ipset_init | {
+			test -n "$arg_ipt_print_" && $arg_ipt_filter_ipset_ || ipset --exist restore
+		}
+		vpnguru_iptchains_init | {
+			test -n "$arg_ipt_print_" && $arg_ipt_filter_rule_ || iptables-restore --noflush
+		}
+	fi
+fi
+
+if test -n "$arg_route_do_"; then
+	if test -z "$arg_flush_only"; then
+		vpnguru_route_init
+	fi
+fi

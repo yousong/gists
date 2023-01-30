@@ -1,7 +1,48 @@
-export o_dst_bypass="$(cat net.cn.txt)"
-export o_dst_forward="0.0.0.0/1 128.0.0.0/1"
-export o_without_recentrst=1
-export o_ifname=tap1
-export o_gateway=10.0.0.1
+n0() {
+	export o_ifname=xx
+	export arg_nft=1
+	export arg_nft_print_chain=1
+	sh -e vpnguru
+}
 
-bash vpnguru
+n1() {
+	export o_ifname=xx
+	export arg_nft=1
+	export arg_nft_print_table=1
+	sh -e vpnguru
+}
+
+i0() {
+	export o_ifname=xx
+	export arg_ipt=1
+	export arg_ipt_print_ipset=1
+	sh -e vpnguru
+}
+
+i1() {
+	export o_ifname=xx
+	export arg_ipt=1
+	export arg_ipt_print_rule=1
+	sh -e vpnguru
+}
+
+nftf() {
+	export o_ifname=xx
+	export arg_ipt=1
+	export arg_flush_only=1
+	sh -e vpnguru
+}
+
+iptf() {
+	export o_ifname=xx
+	export arg_ipt=1
+	export arg_flush_only=1
+	sh -e vpnguru
+}
+
+# ipt/nft must select one
+# ipt print ipset/rule
+# nft print table/chain
+# ipt/nft flush only
+
+"$@"
