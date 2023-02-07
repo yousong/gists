@@ -70,6 +70,7 @@ def IpPairsToNetPreflen(pairs):
     return netprefs
 
 # wget -c https://ftp.apnic.net/stats/apnic/delegated-apnic-latest
+# rg -F '|CN|ipv6|' delegated-apnic-latest | cut -d'|' -f4,5 | tr '|' '/'
 filename = "delegated-apnic-latest"
 ents = parseFile(filename)
 pairs = IpPairs(ents, filterFunc=filterFuncIPv4CN, sort=True)
