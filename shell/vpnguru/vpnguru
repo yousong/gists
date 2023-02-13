@@ -48,6 +48,29 @@ o_dst_bypass="
 	240.0.0.0/4
 	255.255.255.255
 "
+o_dst_bypass6="
+	${o_dst_bypass6}
+	0000::/8
+	0100::/8
+	0200::/7
+	0400::/6
+	0800::/5
+	1000::/4
+	2000::/3
+	4000::/3
+	6000::/3
+	8000::/3
+	a000::/3
+	c000::/3
+	e000::/4
+	f000::/5
+	f800::/6
+	fc00::/7
+	fe00::/9
+	fe80::/10
+	fec0::/10
+	ff00::/8
+"
 
 __errmsg() {
 	echo "vpnguru: $1" >&2
@@ -63,17 +86,20 @@ ip() {
 }
 
 vpnguru_nftset_init() {
-	vpnguru_nftset_init_ vpnguru_dst_bypass "$o_dst_bypass $o_remote_servers"
-	vpnguru_nftset_init_ vpnguru_dst_forward "$o_dst_forward"
+	vpnguru_nftset_init_ 4 vpnguru_dst_bypass "$o_dst_bypass $o_remote_servers"
+	vpnguru_nftset_init_ 4 vpnguru_dst_forward "$o_dst_forward"
+	vpnguru_nftset_init_ 6 vpnguru_dst_bypass6 "$o_dst_bypass6 $o_remote_servers6"
+	vpnguru_nftset_init_ 6 vpnguru_dst_forward6 "$o_dst_forward6"
 }
 
 vpnguru_nftset_init_() {
+	local af="$1"; shift
 	local setname="$1"; shift
 	local el
 
 	cat <<EOF
 set $setname {
-	type ipv4_addr;
+	type ipv${af}_addr;
 	flags interval;
 	auto-merge;
 	elements = {
@@ -103,6 +129,8 @@ chain vpnguru_output {
 chain vpnguru_mark {
 	ip daddr @vpnguru_dst_bypass accept;
 	ip daddr @vpnguru_dst_forward meta mark set $o_fwmark;
+	ip6 daddr @vpnguru_dst_bypass6 accept;
+	ip6 daddr @vpnguru_dst_forward6 meta mark set $o_fwmark;
 }
 EOF
 }
@@ -157,9 +185,20 @@ vpnguru_route_init() {
 	ip route flush cache
 }
 
+vpnguru_route6_init() {
+	ip -6 rule add fwmark "$o_fwmark" lookup "$o_rttable"
+	ip -6 route add default dev "$o_ifname" ${o_gateway:+via "$o_gateway6"} table "$o_rttable"
+	ip -6 route flush cache
+}
+
 vpnguru_route_flush() {
-	ip route flush table "$o_rttable"
+	      ip route flush table "$o_rttable"
 	while ip rule del fwmark "$o_fwmark" lookup "$o_rttable" 2>/dev/null; do true; done
+}
+
+vpnguru_route6_flush() {
+	      ip -6 route flush table "$o_rttable"
+	while ip -6 rule del fwmark "$o_fwmark" lookup "$o_rttable" 2>/dev/null; do true; done
 }
 
 arg_ipt=${arg_ipt}
@@ -228,6 +267,9 @@ fi
 
 if test -n "$arg_route_do_"; then
 	vpnguru_route_flush
+	if test -n "$arg_nft"; then
+		vpnguru_route6_flush
+	fi
 fi
 
 if test -n "$arg_nft"; then
@@ -265,5 +307,8 @@ fi
 if test -n "$arg_route_do_"; then
 	if test -z "$arg_flush_only"; then
 		vpnguru_route_init
+		if test -n "$arg_nft"; then
+			vpnguru_route6_init
+		fi
 	fi
 fi
