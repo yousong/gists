@@ -24,6 +24,8 @@ def comp_eq_pr(debt, n_month, month_rate):
         each_p = each_month - interest
         sum_interest += interest
         debt -= each_p
+        if debt < 0:
+            debt = 0
         print(f'{i:3d} {each_month:9.2f} {each_p:9.2f} {interest:9.2f} {sum_interest:9.2f} {debt:9.2f}')
         i += 1
     return sum_interest
@@ -44,6 +46,8 @@ def comp_eq_p(debt, n_month, month_rate):
         each_month = each_p + interest
         sum_interest += interest
         debt -= each_p
+        if debt < 0:
+            debt = 0
         print(f'{i:3d} {each_month:9.2f} {each_p:9.2f} {interest:9.2f} {sum_interest:9.2f} {debt:9.2f}')
         i += 1
     return sum_interest
@@ -77,9 +81,11 @@ def comp_month_rate_cpf(n_month, one_more=False):
             return 3.25 / 100 / 12
 
 debt = 300000
-
 n_month = 120
-month_rate = comp_month_rate_cpf(n_month)
+month_rate = comp_month_rate_cpf(n_month, one_more=False)
 
-#comp_eq_pr(debt, n_month, month_rate)
+comp_eq_pr(debt, n_month, month_rate)
 comp_eq_p(debt, n_month, month_rate)
+
+each_month = 3000
+comp_eq_each_month(debt, each_month, month_rate)
