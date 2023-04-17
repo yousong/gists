@@ -126,10 +126,12 @@ chain vpnguru_output {
 	goto vpnguru_mark;
 }
 chain vpnguru_mark {
+	ct direction original ct mark $o_fwmark meta mark set ct mark accept;
+	ct state established accept;
 	ip daddr @vpnguru_dst_bypass accept;
-	ip daddr @vpnguru_dst_forward meta mark set $o_fwmark;
+	ip daddr @vpnguru_dst_forward ct mark set $o_fwmark meta mark set ct mark accept;
 	ip6 daddr @vpnguru_dst_bypass6 accept;
-	ip6 daddr @vpnguru_dst_forward6 meta mark set $o_fwmark;
+	ip6 daddr @vpnguru_dst_forward6 ct mark set $o_fwmark meta mark set ct mark accept;
 }
 EOF
 }
