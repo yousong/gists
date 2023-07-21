@@ -1,17 +1,10 @@
 from __future__ import print_function
-import httplib2
 import os
 
-from apiclient import discovery
-from oauth2client import client
-from oauth2client import tools
-from oauth2client.file import Storage
-
-try:
-    import argparse
-    flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
-except ImportError:
-    flags = None
+from googleapiclient import discovery
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 
 # Interesting links
@@ -60,17 +53,25 @@ def get_credentials():
     credential_path = os.path.join(credential_dir,
                                    'gmail-python-quickstart.json')
 
-    store = Storage(credential_path)
-    credentials = store.get()
-    if not credentials or credentials.invalid:
-        flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
-        flow.user_agent = APPLICATION_NAME
-        if flags:
-            credentials = tools.run_flow(flow, store, flags)
-        else: # Needed only for compatibility with Python 2.6
-            credentials = tools.run(flow, store)
-        print('Storing credentials to ' + credential_path)
-    return credentials
+    creds = None
+    # The file token.json stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first
+    # time.
+    if os.path.exists(credential_path):
+        creds = Credentials.from_authorized_user_file(credential_path, SCOPES)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                CLIENT_SECRET_FILE, SCOPES)
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open(credential_path, 'w') as token:
+            token.write(creds.to_json())
+    return creds
+
 
 def threads_trash(service, threads):
     def batchcb(reqid, resp, exc):
@@ -99,8 +100,7 @@ def main(q):
     of the user's Gmail account.
     """
     credentials = get_credentials()
-    http = credentials.authorize(httplib2.Http())
-    service = discovery.build('gmail', 'v1', http=http)
+    service = discovery.build('gmail', 'v1', credentials=credentials)
 
     fields = 'threads(id)'
     while True:
