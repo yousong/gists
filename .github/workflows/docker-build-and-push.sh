@@ -20,6 +20,10 @@ build_and_push() {
 		log "build_and_push: $d: skipping (empty or null \$DOCKER_IMAGE_TAG)"
 		return
 	fi
+	if test "$GITHUB_REF" = "refs/heads/testing"; then
+		log "build_and_push: $d: build testing image"
+		DOCKER_IMAGE_TAG="${DOCKER_IMAGE_TAG%:*}:testing-${DOCKER_IMAGE_TAG#*:}"
+	fi
 	log "build_and_push: $d: building $DOCKER_IMAGE_TAG"
 	docker build -t "$DOCKER_IMAGE_TAG" .
 	docker image push "$DOCKER_IMAGE_TAG"
