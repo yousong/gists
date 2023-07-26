@@ -2,9 +2,19 @@ name: Build and push docker image
 
 on:
   workflow_dispatch:
+    inputs:
+      dirs:
+        description: 'Directories (separated by whitespace) containing Dockerfile'
+        type: string
+        default: ALL
+        required: true
+      is_testing:
+        description: 'Build testing images'
+        type: boolean
+        default: false
+        required: false
   push:
     branches:
-      - master
       - testing
     paths:
       - docker/**
@@ -22,3 +32,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push
         run: ./.github/workflows/docker-build-and-push.sh
+        env:
+          DOCKER_BUILD_AND_PUSH_DIRS: ${{ inputs.dirs }}
+          DOCKER_BUILD_AND_PUSH_IS_TESTING: ${{ inputs.is_testing }}

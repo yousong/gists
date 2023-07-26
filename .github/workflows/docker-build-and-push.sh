@@ -21,7 +21,7 @@ build_and_push() {
 	local tag
 	local built_tag
 	for tag in "${DOCKER_IMAGE_TAGS[@]}"; do
-		if test "$GITHUB_REF" = "refs/heads/testing"; then
+		if test "$DOCKER_BUILD_AND_PUSH_IS_TESTING" = true; then
 			log "build_and_push: $d: build testing image"
 			tag="${tag%:*}:testing-${tag#*:}"
 		fi
@@ -42,11 +42,11 @@ build_and_push() {
 	fi
 }
 
-build_and_push_all() {
+build_and_push_dirs() {
 	local d
 
 	cd "$topdir"
-	for d in docker/*; do
+	for d in "$@"; do
 		build_and_push "$topdir/$d"
 	done
 }
@@ -54,4 +54,11 @@ build_and_push_all() {
 set -o errexit
 set -o xtrace
 
-build_and_push_all
+if test "$GITHUB_REF" = "refs/heads/testing"; then
+	DOCKER_BUILD_AND_PUSH_IS_TESTING=true
+fi
+
+if test -z "$DOCKER_BUILD_AND_PUSH_DIRS" || test "$DOCKER_IMAGE_TAGS" = ALL; then
+	DOCKER_BUILD_AND_PUSH_DIRS="$(cd $topdir; echo docker/*)"
+fi
+build_and_push_dirs $DOCKER_BUILD_AND_PUSH_DIRS
