@@ -1,1 +1,4 @@
-DOCKER_IMAGE_TAG=yousong/test:nextcloud-full
+DOCKER_IMAGE_TAGS=(
+	yousong/test:nextcloud-27-full
+	yousong/test:nextcloud-full
+)

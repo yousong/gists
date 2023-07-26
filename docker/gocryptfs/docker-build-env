@@ -1,1 +1,6 @@
-DOCKER_IMAGE_TAG=yousong/test:gocryptfs-2.4.0
+DOCKER_IMAGE_TAGS=(
+	yousong/test:gocryptfs-2.4.0
+	yousong/test:gocryptfs-2.4
+	yousong/test:gocryptfs-2
+	yousong/test:gocryptfs
+)
