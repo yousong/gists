@@ -16,9 +16,12 @@ RUN set -ex; \
 
 RUN set -ex; \
     \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        libc-client2007e \
+    ; \
     savedAptMark="$(apt-mark showmanual)"; \
     \
-    apt-get update; \
     apt-get install -y --no-install-recommends \
         libbz2-dev \
         libc-client-dev \
