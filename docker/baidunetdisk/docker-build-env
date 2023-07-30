@@ -1,0 +1,6 @@
+DOCKER_IMAGE_TAGS=(
+	yousong/test:baidunetdisk-4.17.7
+	yousong/test:baidunetdisk-4.17
+	yousong/test:baidunetdisk-4
+	yousong/test:baidunetdisk
+)
