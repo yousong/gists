@@ -12,6 +12,7 @@ RUN set -x \
 	&& apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		ca-certificates \
+		chromium \
 		curl \
 		libasound2 \
 		libdrm2 \
