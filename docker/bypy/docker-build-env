@@ -1,0 +1,5 @@
+DOCKER_IMAGE_TAGS=(
+	yousong/test:bypy-1.8
+	yousong/test:bypy-1
+	yousong/test:bypy
+)
