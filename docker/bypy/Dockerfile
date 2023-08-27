@@ -5,7 +5,7 @@ RUN set -ex \
 	&& apk add --no-cache \
 		aria2 \
 	&& pip install --no-cache-dir \
-		bypy==1.8 \
+		'bypy>=1.8,<1.9' \
 	&& true
 
 ADD root/ /
