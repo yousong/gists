@@ -12,10 +12,8 @@ CONFIG_TARGET_PER_DEVICE_ROOTFS=y
 #  - Edit include/target.mk, remove opkg, odhcpd, odhcp6c from DEFAULT_PACKAGES
 #
 CONFIG_CLEAN_IPKG=y
-# CONFIG_IPV6 is not set
 CONFIG_KERNEL_CC_STACKPROTECTOR_NONE=y
 # CONFIG_KERNEL_CC_STACKPROTECTOR_REGULAR is not set
-# CONFIG_KERNEL_IPV6 is not set
 CONFIG_PKG_CC_STACKPROTECTOR_NONE=y
 # CONFIG_PKG_CHECK_FORMAT_SECURITY is not set
 # CONFIG_PKG_FORTIFY_SOURCE_1 is not set
@@ -25,19 +23,10 @@ CONFIG_PKG_RELRO_NONE=y
 CONFIG_STRIP_KERNEL_EXPORTS=y
 CONFIG_USE_MKLIBS=y
 
-CONFIG_PACKAGE_luci=y
+# CONFIG_PACKAGE_luci is not set
 
+CONFIG_PACKAGE_ip6tables-mod-nat=y
 CONFIG_PACKAGE_wireguard=y
 CONFIG_PACKAGE_pservice=y
 # CONFIG_PACKAGE_opkg is not set
 # CONFIG_DEFAULT_opkg is not set
-
-CONFIG_PACKAGE_ipset=y
-CONFIG_PACKAGE_iptables-mod-conntrack-extra=y
-
-# CONFIG_PACKAGE_dnsmasq is not set
-CONFIG_PACKAGE_dnsmasq-full=y
-CONFIG_PACKAGE_dnsmasq_full_ipset=y
-# CONFIG_PACKAGE_dnsmasq_full_auth is not set
-# CONFIG_PACKAGE_dnsmasq_full_dnssec is not set
-# CONFIG_PACKAGE_dnsmasq_full_dhcpv6 is not set
