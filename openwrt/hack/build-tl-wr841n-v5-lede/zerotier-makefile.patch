@@ -1,0 +1,20 @@
+diff --git a/net/zerotier/Makefile b/net/zerotier/Makefile
+index e9c1426a1..54ff3c6f0 100644
+--- a/net/zerotier/Makefile
++++ b/net/zerotier/Makefile
+@@ -6,12 +6,12 @@
+ include $(TOPDIR)/rules.mk
+ 
+ PKG_NAME:=zerotier
+-PKG_VERSION:=1.12.2
+-PKG_RELEASE:=2
++PKG_VERSION:=1.10.6
++PKG_RELEASE:=1
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_SOURCE_URL:=https://codeload.github.com/zerotier/ZeroTierOne/tar.gz/$(PKG_VERSION)?
+-PKG_HASH:=7c6512cfc208374ea9dc9931110e35f71800c34890e0f35991ea485aae66e31c
++PKG_HASH:=3f0b59e0c290b18b93fddee1f7b927209538d84a88343b2f3ac61a6bf3c87910
+ PKG_BUILD_DIR:=$(BUILD_DIR)/ZeroTierOne-$(PKG_VERSION)
+ 
+ PKG_MAINTAINER:=Moritz Warning <moritzwarning@web.de>
