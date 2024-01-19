@@ -1,5 +1,5 @@
 DOCKER_IMAGE_TAGS=(
-	yousong/test:openwrt-$(date +%Y%m%d%H%M)
-	yousong/test:openwrt-$(date +%Y%m%d)
-	yousong/test:openwrt
+	yousong/test:openwrt-build-$(date +%Y%m%d%H%M)
+	yousong/test:openwrt-build-$(date +%Y%m%d)
+	yousong/test:openwrt-build
 )
