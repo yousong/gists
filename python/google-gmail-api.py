@@ -31,8 +31,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 
 # If modifying these scopes, delete your previously saved credentials
 # at ~/.credentials/gmail-python-quickstart.json
+#
+# https://developers.oogle.com/gmail/api/auth/scopes
 SCOPES = 'https://www.googleapis.com/auth/gmail.readonly'
-SCOPES = 'https://mail.google.com/'
+SCOPES = ['https://mail.google.com/']
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Gmail API Python Quickstart'
 
@@ -66,7 +68,7 @@ def get_credentials():
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
                 CLIENT_SECRET_FILE, SCOPES)
-            creds = flow.run_local_server(port=0)
+            creds = flow.run_local_server(port=0, open_browser=False)
         # Save the credentials for the next run
         with open(credential_path, 'w') as token:
             token.write(creds.to_json())
@@ -103,6 +105,7 @@ def main(q):
     service = discovery.build('gmail', 'v1', credentials=credentials)
 
     fields = 'threads(id)'
+    print(q)
     while True:
         results = service.users().threads().list(userId='me', q=q, fields=fields).execute()
         if 'threads' in results:
@@ -116,20 +119,48 @@ def main(q):
         else:
             break
 
-if __name__ == '__main__':
+def cleanupLabels():
+    labels = [
+        'bird-users',
+        'bsd-freebsd-arm',
+        'buildroot-crosstool-ng',
+        'busybox',
+        'debian-arm',
+        'dnsmasq-discuss',
+        'golang',
+        'haproxy',
+        'linux-linux-sunxi-cubieboard',
+        'linux-lvs',
+        'linux-riscv',
+        'linux-virtiofs',
+        'linux-wireguard',
+        'linux-xdp',
+        'lua-l',
+        'musl-libc',
+        'nginx-devel',
+        'openvpn-devel',
+        'openwrt-devel',
+        'openwrt-devel-forum',
+        'openwrt-devel-luci',
+        'openwrt-devel-mt76',
+        'openwrt-devel-openwrt-dev',
+        'ovs-ovs-dev',
+        'yunionio',
+    ]
+    for label in labels:
+        q = f'label:{label} is:unread'
+        main(q)
+
+def cleanupByQueries():
     qs = [
-        'label:AD is:unread',
-        'label:ovs-ovs-dev is:unread',
-        'label:ovs-ovs-discuss is:unread',
-        'label:golang is:unread',
-        'label:lua-l is:unread',
-        'label:musl-libc is:unread',
-        'label:openwrt-devel-packages is:unread',
-        'label:openwrt-devel-luci is:unread',
-        'label:core-mentorship is:unread',
-        'label:buildroot-crostool-ng is:unread',
-        'label:nginx-devel is:unread',
+        'list:(centos-devel.centos.org)',
+        'list:(<p4-discuss.lists.p4.org>)',
+        'list:(<p4-dev.lists.p4.org>)',
+        'from:(errata@redhat.com)',
     ]
     for q in qs:
-        print(q)
+        q = f'{q} is:unread'
         main(q)
+
+if __name__ == '__main__':
+    cleanupByQueries()
