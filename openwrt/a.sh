@@ -6,7 +6,7 @@ runob() {
 	local workdir="$mydir/work"
 	local defcfgdir="$mydir/defconfig"
 
-	local dockerimg="yousong/test:openwrt"
+	local dockerimg="yousong/test:openwrt-build"
 
 	local uid
 	local gid
