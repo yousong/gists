@@ -17,7 +17,7 @@ sed -i -e 's!^\(DEFAULT_PACKAGES:=.*\) opkg \(.*\)!\1 \2!' "$f"
 
 # use feeds from local cloned repo
 cat feeds.conf.default \
-	| grep -vE ' (routing|telephony) ' \
+	| grep -vE ' (luci|routing|telephony) ' \
 	| sed -r -e 's!https.*/([^.]+)\.git(\^.*)!file://'$mydir/..'/\1/.git\2!' \
 	> feeds.conf
 ./scripts/feeds update -a
