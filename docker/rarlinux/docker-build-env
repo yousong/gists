@@ -1,0 +1,4 @@
+DOCKER_IMAGE_TAGS=(
+	yousong/test:rarlinux-x64-624
+	yousong/test:rarlinux
+)
