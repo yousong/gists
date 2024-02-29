@@ -7,7 +7,17 @@ RUN set -ex \
 	&& echo "$RARLINUX_TARGZ_MD5SUM  $RARLINUX_TARGZ" | md5sum -c \
 	&& tar xzf "$RARLINUX_TARGZ"
 
-FROM debian:bookworm
+FROM debian:bookworm-slim
+ENV \
+	PATH="/rar:${PATH}" \
+	LANG="en_US.UTF-8"
 COPY --from=builder /rar /rar
-ENV PATH="/rar:${PATH}"
-RUN rar
+RUN set -ex \
+	&& rar \
+	&& apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		locales \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& sed -i -r -e 's/# (en_US.UTF-8)/\1/' /etc/locale.gen \
+	&& sed -i -r -e 's/# (zh_CN)/\1/' /etc/locale.gen \
+	&& locale-gen
