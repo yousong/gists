@@ -1,0 +1,4 @@
+DOCKER_IMAGE_TAGS=(
+	yousong/test:cuda-bench-tensorflow-1.15
+	yousong/test:cuda-bench-tensorflow
+)
