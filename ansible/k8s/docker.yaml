@@ -8,6 +8,7 @@
     the_package_state: present
     the_user: "{{ ansible_user | default(lookup('env', 'USER')) }}"
     the_pkg_mgr: dnf
+    # NOTE nvidia docker, https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
   handlers:
     - name: restart dockerd
       service:
@@ -44,9 +45,7 @@
               "max-file": "2"
             },
             "registry-mirrors": [
-              "https://docker.mirrors.ustc.edu.cn",
-              "https://hub-mirror.c.163.com",
-              "https://registry.docker-cn.com"
+              "https://hub-mirror.c.163.com"
             ]
           }
     - user:
