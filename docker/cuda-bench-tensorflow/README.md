@@ -1,6 +1,6 @@
 Example
 
-    docker run --gpus=all --rm -it b:t --model resnet50 --num_gpus=1
+    docker run --gpus=all --rm -it yousong/test:cuda-bench-tensorflow --model resnet50 --num_gpus=1
 
 # Credits
 
