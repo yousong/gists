@@ -27,6 +27,7 @@ CONFIG_USE_MKLIBS=y
 
 CONFIG_PACKAGE_ip6tables-mod-nat=y
 CONFIG_PACKAGE_wireguard=y
+CONFIG_PACKAGE_pppossh=y
 CONFIG_PACKAGE_pservice=y
 CONFIG_PACKAGE_uhttpd=y
 CONFIG_PACKAGE_travelmate=y
