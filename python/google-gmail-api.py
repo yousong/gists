@@ -153,10 +153,18 @@ def cleanupLabels():
 
 def cleanupByQueries():
     qs = [
-        'list:(centos-devel.centos.org)',
-        'list:(<p4-discuss.lists.p4.org>)',
-        'list:(<p4-dev.lists.p4.org>)',
-        'from:(errata@redhat.com)',
+        'label:yunionio',
+        'label:AD',
+        'label:ovs-ovs-dev',
+        'label:ovs-ovs-discuss',
+        'label:golang',
+        'label:lua-l',
+        'label:musl-libc',
+        'label:openwrt-devel-packages',
+        'label:openwrt-devel-luci',
+        'label:core-mentorship',
+        'label:buildroot-crostool-ng',
+        'label:nginx-devel',
     ]
     for q in qs:
         q = f'{q} is:unread'
