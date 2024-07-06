@@ -1,4 +1,0 @@
-DOCKER_IMAGE_TAGS=(
-	yousong/test:onedrive-2.4
-	yousong/test:onedrive
-)
