@@ -198,7 +198,7 @@ vpnguru_route_init() {
 
 vpnguru_route6_init() {
 	ip -6 rule add fwmark "$o_fwmark" lookup "$o_rttable"
-	ip -6 route add default dev "$o_ifname" ${o_gateway:+via "$o_gateway6"} table "$o_rttable"
+	ip -6 route add default dev "$o_ifname" ${o_gateway6:+via "$o_gateway6"} table "$o_rttable"
 	ip -6 route flush cache
 }
 
