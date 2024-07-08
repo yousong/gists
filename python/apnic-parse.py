@@ -18,7 +18,7 @@ def parseLine(line):
 
 def parseFile(filename):
     ents = []
-    with open(filename, "rb") as fin:
+    with open(filename, "r") as fin:
         for line in fin:
             ent = parseLine(line)
             if ent is not None:
@@ -43,7 +43,7 @@ def IpPairs(ents, filterFunc=None, sort=False):
         pairs.append((ipNum, ipNum + value))
 
     if sort:
-        pairs = sorted(pairs, cmp=lambda a, b: a[0] < b[0])
+        pairs = sorted(pairs, key=lambda a: a[0])
     return pairs
 
 def IpPairsMerge(pairs):
