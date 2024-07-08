@@ -147,7 +147,7 @@ EOF
 }
 
 vpnguru_nft_flush() {
-	nft flush table vpnguru
+	nft delete table inet vpnguru || true
 }
 
 vpnguru_ipset_init() {
