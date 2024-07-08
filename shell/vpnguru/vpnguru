@@ -101,10 +101,20 @@ set $setname {
 	type ipv${af}_addr;
 	flags interval;
 	auto-merge;
+EOF
+	set -- $1
+	if test "$#" -eq 0; then
+		cat <<EOF
+}
+EOF
+		return
+	fi
+
+	cat <<EOF
 	elements = {
 EOF
 
-	for el in $1; do
+	for el in "$@"; do
 	cat <<EOF
 		$el,
 EOF
