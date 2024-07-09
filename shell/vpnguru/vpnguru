@@ -203,12 +203,12 @@ vpnguru_route6_init() {
 }
 
 vpnguru_route_flush() {
-	      ip route flush table "$o_rttable"
+	      ip route flush table "$o_rttable" || true
 	while ip rule del fwmark "$o_fwmark" lookup "$o_rttable" 2>/dev/null; do true; done
 }
 
 vpnguru_route6_flush() {
-	      ip -6 route flush table "$o_rttable"
+	      ip -6 route flush table "$o_rttable" || true
 	while ip -6 rule del fwmark "$o_fwmark" lookup "$o_rttable" 2>/dev/null; do true; done
 }
 
