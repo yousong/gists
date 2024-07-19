@@ -1,0 +1,5 @@
+DOCKER_IMAGE_TAGS=(
+	yousong/test:binwalk-2.3.4
+	yousong/test:binwalk-2.3
+	yousong/test:binwalk
+)
