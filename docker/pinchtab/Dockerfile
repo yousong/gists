@@ -1,31 +1,17 @@
-# Stage 1: Build the React dashboard with Bun.
-FROM oven/bun:1 AS dashboard
-WORKDIR /build
-COPY dashboard/package.json dashboard/bun.lock ./
-RUN bun install --frozen-lockfile
-COPY dashboard/ .
-RUN bun run build
+ARG PINCHTAB_VERSION=0.15.2
 
-# Stage 2: Compile the Go binary.
-FROM golang:1.26-alpine AS builder
-RUN apk add --no-cache git
-WORKDIR /build
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
-COPY --from=dashboard /build/dist/ internal/dashboard/dashboard/
-RUN mv internal/dashboard/dashboard/index.html internal/dashboard/dashboard/dashboard.html
-RUN go build -ldflags="-s -w" -o pinchtab ./cmd/pinchtab
-
-# Stage 3: Runtime image with VNC support for headed Chrome.
+# Runtime image with VNC support for headed Chrome.
 # Based on jlesage/baseimage-gui which provides X11 + VNC + web interface.
 FROM jlesage/baseimage-gui:alpine-3.23-v4
+ARG PINCHTAB_VERSION
+ARG TARGETARCH
 
 LABEL org.opencontainers.image.source="https://github.com/pinchtab/pinchtab"
 LABEL org.opencontainers.image.description="Browser automation bridge with VNC for headed mode"
 
 RUN apk upgrade --no-cache --available \
     && apk add --no-cache \
+    libc6-compat \
     chromium \
     nss \
     freetype \
@@ -43,7 +29,7 @@ RUN apk upgrade --no-cache --available \
 
 RUN mkdir -p /data && chmod 777 /data
 
-COPY --from=builder /build/pinchtab /usr/local/bin/pinchtab
+ADD --chmod=755 https://github.com/pinchtab/pinchtab/releases/download/v${PINCHTAB_VERSION}/pinchtab-linux-${TARGETARCH} /usr/local/bin/pinchtab
 COPY --chmod=0755 docker-entrypoint.sh /startapp.sh
 
 ENV HOME=/data \
