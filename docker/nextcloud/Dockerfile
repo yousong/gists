@@ -1,4 +1,4 @@
-FROM nextcloud:31-apache
+FROM nextcloud:32-apache
 
 RUN set -ex; \
     \
@@ -6,7 +6,6 @@ RUN set -ex; \
     apt-get install -y --no-install-recommends \
         ffmpeg \
         ghostscript \
-        libmagickcore-6.q16-6-extra \
         procps \
         smbclient \
         supervisor \
@@ -16,23 +15,17 @@ RUN set -ex; \
 
 RUN set -ex; \
     \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-        libc-client2007e \
-    ; \
     savedAptMark="$(apt-mark showmanual)"; \
     \
+    apt-get update; \
     apt-get install -y --no-install-recommends \
         libbz2-dev \
-        libc-client-dev \
         libkrb5-dev \
         libsmbclient-dev \
     ; \
     \
-    docker-php-ext-configure imap --with-kerberos --with-imap-ssl; \
     docker-php-ext-install \
         bz2 \
-        imap \
     ; \
     pecl install smbclient; \
     docker-php-ext-enable smbclient; \
