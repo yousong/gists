@@ -6,6 +6,11 @@ description: Upgrade, rebuild, or triage the custom full Nextcloud image in dock
 # Upgrading the custom full Nextcloud image
 
 Everything deterministic lives in `docker/nextcloud/bin/nc-upgrade` (run `nc-upgrade help`).
+Below, `nc-upgrade` is shorthand for that path. The script finds the repo root from its own
+location, so it works **from any working directory** — just give the shell a path that
+resolves the binary (`docker/nextcloud/bin/nc-upgrade` from the repo root, or its absolute
+path from anywhere).
+
 Prefer its subcommands over hand-editing files or calling the GitHub API ad hoc —
 they validate versions against Docker Hub, guard the one-major-per-step rule,
 stage exactly the right files, resolve the dispatched run id, and fetch failure logs.
@@ -34,22 +39,22 @@ build failure.
 
 ## Runbook
 
-1. `docker/nextcloud/bin/nc-upgrade status`
+1. `nc-upgrade status`
    — current vs latest upstream, branch/tree state, recent CI runs.
-2. Preview the whole plan: `... upgrade --dry-run [N]` (N defaults to latest).
+2. Preview the whole plan: `nc-upgrade upgrade --dry-run [N]` (N defaults to latest).
 3. Per step (the `upgrade` loop does these in sequence; do them manually when a
    step is expected to need Dockerfile fixes):
-   - `... bump M` — checks Docker Hub for `nextcloud:M-apache`, edits both
+   - `nc-upgrade bump M` — checks Docker Hub for `nextcloud:M-apache`, edits both
      files, prints the diff for review.
-   - `... commit [M] [extra message text...]` — stages **only** the two files
+   - `nc-upgrade commit [M] [extra message text]` — stages **only** the two files
      and commits `docker/nextcloud: upgrade to M`. Version-only bumps need no
      extra text; when the Dockerfile needed real changes (removed extension,
      renamed package…), pass a short explanation so it lands in the commit body.
-   - `... trigger` — pushes `nc` (refuses on divergence), dispatches the
+   - `nc-upgrade trigger` — pushes `nc` (refuses on divergence), dispatches the
      workflow with `dirs=docker/nextcloud`, resolves the run, watches it, and
      on failure dumps the tail of every failed job's log. `--testing` builds
      `testing-`-prefixed tags instead; `--no-wait` returns the run id only.
-4. If a step fails: read the dumped log (or `... fail-log [run-id]`),
+4. If a step fails: read the dumped log (or `nc-upgrade fail-log [run-id]`),
    propose/apply Dockerfile or env fixes as an ordinary commit or fold them
    into the step, re-run `trigger`. Then continue the chain.
 
