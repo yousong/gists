@@ -1,0 +1,415 @@
+#!/usr/bin/env bash
+# nc-upgrade — deterministic tooling for maintaining the custom full Nextcloud
+# image defined in docker/nextcloud (Dockerfile + docker-build-env).
+#
+# Lifecycle of one upgrade step (Nextcloud can only move one major version at a
+# time, so a chain 33 -> 35 means building 34 first, then 35):
+#
+#   nc-upgrade status            # what do we have vs. what upstream offers
+#   nc-upgrade latest            # newest upstream major with an N-apache tag
+#   nc-upgrade bump [N]          # edit Dockerfile + docker-build-env (no commit)
+#   nc-upgrade commit [N] [msg]  # stage exactly those two files and commit
+#   nc-upgrade trigger           # git push origin nc + workflow_dispatch build
+#   nc-upgrade watch [run-id]    # poll a run, dump failed job logs, exit = result
+#   nc-upgrade fail-log [run-id] # logs of failed jobs (default: latest run on branch)
+#   nc-upgrade upgrade [N]       # run the whole chain up to N (default: latest)
+#
+# bump/trigger/upgrade accept --dry-run. bump also accepts --force (allow
+# >1-major or downgrade). trigger accepts --testing (build testing-<tag>
+# images), --no-wait (dispatch only), --no-branch-check.
+#
+# GitHub token (fine-grained PAT with "Actions: write" on yousong/gists is
+# enough; read-only public-repo commands work without one) is looked up in:
+#   1. $NC_UPGRADE_TOKEN, then $GITHUB_TOKEN, then $GH_TOKEN
+#   2. the file $NC_UPGRADE_TOKEN_FILE (default docker/nextcloud/.nc-upgrade-token,
+#      gitignored — mode 600 recommended)
+# This repository is public: NEVER put a token in it, in git config, or in CI logs.
+#
+# Tunables: NC_UPGRADE_BRANCH (nc), NC_UPGRADE_DIRS (docker/nextcloud),
+# NC_UPGRADE_POLL (watch seconds, 15), NC_UPGRADE_TAIL (log tail lines, 120).
+
+set -euo pipefail
+
+TOP="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
+IMG_DIR="$TOP/docker/nextcloud"
+DOCKERFILE="$IMG_DIR/Dockerfile"
+BUILD_ENV="$IMG_DIR/docker-build-env"
+BRANCH="${NC_UPGRADE_BRANCH:-nc}"
+DIRS="${NC_UPGRADE_DIRS:-docker/nextcloud}"
+WF_FILE="docker-build-and-push.yaml"
+API="https://api.github.com"
+HUB="https://hub.docker.com/v2/repositories/library/nextcloud"
+
+log() { printf '%s\n' "$*" >&2; }
+die() { log "error: $*"; exit 1; }
+
+# ---------------------------------------------------------------- primitives
+
+current_version() {
+	sed -n 's/^FROM nextcloud:\([0-9][0-9]*\)-apache.*/\1/p' "$DOCKERFILE" | head -1
+}
+
+hub_tag_exists() { # <tag suffix, e.g. 34-apache> -> exit status
+	test "$(curl -sS -o /dev/null -w '%{http_code}' "$HUB/tags/$1")" = 200
+}
+
+hub_latest_major() { # highest N that has an N-apache tag on Docker Hub
+	local url="$HUB/tags?page_size=100&name=-apache" body m
+	local max=0 pages=0
+	while [ -n "$url" ] && [ "$pages" -lt 20 ]; do
+		body="$(curl -fsS "$url")" || die "Docker Hub query failed: $url"
+		m="$(jq -r '
+			[.results[].name
+			 | select(test("^[0-9]+-apache$"))
+			 | (split("-")[0] | tonumber)]
+			| if length == 0 then 0 else max end' <<<"$body")"
+		[ "$m" -gt "$max" ] && max="$m"
+		url="$(jq -r '.next // empty' <<<"$body")"
+		pages=$((pages + 1))
+	done
+	printf '%s' "$max"
+}
+
+gh_token() { # -> token on stdout, exit 1 when none found
+	local tok="${NC_UPGRADE_TOKEN:-${GITHUB_TOKEN:-${GH_TOKEN:-}}}"
+	if [ -n "$tok" ]; then printf '%s' "$tok"; return 0; fi
+	local f="${NC_UPGRADE_TOKEN_FILE:-$IMG_DIR/.nc-upgrade-token}"
+	if [ -s "$f" ]; then tr -d '[:space:]' <"$f"; return 0; fi
+	return 1
+}
+
+require_token() {
+	gh_token >/dev/null || die "no GitHub token found. Create a fine-grained PAT with 'Actions: write' permission on yousong/gists, then either export it as NC_UPGRADE_TOKEN or store it in ${NC_UPGRADE_TOKEN_FILE:-$IMG_DIR/.nc-upgrade-token} (chmod 600; the path is gitignored). The repo is public — never commit tokens."
+}
+
+repo_slug() { # owner/repo parsed from the origin remote (ssh or https form)
+	local url pair
+	url="$(git -C "$TOP" remote get-url origin)"
+	url="${url%.git}"
+	case "$url" in
+		*github.com:*) pair="${url##*github.com:}" ;;
+		*github.com/*) pair="${url##*github.com/}" ;;
+		*) die "cannot parse owner/repo from remote: $url" ;;
+	esac
+	printf '%s' "$pair"
+}
+
+# api METHOD PATH [JSON-BODY] -> response body on stdout; dies on non-2xx.
+api() {
+	local method="$1" path="$2" body="${3:-}" tok resp code out
+	local -a args=(-sS -X "$method"
+		-H 'Accept: application/vnd.github+json'
+		-H 'X-GitHub-Api-Version: 2022-11-28')
+	if tok="$(gh_token)"; then args+=(-H "Authorization: Bearer $tok"); fi
+	[ -n "$body" ] && args+=(-H 'Content-Type: application/json' --data "$body")
+	resp="$(curl "${args[@]}" -w $'\n%{http_code}' "$API$path")" ||
+		die "request failed: $method $path"
+	code="${resp##*$'\n'}"
+	out="${resp%$'\n'*}"
+	case "$code" in 2*) ;; *) die "GitHub API $method $path -> HTTP $code: $out" ;; esac
+	printf '%s' "$out"
+}
+
+img_dir_dirty() { # tracked files under docker/nextcloud modified? (untracked ignored)
+	[ -n "$(git -C "$TOP" status --porcelain --untracked-files=no -- "$IMG_DIR")" ]
+}
+
+build_input_files() { # Dockerfile, docker-build-env, plus everything COPY'd into the image
+	local f
+	printf '%s\n' "$DOCKERFILE" "$BUILD_ENV"
+	while read -r f; do
+		[ -f "$IMG_DIR/$f" ] && printf '%s\n' "$IMG_DIR/$f"
+	done < <(sed -n 's/^COPY[[:space:]]\{1,\}\([^[:space:]]\{1,\}\).*/\1/p' "$DOCKERFILE")
+}
+
+build_files_dirty() { # uncommitted changes to anything that affects the build?
+	[ -n "$(git -C "$TOP" status --porcelain --untracked-files=no -- $(build_input_files))" ]
+}
+
+# -------------------------------------------------------------- subcommands
+
+cmd_status() {
+	local cur latest b runs ahead_behind
+	cur="$(current_version)"
+	log "image dir      : docker/nextcloud"
+	log "current major  : ${cur:-<unparsed>}"
+	[ -n "$cur" ] || die "cannot parse 'FROM nextcloud:N-apache' from $DOCKERFILE"
+	latest="$(hub_latest_major)"
+	log "latest upstream: $latest"
+	if [ "$cur" -lt "$latest" ]; then
+		log "upgrade chain  : $cur -> $(seq -s ' -> ' "$((cur + 1))" "$latest")"
+	else
+		log "upgrade chain  : none, up to date"
+	fi
+	b="$(git -C "$TOP" branch --show-current)"
+	log "branch         : $b $([ "$b" = "$BRANCH" ] || echo "(expected $BRANCH)")"
+	img_dir_dirty && log "working tree   : uncommitted changes under docker/nextcloud"
+	if git -C "$TOP" rev-parse -q --verify "origin/$BRANCH" >/dev/null; then
+		git -C "$TOP" fetch -q origin "$BRANCH" 2>/dev/null || true
+		ahead_behind="$(git -C "$TOP" rev-list --left-right --count "origin/$BRANCH...HEAD" 2>/dev/null || echo '? ?')"
+		log "behind/ahead vs origin/$BRANCH: $ahead_behind"
+	fi
+	if runs="$(api GET "/repos/$(repo_slug)/actions/workflows/$WF_FILE/runs?branch=$BRANCH&per_page=3" 2>/dev/null)"; then
+		jq -r '.workflow_runs[] | "recent run     : #\(.run_number) \(.event) \(.status) \(.conclusion // "") \(.html_url)"' <<<"$runs" | head -3 >&2
+	fi
+}
+
+cmd_bump() {
+	local target="" force=0 dry=0 a
+	for a in "$@"; do
+		case "$a" in
+			--force) force=1 ;;
+			--dry-run) dry=1 ;;
+			--*) die "bump: unknown flag $a" ;;
+			*) target="$a" ;;
+		esac
+	done
+	local cur
+	cur="$(current_version)"
+	[ -n "$cur" ] || die "cannot parse current version from $DOCKERFILE"
+	[ -n "$target" ] || target="$(hub_latest_major)"
+	case "$target" in '' | *[!0-9]*) die "bad target version: '$target'" ;; esac
+	if [ "$target" -eq "$cur" ]; then
+		log "already at $cur"
+		return 0
+	fi
+	if [ "$target" -lt "$cur" ] && [ "$force" -eq 0 ]; then
+		die "target $target is older than current $cur (pass --force to insist)"
+	fi
+	if [ "$target" -gt "$((cur + 1))" ] && [ "$force" -eq 0 ]; then
+		die "only one major version at a time (Nextcloud upgrade constraint): use 'nc-upgrade upgrade $target' for the $((cur + 1))..$target chain, or bump stepwise, or --force to bypass"
+	fi
+	if [ "$dry" -eq 1 ]; then
+		log "[dry-run] Dockerfile:    FROM nextcloud:${cur}-apache -> FROM nextcloud:${target}-apache"
+		log "[dry-run] docker-build-env: yousong/test:nextcloud-${cur}-full -> yousong/test:nextcloud-${target}-full"
+		return 0
+	fi
+	build_files_dirty && die "uncommitted changes in Dockerfile/docker-build-env — commit or revert first"
+	hub_tag_exists "${target}-apache" ||
+		die "docker tag nextcloud:${target}-apache does not exist on Docker Hub"
+	sed -i "s|^FROM nextcloud:.*|FROM nextcloud:${target}-apache|" "$DOCKERFILE"
+	sed -i -E "s|nextcloud-[0-9]+-full|nextcloud-${target}-full|" "$BUILD_ENV"
+	git -C "$TOP" --no-pager diff -- "$IMG_DIR" >&2
+	log "bumped $cur -> $target; review the diff, then run 'nc-upgrade commit $target'"
+}
+
+cmd_commit() {
+	local ver="" extra="" a
+	for a in "$@"; do
+		case "$a" in
+		'' | *[!0-9]*) [ -z "$extra" ] && extra="$a" || extra="$extra
+$a" ;;
+			*) [ -z "$ver" ] && ver="$a" || extra="${extra:+$extra
+}$a" ;;
+		esac
+	done
+	ver="${ver:-$(current_version)}"
+	build_files_dirty || die "nothing to commit in Dockerfile/docker-build-env (run 'nc-upgrade bump' first)"
+	git -C "$TOP" add -- docker/nextcloud/Dockerfile docker/nextcloud/docker-build-env
+	if [ -n "$extra" ]; then
+		git -C "$TOP" commit -m "docker/nextcloud: upgrade to $ver" -m "$extra"
+	else
+		git -C "$TOP" commit -m "docker/nextcloud: upgrade to $ver"
+	fi
+	git -C "$TOP" --no-pager log -1 --stat >&2
+}
+
+ensure_pushed() { # commit-free img dir, on $BRANCH, fast-forward push to origin
+	local b counts ahead behind
+	if [ "${SKIP_BRANCH_CHECK:-0}" != 1 ]; then
+		b="$(git -C "$TOP" branch --show-current)"
+		[ "$b" = "$BRANCH" ] || die "not on branch $BRANCH (currently $b); switch first or pass --no-branch-check"
+	fi
+	build_files_dirty && die "uncommitted changes to build inputs (Dockerfile/docker-build-env/COPY sources); commit them before triggering a build"
+	git -C "$TOP" fetch -q origin "$BRANCH" 2>/dev/null || true
+	if git -C "$TOP" rev-parse -q --verify "origin/$BRANCH" >/dev/null; then
+		counts="$(git -C "$TOP" rev-list --left-right --count "origin/$BRANCH...HEAD")"
+		read -r behind ahead <<<"$counts" # tab-separated: behind<TAB>ahead
+		[ "$behind" -gt 0 ] && die "local $BRANCH is $behind commits behind origin/$BRANCH; pull/rebase first"
+		if [ "$ahead" -gt 0 ]; then
+			log "pushing $ahead commit(s) to origin/$BRANCH"
+			git -C "$TOP" push origin "$BRANCH"
+		fi
+	else
+		git -C "$TOP" push -u origin "$BRANCH"
+	fi
+}
+
+cmd_trigger() {
+	local testing=false wait=1 dry=0 a
+	for a in "$@"; do
+		case "$a" in
+			--testing) testing=true ;;
+			--no-wait) wait=0 ;;
+			--no-branch-check) SKIP_BRANCH_CHECK=1 ;;
+			--dry-run) dry=1 ;;
+			--*) die "trigger: unknown flag $a" ;;
+		esac
+	done
+	local slug body
+	slug="$(repo_slug)"
+	body="$(jq -n --arg ref "$BRANCH" --arg dirs "$DIRS" --arg t "$testing" \
+		'{ref: $ref, inputs: {dirs: $dirs, is_testing: $t}}')"
+	if [ "$dry" -eq 1 ]; then
+		log "[dry-run] ensure $BRANCH committed & pushed, then"
+		log "[dry-run] POST /repos/$slug/actions/workflows/$WF_FILE/dispatches"
+		log "[dry-run] $(tr -d '\n' <<<"$body")"
+		return 0
+	fi
+	require_token
+	ensure_pushed
+	local ts id url waited=0 disp
+	ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+	if ! disp="$(api POST "/repos/$slug/actions/workflows/$WF_FILE/dispatches" "$body")"; then
+		log "hint: HTTP 403 'Resource not accessible by personal access token' means the fine-grained PAT is misconfigured:"
+		log "      1) Repository access: 'Only select repositories' must include $slug (or choose All repositories)"
+		log "      2) Repository permissions: Actions -> Read and write"
+		log "      (Contents is not needed — git push goes over SSH)"
+		exit 1
+	fi
+	log "dispatched $WF_FILE on $BRANCH (dirs=$DIRS is_testing=$testing)"
+	# recent API versions return the run id in the dispatch body (200 JSON);
+	# older behaviour is 204 with an empty body -> fall back to the runs list
+	id="$(jq -r '.workflow_run_id // empty' <<<"${disp:-}" 2>/dev/null || true)"
+	url="$(jq -r '.html_url // .run_url // empty' <<<"${disp:-}" 2>/dev/null || true)"
+	if [ -z "$id" ]; then
+		while :; do
+			# read fails on empty output (run not listed yet) — that just means retry
+			read -r id url < <(api GET "/repos/$slug/actions/workflows/$WF_FILE/runs?branch=$BRANCH&event=workflow_dispatch&per_page=10" |
+				jq -r --arg ts "$ts" \
+					'[.workflow_runs[] | select(.created_at >= $ts)][0] | if . == null then empty else "\(.id) \(.html_url)" end') || id=""
+			[ -n "${id:-}" ] && break
+			waited=$((waited + 5))
+			[ "$waited" -ge 180 ] && die "dispatched but run not visible after 180s — check https://github.com/$slug/actions/workflows/$WF_FILE"
+			sleep 5
+		done
+	fi
+	log "run $id : $url"
+	if [ "$wait" -eq 1 ]; then
+		cmd_watch "$id"
+	else
+		log "not waiting; run id for later: $id"
+	fi
+}
+
+run_info() { # [run-id] -> "<id> <status> <conclusion>"; defaults to latest run on branch
+	local runid="${1:-}" slug
+	slug="$(repo_slug)"
+	if [ -z "$runid" ]; then
+		read -r runid _ < <(api GET "/repos/$slug/actions/workflows/$WF_FILE/runs?branch=$BRANCH&per_page=1" |
+			jq -r '.workflow_runs[0] | if . == null then empty else .id end') || runid=""
+		[ -n "$runid" ] || die "no runs found for $WF_FILE on branch $BRANCH"
+	fi
+	api GET "/repos/$slug/actions/runs/$runid" |
+		jq -r '"\(.id) \(.status) \(.conclusion // "")"'
+}
+
+fetch_job_log() { # <job-id> -> plain-text log on stdout (follow redirect without leaking token)
+	local slug tok resp code loc
+	slug="$(repo_slug)"
+	local -a args=(-sS)
+	if tok="$(gh_token)"; then args+=(-H "Authorization: Bearer $tok"); fi
+	resp="$(curl "${args[@]}" -o /dev/null -w '%{redirect_url}\n%{http_code}' \
+		"$API/repos/$slug/actions/jobs/$1/logs")" || die "cannot fetch job log for job $1"
+	code="${resp##*$'\n'}"
+	loc="${resp%$'\n'*}"
+	if [ "$code" = 302 ] || [ "$code" = 301 ]; then
+		curl -fsSL "$loc"
+	else
+		die "unexpected HTTP $code fetching log for job $1"
+	fi
+}
+
+cmd_fail_log() { # job logs require auth even on public repos
+	local runid="${1:-}" slug jobs id name
+	require_token
+	slug="$(repo_slug)"
+	if [ -z "$runid" ]; then
+		read -r runid _ < <(run_info)
+	fi
+	jobs="$(api GET "/repos/$slug/actions/runs/$runid/jobs")"
+	local found=0
+	while read -r id name; do
+		[ -n "$id" ] || continue
+		found=1
+		log "=== run $runid job #$id ($name): last ${NC_UPGRADE_TAIL:-120} lines ==="
+		fetch_job_log "$id" | tail -n "${NC_UPGRADE_TAIL:-120}"
+	done < <(jq -r '.jobs[] | select(.conclusion == "failure") | "\(.id) \(.name)"' <<<"$jobs")
+	[ "$found" -eq 1 ] || log "run $runid has no failed job (status: $(run_info "$runid"))"
+}
+
+cmd_watch() {
+	local runid="${1:-}" status="" conclusion=""
+	require_token
+	if [ -z "$runid" ]; then
+		read -r runid _ < <(run_info) || die "no runs found on branch $BRANCH"
+	fi
+	log "watching run $runid (poll ${NC_UPGRADE_POLL:-15}s)"
+	while :; do
+		read -r _ status conclusion < <(run_info "$runid") || status="" # transient API error -> poll again
+		[ "$status" = completed ] && break
+		sleep "${NC_UPGRADE_POLL:-15}"
+	done
+	log "run $runid finished: $conclusion"
+	if [ "$conclusion" = success ]; then
+		log "build OK"
+		return 0
+	fi
+	cmd_fail_log "$runid"
+	return 1
+}
+
+cmd_upgrade() {
+	local target="" a dry=0
+	local -a flags=()
+	for a in "$@"; do
+		case "$a" in
+			--dry-run) dry=1; flags+=("$a") ;;
+			--force | --no-wait | --testing | --no-branch-check) flags+=("$a") ;;
+			--*) die "upgrade: unknown flag $a" ;;
+			*) target="$a" ;;
+		esac
+	done
+	local cur
+	cur="$(current_version)"
+	[ -n "$cur" ] || die "cannot parse current version from $DOCKERFILE"
+	[ -n "$target" ] || target="$(hub_latest_major)"
+	if [ "$target" -le "$cur" ]; then
+		log "already at $cur (target was $target)"
+		return 0
+	fi
+	log "upgrade chain: $cur -> ... -> $target (one build per major version)"
+	while [ "$cur" -lt "$target" ]; do
+		local next=$((cur + 1))
+		log "--- step $cur -> $next ---"
+		if [ "$dry" -eq 1 ]; then
+			# files are never actually changed in preview mode, so the
+			# one-major-per-step guard would misfire from step 2 on
+			cmd_bump "$next" --force ${flags[@]+"${flags[@]}"}
+			cmd_trigger ${flags[@]+"${flags[@]}"}
+		else
+			cmd_bump "$next" ${flags[@]+"${flags[@]}"}
+			cmd_commit "$next"
+			cmd_trigger ${flags[@]+"${flags[@]}"}
+		fi
+		cur="$next"
+	done
+	log "all done: image now at $cur"
+}
+
+# ------------------------------------------------------------------ dispatch
+
+case "${1:-}" in
+	status) shift; cmd_status "$@" ;;
+	latest) printf '%s\n' "$(hub_latest_major)" ;;
+	bump) shift; cmd_bump "$@" ;;
+	commit) shift; cmd_commit "$@" ;;
+	trigger) shift; cmd_trigger "$@" ;;
+	watch) shift; cmd_watch "$@" ;;
+	fail-log) shift; cmd_fail_log "$@" ;;
+	upgrade) shift; cmd_upgrade "$@" ;;
+	'' | -h | --help | help)
+		sed -n '3,28p' "$0" | sed 's/^# \{0,1\}//'
+		;;
+	*) die "unknown subcommand: $1 (see '$0 help')" ;;
+esac

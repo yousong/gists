@@ -1,0 +1,3 @@
+# GitHub token for bin/nc-upgrade (env NC_UPGRADE_TOKEN takes precedence).
+# This repo is public — this file must stay ignored, never force-add it.
+.nc-upgrade-token
