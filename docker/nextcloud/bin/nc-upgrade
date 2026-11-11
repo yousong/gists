@@ -30,7 +30,9 @@
 
 set -euo pipefail
 
-TOP="$(cd "$(dirname "$(readlink -f "$0")")/../../.." && pwd)"
+# Repo root, resolved from the script's own location (follows symlinks) so it is
+# correct regardless of the caller's working directory or how deep the script sits.
+TOP="$(git -C "$(dirname "$(readlink -f "$0")")" rev-parse --show-toplevel)"
 IMG_DIR="$TOP/docker/nextcloud"
 DOCKERFILE="$IMG_DIR/Dockerfile"
 BUILD_ENV="$IMG_DIR/docker-build-env"

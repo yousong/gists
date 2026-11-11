@@ -6,11 +6,13 @@ Update instructions: https://github.com/nextcloud/docker?tab=readme-ov-file#upda
 
 ## Maintenance
 
-Upgrades are automated with `bin/nc-upgrade` (see `bin/nc-upgrade help`):
+Upgrades are automated with `docker/nextcloud/bin/nc-upgrade` (run `docker/nextcloud/bin/nc-upgrade help`).
+It resolves the repo root itself, so it works from any working directory — the path
+below assumes the repo root:
 
-    bin/nc-upgrade status            # current vs latest, recent CI runs
-    bin/nc-upgrade upgrade           # full chain to latest, one build per major
-    bin/nc-upgrade bump 34 && bin/nc-upgrade commit 34 && bin/nc-upgrade trigger
+    docker/nextcloud/bin/nc-upgrade status            # current vs latest, recent CI runs
+    docker/nextcloud/bin/nc-upgrade upgrade           # full chain to latest, one build per major
+    docker/nextcloud/bin/nc-upgrade bump 34 && docker/nextcloud/bin/nc-upgrade commit 34 && docker/nextcloud/bin/nc-upgrade trigger
 
 Each step bumps `Dockerfile` + `docker-build-env` together, commits on branch
 `nc`, pushes, dispatches `.github/workflows/docker-build-and-push.yaml` via the
